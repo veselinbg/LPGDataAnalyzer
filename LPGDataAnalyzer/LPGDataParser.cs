@@ -54,6 +54,8 @@ namespace LPGDataAnalyzer
             string[] f = line.Split('\t', StringSplitOptions.None);
             var culture = CultureInfo.InvariantCulture;
 
+            if (f.Count() < 22) return new LPGData();
+
             var lpgDataLine = new LPGData
             {
                 TEMPO = ToInt(f[0]),
