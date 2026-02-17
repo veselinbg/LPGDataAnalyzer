@@ -1,3 +1,5 @@
+using Microsoft.Extensions.DependencyInjection;
+
 namespace LPGDataAnalyzer
 {
     internal static class Program
@@ -8,10 +10,21 @@ namespace LPGDataAnalyzer
         [STAThread]
         static void Main()
         {
-            // To customize application configuration such as set high DPI settings or default font,
-            // see https://aka.ms/applicationconfiguration.
             ApplicationConfiguration.Initialize();
-            Application.Run(new MainForm());
+
+            var services = new ServiceCollection();
+
+            // Register services
+            services.AddSingleton<AppSettingManager>();
+            services.AddTransient<MainForm>();
+
+            using var serviceProvider = services.BuildServiceProvider();
+
+            var mainForm = serviceProvider.GetRequiredService<MainForm>();
+
+            Application.Run(mainForm);
+
+
         }
     }
 }
