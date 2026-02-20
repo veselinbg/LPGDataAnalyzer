@@ -1,4 +1,5 @@
 ﻿using LPGDataAnalyzer.Models;
+using System.Runtime.Intrinsics.Arm;
 
 namespace LPGDataAnalyzer
 {
@@ -18,12 +19,14 @@ namespace LPGDataAnalyzer
         }
         private static int RpmBin(int rpm)
         {
-            return (int)Math.Round(rpm / 500.0) * 500;
+            return Settings.RpmColumns.Single(x=>x.Min < rpm && rpm <= x.Max).Label;
+            //return (int)Math.Round(rpm / 500.0) * 500;
         }
 
         private static double InjBin(double injMs)
         {
-            return Math.Round(injMs * 2.0) / 2.0; // 0.5 ms bins
+            return Settings.InjectionRanges.Single(x => x.Min < injMs && injMs <= x.Max).Label;
+            //return Math.Round(injMs * 2.0) / 2.0; // 0.5 ms bins
         }
 
         public ICollection<GroupByTemp> GroupByTemperature(
@@ -35,6 +38,28 @@ namespace LPGDataAnalyzer
             if (data == null) throw new ArgumentNullException("The data object is null!");
 
             return [.. data.Where(x => BenzFilter(x, benzTimingFilterCuting))
+                .GroupBy(x => x.Temp_RID)
+                .Select(x =>
+                {
+                    //var bank1 = x.Select(selector1);
+                    //var bank2 = x.Select(selector2);
+                    //var Temp_RID = x.Select(y => y.Temp_RID);
+
+                    return new GroupByTemp
+                    {
+                        Temp = x.Key,
+                        //AverageB1 = bank1.Average().Round(),
+                        //AverageB2 = bank2.Average().Round(),
+                        //MinB1 = bank1.Min().Round(),
+                        //MinB2 = bank2.Min().Round(),
+                        //MaxB1 = bank1.Max().Round(),
+                        //MaxB2 = bank2.Max().Round(),
+                        //MinTempRed = Temp_RID.Min().Round(),
+                        //MaxTempRed = Temp_RID.Max().Round(),
+                        AveragePressure = x.Average(y=>y.PRESS).Round()
+                    };
+                })];
+            /*return [.. data.Where(x => BenzFilter(x, benzTimingFilterCuting))
                 .GroupBy(x => x.Temp_GAS)
                 .Select(x =>
                 {
@@ -56,6 +81,7 @@ namespace LPGDataAnalyzer
                         AveragePressure = x.Average(y=>y.PRESS).Round()
                     };
                 })];
+            */
         }
         public IEnumerable<DataItem> FilterByTemp(IEnumerable<DataItem> data, string sLPGTempGroup, string sReductorTempGroup)
         {
@@ -295,74 +321,6 @@ namespace LPGDataAnalyzer
         .Distinct();
 
             return afr;
-        }
-        
-        /// <summary>
-        /// Auto-correction algorithm
-        /// </summary>
-        /// <param name="data"></param>
-        /// <param name="fuelTable"></param>
-        public List<FuelCell> AutoCorrectFuelTable(IEnumerable<DataItem> validLogs, List<FuelCell> fuelTable)
-        {
-            List<FuelCell> result = [];
-            // 1. Filter usable data (VERY important)
-            //var validLogs = data;//.Where(l =>
-                //l.LIV == 1 &&                         // running on LPG
-                //l.BENZ_b1 > 1.5 && l.BENZ_b1 < 8.0 && // cruise only
-                //l.MAP < 0.60 &&                       // no high load
-                //l.Temp_RID > 50 &&                    // reducer warm
-                //Math.Abs(l.FAST_b1) < 15 &&           // ignore extremes
-               // Math.Abs(l.FAST_b2) < 15
-            //);
-
-            // 2. Group by table cells
-            var grouped = validLogs.GroupBy(l => new
-            {
-                Rpm = RpmBin(l.RPM),
-                Inj = InjBin(l.BENZ_b1)
-            });
-
-            foreach (var group in grouped)
-            {
-                // 3. Average trims (both banks)
-                double avgTrimB1 = group.Average(x => x.FAST_b1 + x.SLOW_b1);
-                double avgTrimB2 = group.Average(x => x.FAST_b2 + x.SLOW_b2);
-
-                double avgTrim = (avgTrimB1 + avgTrimB2) / 2.0;
-
-                // 4. Convert trim to correction factor
-                double correction = 1.0 + avgTrim / 100.0;
-
-                // SAFETY CLAMPS (do NOT remove)
-                correction = Math.Clamp(correction, 0.95, 1.08);
-
-                const double learningRate = 0.30;
-                // 6. Apply correction gently (learning rate)
-                double delta = (correction - 1.0) * learningRate;
-
-                //Important!
-                //If you have inputed data here, you can see the finished value!
-                // 5. Find matching fuel table cell
-                
-                var cell = fuelTable.FirstOrDefault(c =>
-                    c.RpmBin == group.Key.Rpm &&
-                    Math.Abs(c.InjBin - group.Key.Inj) < 0.01);
-
-
-                if (cell != null)
-                {
-                    cell.Value = (cell.Value * (1.0 + delta)).Round(0);
-
-                    result.Add(cell);
-                }
-                
-                //show only delta for changing.
-               // result.Add(new FuelCell { InjBin = group.Key.Inj, RpmBin = group.Key.Rpm, Value = delta });
-                
-            }
-
-            return result;
-
         }
     }
 }

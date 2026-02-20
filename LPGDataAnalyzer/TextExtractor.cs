@@ -16,9 +16,9 @@ namespace LPGDataAnalyzer
                 using var img = Pix.LoadFromFile(imagePath);
                 using (var page = engine.Process(img))
                 {
-                    string text = page.GetText().Replace("\n\n", Environment.NewLine);
+                    string text = page.GetText();
 
-                    return text.Trim();
+                    return text.Replace("\n\n", Environment.NewLine).Replace("\n","").Trim();
                 }
             }
         }
