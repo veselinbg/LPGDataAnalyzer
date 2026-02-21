@@ -102,7 +102,7 @@ namespace LPGDataAnalyzer
 
             GridBuilder(dataGridViewAnalyzeDataBank1t1, analyser.BuildTable(filteredLPGDataByTemp1, x => x.BENZ_b1, selector1));
             GridBuilder(dataGridViewAnalyzeDataBank2t1, analyser.BuildTable(filteredLPGDataByTemp1, x => x.BENZ_b2, selector2));
-
+            HighlightDifferencesHeatmapWithValues(dataGridViewAnalyzeDataBank1t1, dataGridViewAnalyzeDataBank2t1);
             //temp2
             IEnumerable<DataItem> filteredLPGDataByTemp2 = analyser.FilterByTemp(lpgdata, comboBoxTemperature2.SelectedValue.ToString(), comboBoxReductorTempGroup2.SelectedValue.ToString());
 
@@ -110,7 +110,7 @@ namespace LPGDataAnalyzer
             GridBuilder(dataGridViewAnalyzeDataBank2t2, analyser.BuildTable(filteredLPGDataByTemp2, x => x.BENZ_b2, selector2));
         }
 
-        void GridBuilder(DataGridView dgv, IEnumerable<TableRow> data)
+        static void GridBuilder(DataGridView dgv, IEnumerable<TableRow> data)
         {
             PrepareGrid(dgv);
 
@@ -135,7 +135,7 @@ namespace LPGDataAnalyzer
             dgv.AllowUserToAddRows = false;
             dgv.DataSource = dataSource;
         }
-        void CreateColumns(DataGridView dgv, IEnumerable<int> rpmColumns)
+        static void CreateColumns(DataGridView dgv, IEnumerable<int> rpmColumns)
         {
             dgv.Columns.Add("InjectionTime", "Inj.Time");
 
@@ -144,7 +144,7 @@ namespace LPGDataAnalyzer
                 dgv.Columns.Add($"RPM_{rpm}", rpm.ToString());
             }
         }
-        void FillRows(DataGridView dgv, IEnumerable<TableRow> table)
+        static void FillRows(DataGridView dgv, IEnumerable<TableRow> table)
         {
             foreach (var row in table)
             {
@@ -160,6 +160,150 @@ namespace LPGDataAnalyzer
                             : null;
                 }
             }
+        }
+        void CreateDynamicHorizontalHeatmapLegend(Panel legendPanel, DataGridView dgv, double minDiff, double maxDiff)
+        {
+            if (legendPanel == null || dgv == null) return;
+
+            // Adjust legend width to match DataGridView width
+            legendPanel.Width = dgv.Width;
+
+            legendPanel.Controls.Clear();
+            legendPanel.Paint += (s, e) =>
+            {
+                int width = legendPanel.Width;
+                int height = legendPanel.Height;
+
+                // Draw gradient left → right
+                for (int x = 0; x < width; x++)
+                {
+                    double normalized = (double)x / (width - 1); // 0 at left, 1 at right
+                    int greenBlue = (int)(230 - 130 * normalized); // same gradient as table
+                    if (greenBlue < 0) greenBlue = 0;
+                    Color color = Color.FromArgb(255, greenBlue, greenBlue);
+
+                    using (Pen pen = new Pen(color))
+                    {
+                        e.Graphics.DrawLine(pen, x, 0, x, height);
+                    }
+                }
+
+                // Draw ticks for min, 25%, 50%, 75%, max
+                using (Font font = new Font("Segoe UI", 8))
+                using (Brush brush = new SolidBrush(Color.Black))
+                using (Pen tickPen = new Pen(Color.Black))
+                {
+                    double[] percents = { 0, 0.25, 0.5, 0.75, 1.0 };
+                    foreach (double p in percents)
+                    {
+                        double value = minDiff + p * (maxDiff - minDiff);
+                        int x = (int)(p * (width - 1));
+                        x = Math.Max(0, Math.Min(width - 1, x));
+
+                        // Draw vertical tick line
+                        e.Graphics.DrawLine(tickPen, x, 0, x, 5);
+
+                        // Draw label below tick
+                        string text = value.ToString("F4");
+                        SizeF textSize = e.Graphics.MeasureString(text, font);
+                        float textX = x - textSize.Width / 2;
+                        float textY = 6;
+                        e.Graphics.DrawString(text, font, brush, textX, textY);
+                    }
+                }
+            };
+
+            legendPanel.Refresh();
+
+            // Optional: handle DataGridView resizing
+            dgv.SizeChanged += (s, e) =>
+            {
+                legendPanel.Width = dgv.Width;
+                legendPanel.Refresh();
+            };
+        }
+        static (int minDiffIndex, int maxDiffIndex, double minDiff, double maxDiff) HighlightDifferencesHeatmapWithValues(
+                                                        DataGridView dgv1, DataGridView dgv2, double tolerance = 0.0)
+        {
+            if (dgv1.RowCount != dgv2.RowCount || dgv1.ColumnCount != dgv2.ColumnCount)
+                throw new ArgumentException("DataGridViews must have the same dimensions.");
+
+            int rowCount = dgv1.RowCount;
+            int colCount = dgv1.ColumnCount;
+            double[,] differences = new double[rowCount, colCount];
+            double maxDiff = double.MinValue;
+            double minDiff = double.MaxValue;
+            int minDiffIndex = -1;
+            int maxDiffIndex = -1;
+
+            // Step 1: Compute differences
+            for (int row = 0; row < rowCount; row++)
+            {
+                for (int col = 0; col < colCount; col++)
+                {
+                    double val1 = dgv1.Rows[row].Cells[col].Value != null
+                        ? Convert.ToDouble(dgv1.Rows[row].Cells[col].Value)
+                        : 0.0;
+                    double val2 = dgv2.Rows[row].Cells[col].Value != null
+                        ? Convert.ToDouble(dgv2.Rows[row].Cells[col].Value)
+                        : 0.0;
+
+                    double diff = Math.Abs(val1 - val2);
+                    differences[row, col] = diff;
+
+                    if (diff > tolerance)
+                    {
+                        if (diff > maxDiff)
+                        {
+                            maxDiff = diff;
+                            maxDiffIndex = row * colCount + col;
+                        }
+                        if (diff < minDiff)
+                        {
+                            minDiff = diff;
+                            minDiffIndex = row * colCount + col;
+                        }
+                    }
+                }
+            }
+
+            if (maxDiff <= tolerance)
+            {
+                maxDiff = tolerance + 1e-6; // avoid division by zero
+                minDiff = tolerance;
+            }
+
+            // Step 2: Apply heatmap colors
+            for (int row = 0; row < rowCount; row++)
+            {
+                for (int col = 0; col < colCount; col++)
+                {
+                    double diff = differences[row, col];
+
+                    if (diff <= tolerance)
+                    {
+                        dgv1.Rows[row].Cells[col].Style.BackColor = Color.White;
+                        dgv2.Rows[row].Cells[col].Style.BackColor = Color.White;
+                    }
+                    else
+                    {
+                        // Normalize difference
+                        double normalized = (diff - minDiff) / (maxDiff - minDiff);
+                        if (normalized < 0) normalized = 0;
+                        if (normalized > 1) normalized = 1;
+
+                        // Map to light red gradient
+                        int greenBlue = (int)(230 - 130 * normalized); // 230 → 100
+                        if (greenBlue < 0) greenBlue = 0;
+
+                        Color cellColor = Color.FromArgb(255, greenBlue, greenBlue);
+                        dgv1.Rows[row].Cells[col].Style.BackColor = cellColor;
+                        dgv2.Rows[row].Cells[col].Style.BackColor = cellColor;
+                    }
+                }
+            }
+
+            return (minDiffIndex, maxDiffIndex, minDiff, maxDiff);
         }
         private void buttonAFR_Click(object sender, EventArgs e)
         {
@@ -238,7 +382,17 @@ namespace LPGDataAnalyzer
             //Auto-correction algorithm
             var newfuelTable = new Prediction().AutoCorrectFuelTable(Parser.Data, fuelCellTable);
 
-            GridBuilder(dataGridViewPrediction, FuelCellBuilder.BuildTableRow(newfuelTable));
+            GridBuilder(dataGridViewPrediction, FuelCellBuilder.BuildTableRow(newfuelTable.UpdatedCells));
+
+            // Apply heatmap to DataGridViews
+            var (minIndex, maxIndex, minDiff, maxDiff) =
+                HighlightDifferencesHeatmapWithValues(dataGridViewOrig, dataGridViewPrediction, tolerance: 0.001);
+
+            // Create horizontal legend aligned with DataGridView
+            CreateDynamicHorizontalHeatmapLegend(panelLegend, dataGridViewOrig, minDiff, maxDiff);
+
+            PrepareGrid(dataGridViewDiagnostics);
+            dataGridViewDiagnostics.DataSource = newfuelTable.Diagnostics;
         }
 
         private void ButtonValidate_Click(object sender, EventArgs e)

@@ -50,6 +50,8 @@
             dataGridViewInjectionTimeAnalisys = new DataGridView();
             dataGridViewMapAnalysis = new DataGridView();
             tabPagePredictions = new TabPage();
+            panelLegend = new Panel();
+            dataGridViewDiagnostics = new DataGridView();
             textBoxImagePath = new TextBox();
             textBoxParsedData = new TextBox();
             buttonValidate = new Button();
@@ -83,6 +85,7 @@
             ((System.ComponentModel.ISupportInitialize)dataGridViewInjectionTimeAnalisys).BeginInit();
             ((System.ComponentModel.ISupportInitialize)dataGridViewMapAnalysis).BeginInit();
             tabPagePredictions.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)dataGridViewDiagnostics).BeginInit();
             ((System.ComponentModel.ISupportInitialize)dataGridViewPrediction).BeginInit();
             ((System.ComponentModel.ISupportInitialize)dataGridViewOrig).BeginInit();
             SuspendLayout();
@@ -94,9 +97,9 @@
             // statusBar
             // 
             statusBar.Items.AddRange(new ToolStripItem[] { toolStripSummary });
-            statusBar.Location = new Point(0, 724);
+            statusBar.Location = new Point(0, 846);
             statusBar.Name = "statusBar";
-            statusBar.Size = new Size(1232, 22);
+            statusBar.Size = new Size(1416, 22);
             statusBar.TabIndex = 3;
             statusBar.Text = "statusStrip1";
             // 
@@ -132,7 +135,7 @@
             dataGridViewLPGData.Location = new Point(3, 3);
             dataGridViewLPGData.Name = "dataGridViewLPGData";
             dataGridViewLPGData.SelectionMode = DataGridViewSelectionMode.CellSelect;
-            dataGridViewLPGData.Size = new Size(1218, 606);
+            dataGridViewLPGData.Size = new Size(1399, 735);
             dataGridViewLPGData.TabIndex = 0;
             // 
             // txtFilePath
@@ -158,7 +161,7 @@
             dataGridViewAnalyzeDataBank1t2.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             dataGridViewAnalyzeDataBank1t2.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
             dataGridViewAnalyzeDataBank1t2.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dataGridViewAnalyzeDataBank1t2.Location = new Point(478, 6);
+            dataGridViewAnalyzeDataBank1t2.Location = new Point(658, 3);
             dataGridViewAnalyzeDataBank1t2.Name = "dataGridViewAnalyzeDataBank1t2";
             dataGridViewAnalyzeDataBank1t2.ReadOnly = true;
             dataGridViewAnalyzeDataBank1t2.RowHeadersVisible = false;
@@ -171,7 +174,7 @@
             dataGridViewAnalyzeDataBank2t2.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
             dataGridViewAnalyzeDataBank2t2.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
             dataGridViewAnalyzeDataBank2t2.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dataGridViewAnalyzeDataBank2t2.Location = new Point(471, 266);
+            dataGridViewAnalyzeDataBank2t2.Location = new Point(652, 378);
             dataGridViewAnalyzeDataBank2t2.Name = "dataGridViewAnalyzeDataBank2t2";
             dataGridViewAnalyzeDataBank2t2.ReadOnly = true;
             dataGridViewAnalyzeDataBank2t2.RowHeadersVisible = false;
@@ -184,7 +187,7 @@
             dataGridViewAnalyzeDataBank2t1.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
             dataGridViewAnalyzeDataBank2t1.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
             dataGridViewAnalyzeDataBank2t1.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dataGridViewAnalyzeDataBank2t1.Location = new Point(-4, 262);
+            dataGridViewAnalyzeDataBank2t1.Location = new Point(-4, 378);
             dataGridViewAnalyzeDataBank2t1.Name = "dataGridViewAnalyzeDataBank2t1";
             dataGridViewAnalyzeDataBank2t1.ReadOnly = true;
             dataGridViewAnalyzeDataBank2t1.RowHeadersVisible = false;
@@ -216,7 +219,7 @@
             tabControlMain.Location = new Point(0, 81);
             tabControlMain.Name = "tabControlMain";
             tabControlMain.SelectedIndex = 0;
-            tabControlMain.Size = new Size(1232, 640);
+            tabControlMain.Size = new Size(1416, 762);
             tabControlMain.TabIndex = 5;
             // 
             // tabPageMainData
@@ -225,7 +228,7 @@
             tabPageMainData.Location = new Point(4, 24);
             tabPageMainData.Name = "tabPageMainData";
             tabPageMainData.Padding = new Padding(3);
-            tabPageMainData.Size = new Size(1224, 612);
+            tabPageMainData.Size = new Size(1408, 734);
             tabPageMainData.TabIndex = 0;
             tabPageMainData.Text = "Main Data";
             tabPageMainData.UseVisualStyleBackColor = true;
@@ -239,7 +242,7 @@
             tabPageAnalyses.Location = new Point(4, 24);
             tabPageAnalyses.Name = "tabPageAnalyses";
             tabPageAnalyses.Padding = new Padding(3);
-            tabPageAnalyses.Size = new Size(1224, 612);
+            tabPageAnalyses.Size = new Size(1408, 734);
             tabPageAnalyses.TabIndex = 1;
             tabPageAnalyses.Text = "Analyses";
             tabPageAnalyses.UseVisualStyleBackColor = true;
@@ -249,7 +252,7 @@
             tabPageGroupByTemp.Controls.Add(dataGridViewGroupByTemp);
             tabPageGroupByTemp.Location = new Point(4, 24);
             tabPageGroupByTemp.Name = "tabPageGroupByTemp";
-            tabPageGroupByTemp.Size = new Size(1224, 612);
+            tabPageGroupByTemp.Size = new Size(1408, 734);
             tabPageGroupByTemp.TabIndex = 2;
             tabPageGroupByTemp.Text = "Group By Temp";
             tabPageGroupByTemp.UseVisualStyleBackColor = true;
@@ -260,7 +263,7 @@
             dataGridViewGroupByTemp.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             dataGridViewGroupByTemp.Location = new Point(3, 3);
             dataGridViewGroupByTemp.Name = "dataGridViewGroupByTemp";
-            dataGridViewGroupByTemp.Size = new Size(1218, 606);
+            dataGridViewGroupByTemp.Size = new Size(1402, 731);
             dataGridViewGroupByTemp.TabIndex = 0;
             // 
             // tabPageMapAnalysis
@@ -270,7 +273,7 @@
             tabPageMapAnalysis.Controls.Add(dataGridViewMapAnalysis);
             tabPageMapAnalysis.Location = new Point(4, 24);
             tabPageMapAnalysis.Name = "tabPageMapAnalysis";
-            tabPageMapAnalysis.Size = new Size(1224, 612);
+            tabPageMapAnalysis.Size = new Size(1408, 734);
             tabPageMapAnalysis.TabIndex = 3;
             tabPageMapAnalysis.Text = "Map Analysis";
             tabPageMapAnalysis.UseVisualStyleBackColor = true;
@@ -279,19 +282,19 @@
             // 
             dataGridView1.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Right;
             dataGridView1.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dataGridView1.Location = new Point(786, 3);
+            dataGridView1.Location = new Point(975, 3);
             dataGridView1.Name = "dataGridView1";
-            dataGridView1.Size = new Size(430, 606);
+            dataGridView1.Size = new Size(430, 728);
             dataGridView1.TabIndex = 3;
             // 
             // dataGridViewInjectionTimeAnalisys
             // 
             dataGridViewInjectionTimeAnalisys.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             dataGridViewInjectionTimeAnalisys.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dataGridViewInjectionTimeAnalisys.Location = new Point(0, 313);
+            dataGridViewInjectionTimeAnalisys.Location = new Point(3, 383);
             dataGridViewInjectionTimeAnalisys.Name = "dataGridViewInjectionTimeAnalisys";
             dataGridViewInjectionTimeAnalisys.ReadOnly = true;
-            dataGridViewInjectionTimeAnalisys.Size = new Size(780, 296);
+            dataGridViewInjectionTimeAnalisys.Size = new Size(780, 348);
             dataGridViewInjectionTimeAnalisys.TabIndex = 2;
             // 
             // dataGridViewMapAnalysis
@@ -301,11 +304,13 @@
             dataGridViewMapAnalysis.Location = new Point(3, 3);
             dataGridViewMapAnalysis.Name = "dataGridViewMapAnalysis";
             dataGridViewMapAnalysis.ReadOnly = true;
-            dataGridViewMapAnalysis.Size = new Size(777, 293);
+            dataGridViewMapAnalysis.Size = new Size(777, 346);
             dataGridViewMapAnalysis.TabIndex = 0;
             // 
             // tabPagePredictions
             // 
+            tabPagePredictions.Controls.Add(panelLegend);
+            tabPagePredictions.Controls.Add(dataGridViewDiagnostics);
             tabPagePredictions.Controls.Add(textBoxImagePath);
             tabPagePredictions.Controls.Add(textBoxParsedData);
             tabPagePredictions.Controls.Add(buttonValidate);
@@ -315,10 +320,28 @@
             tabPagePredictions.Controls.Add(dataGridViewOrig);
             tabPagePredictions.Location = new Point(4, 24);
             tabPagePredictions.Name = "tabPagePredictions";
-            tabPagePredictions.Size = new Size(1224, 612);
+            tabPagePredictions.Size = new Size(1408, 734);
             tabPagePredictions.TabIndex = 4;
             tabPagePredictions.Text = "Prediction";
             tabPagePredictions.UseVisualStyleBackColor = true;
+            // 
+            // panelLegend
+            // 
+            panelLegend.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            panelLegend.Location = new Point(3, 348);
+            panelLegend.Name = "panelLegend";
+            panelLegend.Size = new Size(916, 45);
+            panelLegend.TabIndex = 24;
+            // 
+            // dataGridViewDiagnostics
+            // 
+            dataGridViewDiagnostics.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            dataGridViewDiagnostics.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            dataGridViewDiagnostics.Location = new Point(925, 419);
+            dataGridViewDiagnostics.Name = "dataGridViewDiagnostics";
+            dataGridViewDiagnostics.ReadOnly = true;
+            dataGridViewDiagnostics.Size = new Size(480, 315);
+            dataGridViewDiagnostics.TabIndex = 23;
             // 
             // textBoxImagePath
             // 
@@ -333,12 +356,12 @@
             textBoxParsedData.Location = new Point(925, 30);
             textBoxParsedData.Multiline = true;
             textBoxParsedData.Name = "textBoxParsedData";
-            textBoxParsedData.Size = new Size(291, 404);
+            textBoxParsedData.Size = new Size(291, 354);
             textBoxParsedData.TabIndex = 21;
             // 
             // buttonValidate
             // 
-            buttonValidate.Location = new Point(1054, 440);
+            buttonValidate.Location = new Point(1049, 390);
             buttonValidate.Name = "buttonValidate";
             buttonValidate.Size = new Size(75, 23);
             buttonValidate.TabIndex = 20;
@@ -348,7 +371,7 @@
             // 
             // buttonContinue
             // 
-            buttonContinue.Location = new Point(1146, 440);
+            buttonContinue.Location = new Point(1141, 390);
             buttonContinue.Name = "buttonContinue";
             buttonContinue.Size = new Size(75, 23);
             buttonContinue.TabIndex = 3;
@@ -370,9 +393,9 @@
             // 
             dataGridViewPrediction.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
             dataGridViewPrediction.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dataGridViewPrediction.Location = new Point(-4, 268);
+            dataGridViewPrediction.Location = new Point(-4, 399);
             dataGridViewPrediction.Name = "dataGridViewPrediction";
-            dataGridViewPrediction.Size = new Size(923, 341);
+            dataGridViewPrediction.Size = new Size(923, 332);
             dataGridViewPrediction.TabIndex = 1;
             // 
             // dataGridViewOrig
@@ -380,7 +403,7 @@
             dataGridViewOrig.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             dataGridViewOrig.Location = new Point(3, 3);
             dataGridViewOrig.Name = "dataGridViewOrig";
-            dataGridViewOrig.Size = new Size(916, 358);
+            dataGridViewOrig.Size = new Size(916, 339);
             dataGridViewOrig.TabIndex = 0;
             // 
             // buttonAnalyzeFastTrim
@@ -479,7 +502,7 @@
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(1232, 746);
+            ClientSize = new Size(1416, 868);
             Controls.Add(buttonAFR);
             Controls.Add(button2);
             Controls.Add(button1);
@@ -517,6 +540,7 @@
             ((System.ComponentModel.ISupportInitialize)dataGridViewMapAnalysis).EndInit();
             tabPagePredictions.ResumeLayout(false);
             tabPagePredictions.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)dataGridViewDiagnostics).EndInit();
             ((System.ComponentModel.ISupportInitialize)dataGridViewPrediction).EndInit();
             ((System.ComponentModel.ISupportInitialize)dataGridViewOrig).EndInit();
             ResumeLayout(false);
@@ -563,5 +587,7 @@
         private Button buttonValidate;
         private TextBox textBoxParsedData;
         private TextBox textBoxImagePath;
+        private DataGridView dataGridViewDiagnostics;
+        private Panel panelLegend;
     }
 }
