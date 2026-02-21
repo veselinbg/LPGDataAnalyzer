@@ -50,13 +50,14 @@
             dataGridViewInjectionTimeAnalisys = new DataGridView();
             dataGridViewMapAnalysis = new DataGridView();
             tabPagePredictions = new TabPage();
+            textBoxLastPredictedFuelTable = new TextBox();
             panelLegend = new Panel();
             dataGridViewDiagnostics = new DataGridView();
             textBoxImagePath = new TextBox();
             textBoxParsedData = new TextBox();
             buttonValidate = new Button();
             buttonContinue = new Button();
-            buttonPrediction = new Button();
+            buttonParceSelectedPhoto = new Button();
             dataGridViewPrediction = new DataGridView();
             dataGridViewOrig = new DataGridView();
             buttonAnalyzeFastTrim = new Button();
@@ -309,13 +310,14 @@
             // 
             // tabPagePredictions
             // 
+            tabPagePredictions.Controls.Add(textBoxLastPredictedFuelTable);
             tabPagePredictions.Controls.Add(panelLegend);
             tabPagePredictions.Controls.Add(dataGridViewDiagnostics);
             tabPagePredictions.Controls.Add(textBoxImagePath);
             tabPagePredictions.Controls.Add(textBoxParsedData);
             tabPagePredictions.Controls.Add(buttonValidate);
             tabPagePredictions.Controls.Add(buttonContinue);
-            tabPagePredictions.Controls.Add(buttonPrediction);
+            tabPagePredictions.Controls.Add(buttonParceSelectedPhoto);
             tabPagePredictions.Controls.Add(dataGridViewPrediction);
             tabPagePredictions.Controls.Add(dataGridViewOrig);
             tabPagePredictions.Location = new Point(4, 24);
@@ -325,43 +327,51 @@
             tabPagePredictions.Text = "Prediction";
             tabPagePredictions.UseVisualStyleBackColor = true;
             // 
+            // textBoxLastPredictedFuelTable
+            // 
+            textBoxLastPredictedFuelTable.Location = new Point(1153, 29);
+            textBoxLastPredictedFuelTable.Multiline = true;
+            textBoxLastPredictedFuelTable.Name = "textBoxLastPredictedFuelTable";
+            textBoxLastPredictedFuelTable.Size = new Size(252, 288);
+            textBoxLastPredictedFuelTable.TabIndex = 25;
+            // 
             // panelLegend
             // 
             panelLegend.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             panelLegend.Location = new Point(3, 348);
             panelLegend.Name = "panelLegend";
-            panelLegend.Size = new Size(916, 45);
+            panelLegend.Size = new Size(818, 45);
             panelLegend.TabIndex = 24;
             // 
             // dataGridViewDiagnostics
             // 
             dataGridViewDiagnostics.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             dataGridViewDiagnostics.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dataGridViewDiagnostics.Location = new Point(925, 419);
+            dataGridViewDiagnostics.Location = new Point(883, 412);
             dataGridViewDiagnostics.Name = "dataGridViewDiagnostics";
             dataGridViewDiagnostics.ReadOnly = true;
-            dataGridViewDiagnostics.Size = new Size(480, 315);
+            dataGridViewDiagnostics.Size = new Size(522, 322);
             dataGridViewDiagnostics.TabIndex = 23;
             // 
             // textBoxImagePath
             // 
-            textBoxImagePath.Location = new Point(925, 1);
+            textBoxImagePath.Location = new Point(883, 3);
             textBoxImagePath.Name = "textBoxImagePath";
             textBoxImagePath.ReadOnly = true;
-            textBoxImagePath.Size = new Size(215, 23);
+            textBoxImagePath.Size = new Size(517, 23);
             textBoxImagePath.TabIndex = 22;
             // 
             // textBoxParsedData
             // 
-            textBoxParsedData.Location = new Point(925, 30);
+            textBoxParsedData.Location = new Point(883, 29);
             textBoxParsedData.Multiline = true;
             textBoxParsedData.Name = "textBoxParsedData";
-            textBoxParsedData.Size = new Size(291, 354);
+            textBoxParsedData.Size = new Size(271, 288);
             textBoxParsedData.TabIndex = 21;
             // 
             // buttonValidate
             // 
-            buttonValidate.Location = new Point(1049, 390);
+            buttonValidate.Location = new Point(998, 319);
             buttonValidate.Name = "buttonValidate";
             buttonValidate.Size = new Size(75, 23);
             buttonValidate.TabIndex = 20;
@@ -371,23 +381,23 @@
             // 
             // buttonContinue
             // 
-            buttonContinue.Location = new Point(1141, 390);
+            buttonContinue.Location = new Point(1079, 319);
             buttonContinue.Name = "buttonContinue";
             buttonContinue.Size = new Size(75, 23);
             buttonContinue.TabIndex = 3;
-            buttonContinue.Text = "Continue";
+            buttonContinue.Text = "Predict";
             buttonContinue.UseVisualStyleBackColor = true;
-            buttonContinue.Click += ButtonContinue_Click;
+            buttonContinue.Click += ButtonPredict_Click;
             // 
-            // buttonPrediction
+            // buttonParceSelectedPhoto
             // 
-            buttonPrediction.Location = new Point(1146, 3);
-            buttonPrediction.Name = "buttonPrediction";
-            buttonPrediction.Size = new Size(75, 23);
-            buttonPrediction.TabIndex = 19;
-            buttonPrediction.Text = "Predictions";
-            buttonPrediction.UseVisualStyleBackColor = true;
-            buttonPrediction.Click += buttonPrediction_Click;
+            buttonParceSelectedPhoto.Location = new Point(883, 317);
+            buttonParceSelectedPhoto.Name = "buttonParceSelectedPhoto";
+            buttonParceSelectedPhoto.Size = new Size(75, 23);
+            buttonParceSelectedPhoto.TabIndex = 19;
+            buttonParceSelectedPhoto.Text = "Parce";
+            buttonParceSelectedPhoto.UseVisualStyleBackColor = true;
+            buttonParceSelectedPhoto.Click += buttonParceSelectedImage_Click;
             // 
             // dataGridViewPrediction
             // 
@@ -395,7 +405,10 @@
             dataGridViewPrediction.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             dataGridViewPrediction.Location = new Point(-4, 399);
             dataGridViewPrediction.Name = "dataGridViewPrediction";
-            dataGridViewPrediction.Size = new Size(923, 332);
+            dataGridViewPrediction.ReadOnly = true;
+            dataGridViewPrediction.RowHeadersWidthSizeMode = DataGridViewRowHeadersWidthSizeMode.DisableResizing;
+            dataGridViewPrediction.SelectionMode = DataGridViewSelectionMode.CellSelect;
+            dataGridViewPrediction.Size = new Size(825, 332);
             dataGridViewPrediction.TabIndex = 1;
             // 
             // dataGridViewOrig
@@ -403,7 +416,10 @@
             dataGridViewOrig.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             dataGridViewOrig.Location = new Point(3, 3);
             dataGridViewOrig.Name = "dataGridViewOrig";
-            dataGridViewOrig.Size = new Size(916, 339);
+            dataGridViewOrig.ReadOnly = true;
+            dataGridViewOrig.RowHeadersWidthSizeMode = DataGridViewRowHeadersWidthSizeMode.DisableResizing;
+            dataGridViewOrig.SelectionMode = DataGridViewSelectionMode.CellSelect;
+            dataGridViewOrig.Size = new Size(818, 339);
             dataGridViewOrig.TabIndex = 0;
             // 
             // buttonAnalyzeFastTrim
@@ -581,7 +597,7 @@
         private TabPage tabPagePredictions;
         private DataGridView dataGridViewPrediction;
         private DataGridView dataGridViewOrig;
-        private Button buttonPrediction;
+        private Button buttonParceSelectedPhoto;
         private Button buttonAFR;
         private Button buttonContinue;
         private Button buttonValidate;
@@ -589,5 +605,6 @@
         private TextBox textBoxImagePath;
         private DataGridView dataGridViewDiagnostics;
         private Panel panelLegend;
+        private TextBox textBoxLastPredictedFuelTable;
     }
 }

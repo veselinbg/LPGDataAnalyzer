@@ -94,8 +94,8 @@ namespace LPGDataAnalyzer
 
         public class FuelCorrectionResult
         {
-            public List<FuelCell> UpdatedCells { get; set; } = new();
-            public List<FuelCellUpdate> Diagnostics { get; set; } = new();
+            public List<FuelCell> UpdatedCells { get; set; } = [];
+            public List<FuelCellUpdate> Diagnostics { get; set; } = [];
         }
 
         public static class MathHelpers

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using LPGDataAnalyzer.Models;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
@@ -31,6 +32,21 @@ namespace LPGDataAnalyzer
             double sumSq = list.Sum(v => Math.Pow(v - avg, 2));
 
             return Math.Sqrt(sumSq / list.Count());
+        }
+        public static string ToText(this IEnumerable<TableRow> list)
+        {
+            return list == null
+                ? string.Empty
+                : string.Concat(
+                    list.OrderBy(r => r.Key)
+                        .Select(row =>
+                            string.Concat(
+                                row.Columns
+                                   .OrderBy(c => c.Key)
+                                   .Select(c => c.Value)
+                            ) + Environment.NewLine
+                        )
+                  );
         }
     }
 }

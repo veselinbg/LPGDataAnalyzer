@@ -18,6 +18,7 @@ namespace LPGDataAnalyzer
             txtFilePath.Text = AppSettings.LastSavedFilePath;
             textBoxParsedData.Text = AppSettings.LastLoadedFuelTable;
             textBoxImagePath.Text = AppSettings.ImagePath;
+            textBoxLastPredictedFuelTable.Text = AppSettings.LastPredictedFuelTable;
             LoadParsedData();
 
             comboBoxTemperature1.DataSource = Settings.LPGTempGroups.Clone();
@@ -49,7 +50,7 @@ namespace LPGDataAnalyzer
         }
         void LoadParsedData()
         {
-            if (string.IsNullOrEmpty(AppSettings.LastSavedFilePath)) 
+            if (string.IsNullOrEmpty(AppSettings.LastSavedFilePath))
                 return;
 
             Parser.Load(AppSettings.LastSavedFilePath);
@@ -127,6 +128,7 @@ namespace LPGDataAnalyzer
             dgv.AllowUserToAddRows = false;
             dgv.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.AllCells;
             dgv.SelectionMode = DataGridViewSelectionMode.CellSelect;
+            dgv.RowHeadersVisible = false;
         }
         static void LoadDataSource(DataGridView dgv, object? dataSource)
         {
@@ -368,15 +370,15 @@ namespace LPGDataAnalyzer
             LoadDataSource(dataGridViewMapAnalysis, a1.ToList());
 
         }
-        private void buttonPrediction_Click(object sender, EventArgs e)
+        private void buttonParceSelectedImage_Click(object sender, EventArgs e)
         {
-            textBoxParsedData.Text = textExtractor.Parcer(AppSettings.ImagePath); 
+            textBoxParsedData.Text = textExtractor.Parcer(AppSettings.ImagePath);
         }
 
-        private void ButtonContinue_Click(object sender, EventArgs e)
+        private void ButtonPredict_Click(object sender, EventArgs e)
         {
             var fuelCellTable = textExtractor.BuildFinalTable(textBoxParsedData.Text);
-           
+
             GridBuilder(dataGridViewOrig, FuelCellBuilder.BuildTableRow(fuelCellTable));
 
             //Auto-correction algorithm
@@ -392,7 +394,11 @@ namespace LPGDataAnalyzer
             CreateDynamicHorizontalHeatmapLegend(panelLegend, dataGridViewOrig, minDiff, maxDiff);
 
             PrepareGrid(dataGridViewDiagnostics);
+
             dataGridViewDiagnostics.DataSource = newfuelTable.Diagnostics;
+            textBoxLastPredictedFuelTable.Text = FuelCellBuilder.BuildTableRow(newfuelTable.UpdatedCells).ToText();
+            AppSettings.LastPredictedFuelTable = textBoxParsedData.Text;
+
         }
 
         private void ButtonValidate_Click(object sender, EventArgs e)

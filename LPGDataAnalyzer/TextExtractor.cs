@@ -72,5 +72,43 @@ namespace LPGDataAnalyzer
 
             return result;
         }
+        public static IEnumerable<TableRow> ParseFuelTable(string raw, (double Min, double Max, double Label)[] injRanges,
+(int Min, int Max, int Label)[] rpmCols)
+        {
+            var rows = raw
+                .Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.RemoveEmptyEntries)
+                .ToList();
+
+            if (rows.Count != injRanges.Length)
+                throw new InvalidOperationException(
+                    $"Row count {rows.Count} does not match InjectionRanges {injRanges.Length}");
+
+            for (int r = 0; r < rows.Count; r++)
+            {
+                string line = rows[r].Trim();
+
+                if (line.Length % 3 != 0)
+                    throw new InvalidOperationException(
+                        $"Row {r} length {line.Length} is not divisible by 3");
+
+                int cellCount = line.Length / 3;
+                if (cellCount != rpmCols.Length)
+                    throw new InvalidOperationException(
+                        $"Row {r} has {cellCount} cells but RPM columns are {rpmCols.Length}");
+
+                var row = new TableRow
+                {
+                    Key = injRanges[r].Label
+                };
+
+                for (int c = 0; c < cellCount; c++)
+                {
+                    string token = line.Substring(c * 3, 3);
+                    row.Columns[rpmCols[c].Label] = double.Parse(token);
+                }
+
+                yield return row;
+            }
+        }
     }
 }
