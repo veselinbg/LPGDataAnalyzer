@@ -33,7 +33,7 @@
             toolStripSummary = new ToolStripStatusLabel();
             label1 = new Label();
             tbBenzTimingFilterCuting = new TextBox();
-            dataGridViewLPGData = new DataGridView();
+            dataGridViewMainData = new DataGridView();
             txtFilePath = new TextBox();
             buttonSelectFile = new Button();
             dataGridViewAnalyzeDataBank1t2 = new DataGridView();
@@ -44,7 +44,8 @@
             tabPageMainData = new TabPage();
             tabPageAnalyses = new TabPage();
             tabPageGroupByTemp = new TabPage();
-            dataGridViewGroupByTemp = new DataGridView();
+            dataGridViewRIDData = new DataGridView();
+            dataGridViewGasData = new DataGridView();
             tabPageMapAnalysis = new TabPage();
             dataGridView1 = new DataGridView();
             dataGridViewInjectionTimeAnalisys = new DataGridView();
@@ -60,6 +61,8 @@
             buttonParceSelectedPhoto = new Button();
             dataGridViewPrediction = new DataGridView();
             dataGridViewOrig = new DataGridView();
+            tabPageReducerPred = new TabPage();
+            buttonReducerPrediction = new Button();
             buttonAnalyzeFastTrim = new Button();
             buttonAnalyze = new Button();
             comboBoxReductorTempGroup2 = new ComboBox();
@@ -70,8 +73,9 @@
             button1 = new Button();
             button2 = new Button();
             buttonAFR = new Button();
+            buttonExtraInjectionCalculator = new Button();
             statusBar.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)dataGridViewLPGData).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)dataGridViewMainData).BeginInit();
             ((System.ComponentModel.ISupportInitialize)dataGridViewAnalyzeDataBank1t2).BeginInit();
             ((System.ComponentModel.ISupportInitialize)dataGridViewAnalyzeDataBank2t2).BeginInit();
             ((System.ComponentModel.ISupportInitialize)dataGridViewAnalyzeDataBank2t1).BeginInit();
@@ -80,7 +84,8 @@
             tabPageMainData.SuspendLayout();
             tabPageAnalyses.SuspendLayout();
             tabPageGroupByTemp.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)dataGridViewGroupByTemp).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)dataGridViewRIDData).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)dataGridViewGasData).BeginInit();
             tabPageMapAnalysis.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)dataGridView1).BeginInit();
             ((System.ComponentModel.ISupportInitialize)dataGridViewInjectionTimeAnalisys).BeginInit();
@@ -89,6 +94,7 @@
             ((System.ComponentModel.ISupportInitialize)dataGridViewDiagnostics).BeginInit();
             ((System.ComponentModel.ISupportInitialize)dataGridViewPrediction).BeginInit();
             ((System.ComponentModel.ISupportInitialize)dataGridViewOrig).BeginInit();
+            tabPageReducerPred.SuspendLayout();
             SuspendLayout();
             // 
             // openFileDialog1
@@ -129,15 +135,15 @@
             tbBenzTimingFilterCuting.Text = "2.4";
             tbBenzTimingFilterCuting.TextAlign = HorizontalAlignment.Right;
             // 
-            // dataGridViewLPGData
+            // dataGridViewMainData
             // 
-            dataGridViewLPGData.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            dataGridViewLPGData.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dataGridViewLPGData.Location = new Point(3, 3);
-            dataGridViewLPGData.Name = "dataGridViewLPGData";
-            dataGridViewLPGData.SelectionMode = DataGridViewSelectionMode.CellSelect;
-            dataGridViewLPGData.Size = new Size(1399, 735);
-            dataGridViewLPGData.TabIndex = 0;
+            dataGridViewMainData.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            dataGridViewMainData.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            dataGridViewMainData.Location = new Point(3, 3);
+            dataGridViewMainData.Name = "dataGridViewMainData";
+            dataGridViewMainData.SelectionMode = DataGridViewSelectionMode.CellSelect;
+            dataGridViewMainData.Size = new Size(1402, 725);
+            dataGridViewMainData.TabIndex = 0;
             // 
             // txtFilePath
             // 
@@ -217,6 +223,7 @@
             tabControlMain.Controls.Add(tabPageGroupByTemp);
             tabControlMain.Controls.Add(tabPageMapAnalysis);
             tabControlMain.Controls.Add(tabPagePredictions);
+            tabControlMain.Controls.Add(tabPageReducerPred);
             tabControlMain.Location = new Point(0, 81);
             tabControlMain.Name = "tabControlMain";
             tabControlMain.SelectedIndex = 0;
@@ -225,7 +232,7 @@
             // 
             // tabPageMainData
             // 
-            tabPageMainData.Controls.Add(dataGridViewLPGData);
+            tabPageMainData.Controls.Add(dataGridViewMainData);
             tabPageMainData.Location = new Point(4, 24);
             tabPageMainData.Name = "tabPageMainData";
             tabPageMainData.Padding = new Padding(3);
@@ -250,7 +257,8 @@
             // 
             // tabPageGroupByTemp
             // 
-            tabPageGroupByTemp.Controls.Add(dataGridViewGroupByTemp);
+            tabPageGroupByTemp.Controls.Add(dataGridViewRIDData);
+            tabPageGroupByTemp.Controls.Add(dataGridViewGasData);
             tabPageGroupByTemp.Location = new Point(4, 24);
             tabPageGroupByTemp.Name = "tabPageGroupByTemp";
             tabPageGroupByTemp.Size = new Size(1408, 734);
@@ -258,14 +266,23 @@
             tabPageGroupByTemp.Text = "Group By Temp";
             tabPageGroupByTemp.UseVisualStyleBackColor = true;
             // 
-            // dataGridViewGroupByTemp
+            // dataGridViewRIDData
             // 
-            dataGridViewGroupByTemp.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            dataGridViewGroupByTemp.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dataGridViewGroupByTemp.Location = new Point(3, 3);
-            dataGridViewGroupByTemp.Name = "dataGridViewGroupByTemp";
-            dataGridViewGroupByTemp.Size = new Size(1402, 731);
-            dataGridViewGroupByTemp.TabIndex = 0;
+            dataGridViewRIDData.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Right;
+            dataGridViewRIDData.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            dataGridViewRIDData.Location = new Point(653, 3);
+            dataGridViewRIDData.Name = "dataGridViewRIDData";
+            dataGridViewRIDData.Size = new Size(747, 725);
+            dataGridViewRIDData.TabIndex = 2;
+            // 
+            // dataGridViewGasData
+            // 
+            dataGridViewGasData.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left;
+            dataGridViewGasData.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            dataGridViewGasData.Location = new Point(3, 3);
+            dataGridViewGasData.Name = "dataGridViewGasData";
+            dataGridViewGasData.Size = new Size(644, 731);
+            dataGridViewGasData.TabIndex = 0;
             // 
             // tabPageMapAnalysis
             // 
@@ -347,10 +364,10 @@
             // 
             dataGridViewDiagnostics.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             dataGridViewDiagnostics.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dataGridViewDiagnostics.Location = new Point(883, 412);
+            dataGridViewDiagnostics.Location = new Point(883, 359);
             dataGridViewDiagnostics.Name = "dataGridViewDiagnostics";
             dataGridViewDiagnostics.ReadOnly = true;
-            dataGridViewDiagnostics.Size = new Size(522, 322);
+            dataGridViewDiagnostics.Size = new Size(522, 375);
             dataGridViewDiagnostics.TabIndex = 23;
             // 
             // textBoxImagePath
@@ -421,6 +438,26 @@
             dataGridViewOrig.SelectionMode = DataGridViewSelectionMode.CellSelect;
             dataGridViewOrig.Size = new Size(818, 339);
             dataGridViewOrig.TabIndex = 0;
+            // 
+            // tabPageReducerPred
+            // 
+            tabPageReducerPred.Controls.Add(buttonReducerPrediction);
+            tabPageReducerPred.Location = new Point(4, 24);
+            tabPageReducerPred.Name = "tabPageReducerPred";
+            tabPageReducerPred.Size = new Size(1408, 734);
+            tabPageReducerPred.TabIndex = 5;
+            tabPageReducerPred.Text = "Reducer prediction";
+            tabPageReducerPred.UseVisualStyleBackColor = true;
+            // 
+            // buttonReducerPrediction
+            // 
+            buttonReducerPrediction.Location = new Point(482, 43);
+            buttonReducerPrediction.Name = "buttonReducerPrediction";
+            buttonReducerPrediction.Size = new Size(75, 23);
+            buttonReducerPrediction.TabIndex = 21;
+            buttonReducerPrediction.Text = "ReducerPrediction";
+            buttonReducerPrediction.UseVisualStyleBackColor = true;
+            buttonReducerPrediction.Click += buttonReducerPrediction_Click;
             // 
             // buttonAnalyzeFastTrim
             // 
@@ -514,11 +551,22 @@
             buttonAFR.UseVisualStyleBackColor = true;
             buttonAFR.Click += buttonAFR_Click;
             // 
+            // buttonExtraInjectionCalculator
+            // 
+            buttonExtraInjectionCalculator.Location = new Point(1150, 56);
+            buttonExtraInjectionCalculator.Name = "buttonExtraInjectionCalculator";
+            buttonExtraInjectionCalculator.Size = new Size(152, 23);
+            buttonExtraInjectionCalculator.TabIndex = 21;
+            buttonExtraInjectionCalculator.Text = "Extra Injection Calculator";
+            buttonExtraInjectionCalculator.UseVisualStyleBackColor = true;
+            buttonExtraInjectionCalculator.Click += buttonExtraInjectionCalculator_Click;
+            // 
             // MainForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(1416, 868);
+            Controls.Add(buttonExtraInjectionCalculator);
             Controls.Add(buttonAFR);
             Controls.Add(button2);
             Controls.Add(button1);
@@ -540,7 +588,7 @@
             WindowState = FormWindowState.Maximized;
             statusBar.ResumeLayout(false);
             statusBar.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)dataGridViewLPGData).EndInit();
+            ((System.ComponentModel.ISupportInitialize)dataGridViewMainData).EndInit();
             ((System.ComponentModel.ISupportInitialize)dataGridViewAnalyzeDataBank1t2).EndInit();
             ((System.ComponentModel.ISupportInitialize)dataGridViewAnalyzeDataBank2t2).EndInit();
             ((System.ComponentModel.ISupportInitialize)dataGridViewAnalyzeDataBank2t1).EndInit();
@@ -549,7 +597,8 @@
             tabPageMainData.ResumeLayout(false);
             tabPageAnalyses.ResumeLayout(false);
             tabPageGroupByTemp.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)dataGridViewGroupByTemp).EndInit();
+            ((System.ComponentModel.ISupportInitialize)dataGridViewRIDData).EndInit();
+            ((System.ComponentModel.ISupportInitialize)dataGridViewGasData).EndInit();
             tabPageMapAnalysis.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)dataGridView1).EndInit();
             ((System.ComponentModel.ISupportInitialize)dataGridViewInjectionTimeAnalisys).EndInit();
@@ -559,6 +608,7 @@
             ((System.ComponentModel.ISupportInitialize)dataGridViewDiagnostics).EndInit();
             ((System.ComponentModel.ISupportInitialize)dataGridViewPrediction).EndInit();
             ((System.ComponentModel.ISupportInitialize)dataGridViewOrig).EndInit();
+            tabPageReducerPred.ResumeLayout(false);
             ResumeLayout(false);
             PerformLayout();
         }
@@ -568,7 +618,7 @@
         private StatusStrip statusBar;
         private TextBox txtFilePath;
         private Button buttonSelectFile;
-        private DataGridView dataGridViewLPGData;
+        private DataGridView dataGridViewMainData;
         private DataGridView dataGridViewAnalyzeDataBank1t1;
         private DataGridView dataGridViewAnalyzeDataBank2t1;
         private DataGridView dataGridViewAnalyzeDataBank1t2;
@@ -586,7 +636,7 @@
         private Button buttonAnalyze;
         private Button buttonAnalyzeFastTrim;
         private TabPage tabPageGroupByTemp;
-        private DataGridView dataGridViewGroupByTemp;
+        private DataGridView dataGridViewGasData;
         private Button buttonAnalysisByMap;
         private TabPage tabPageMapAnalysis;
         private DataGridView dataGridViewMapAnalysis;
@@ -606,5 +656,9 @@
         private DataGridView dataGridViewDiagnostics;
         private Panel panelLegend;
         private TextBox textBoxLastPredictedFuelTable;
+        private Button buttonReducerPrediction;
+        private TabPage tabPageReducerPred;
+        private Button buttonExtraInjectionCalculator;
+        private DataGridView dataGridViewRIDData;
     }
 }

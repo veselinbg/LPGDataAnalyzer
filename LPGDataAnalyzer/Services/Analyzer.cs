@@ -1,7 +1,7 @@
 ﻿using LPGDataAnalyzer.Models;
 using System.Runtime.Intrinsics.Arm;
 
-namespace LPGDataAnalyzer
+namespace LPGDataAnalyzer.Services
 {
     internal class Analyzer
     {
@@ -17,49 +17,15 @@ namespace LPGDataAnalyzer
         {
             return ((newValue - baseValue) / baseValue) * 100;
         }
-        private static int RpmBin(int rpm)
-        {
-            return Settings.RpmColumns.Single(x=>x.Min < rpm && rpm <= x.Max).Label;
-            //return (int)Math.Round(rpm / 500.0) * 500;
-        }
-
-        private static double InjBin(double injMs)
-        {
-            return Settings.InjectionRanges.Single(x => x.Min < injMs && injMs <= x.Max).Label;
-            //return Math.Round(injMs * 2.0) / 2.0; // 0.5 ms bins
-        }
-
-        public ICollection<GroupByTemp> GroupByTemperature(
-            IEnumerable<DataItem> data,
-            double benzTimingFilterCuting,
-            Func<DataItem, double> selector1,
-            Func<DataItem, double> selector2)
+        public ICollection<GroupByTemp> GroupByGasTemperature(
+    IEnumerable<DataItem> data,
+    double benzTimingFilterCuting,
+    Func<DataItem, double> selector1,
+    Func<DataItem, double> selector2)
         {
             if (data == null) throw new ArgumentNullException("The data object is null!");
 
-            return [.. data.Where(x => BenzFilter(x, benzTimingFilterCuting))
-                .GroupBy(x => x.Temp_RID)
-                .Select(x =>
-                {
-                    //var bank1 = x.Select(selector1);
-                    //var bank2 = x.Select(selector2);
-                    //var Temp_RID = x.Select(y => y.Temp_RID);
-
-                    return new GroupByTemp
-                    {
-                        Temp = x.Key,
-                        //AverageB1 = bank1.Average().Round(),
-                        //AverageB2 = bank2.Average().Round(),
-                        //MinB1 = bank1.Min().Round(),
-                        //MinB2 = bank2.Min().Round(),
-                        //MaxB1 = bank1.Max().Round(),
-                        //MaxB2 = bank2.Max().Round(),
-                        //MinTempRed = Temp_RID.Min().Round(),
-                        //MaxTempRed = Temp_RID.Max().Round(),
-                        AveragePressure = x.Average(y=>y.PRESS).Round()
-                    };
-                })];
-            /*return [.. data.Where(x => BenzFilter(x, benzTimingFilterCuting))
+           return [.. data.Where(x => BenzFilter(x, benzTimingFilterCuting))
                 .GroupBy(x => x.Temp_GAS)
                 .Select(x =>
                 {
@@ -81,7 +47,38 @@ namespace LPGDataAnalyzer
                         AveragePressure = x.Average(y=>y.PRESS).Round()
                     };
                 })];
-            */
+        }
+
+        public ICollection<object> GroupByRIDTemperature(
+            IEnumerable<DataItem> data,
+            double benzTimingFilterCuting,
+            Func<DataItem, double> selector1,
+            Func<DataItem, double> selector2)
+        {
+            if (data == null) throw new ArgumentNullException("The data object is null!");
+
+            return [.. data.Where(x => BenzFilter(x, benzTimingFilterCuting))
+                .GroupBy(x => x.Temp_RID)
+                .Select(x =>
+                {
+                    var bank1 = x.Select(selector1);
+                    var bank2 = x.Select(selector2);
+                    var Temp_GAS = x.Select(y => y.Temp_GAS);
+
+                    return new 
+                    {
+                        Temp = x.Key,
+                        AverageB1 = bank1.Average().Round(),
+                        AverageB2 = bank2.Average().Round(),
+                        MinB1 = bank1.Min().Round(),
+                        MinB2 = bank2.Min().Round(),
+                        MaxB1 = bank1.Max().Round(),
+                        MaxB2 = bank2.Max().Round(),
+                        MinTempGas = Temp_GAS.Min().Round(),
+                        MaxTempGas = Temp_GAS.Max().Round(),
+                        AveragePressure = x.Average(y=>y.PRESS).Round()
+                    };
+                })];
         }
         public IEnumerable<DataItem> FilterByTemp(IEnumerable<DataItem> data, string sLPGTempGroup, string sReductorTempGroup)
         {

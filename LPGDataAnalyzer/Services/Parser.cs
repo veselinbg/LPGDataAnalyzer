@@ -1,6 +1,6 @@
 ﻿using LPGDataAnalyzer.Models;
 
-namespace LPGDataAnalyzer
+namespace LPGDataAnalyzer.Services
 {
     internal class Parser()
     {

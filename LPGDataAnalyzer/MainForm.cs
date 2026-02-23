@@ -1,4 +1,5 @@
 using LPGDataAnalyzer.Models;
+using LPGDataAnalyzer.Services;
 
 namespace LPGDataAnalyzer
 {
@@ -57,7 +58,7 @@ namespace LPGDataAnalyzer
 
             if (Parser.Data.Any())
             {
-                dataGridViewLPGData.DataSource = Parser.Data;
+                dataGridViewMainData.DataSource = Parser.Data;
                 buttonAnalyze.Enabled = true;
                 buttonAnalyzeFastTrim.Enabled = true;
 
@@ -72,15 +73,16 @@ namespace LPGDataAnalyzer
         {
             if (Parser?.Data is null) return;
 
-            dataGridViewGroupByTemp.DataSource = Analyser.GroupByTemperature(Parser.Data, BenzTimingFilterCuting, x => x.Ratio_b1, y => y.Ratio_b2);
+            dataGridViewGasData.DataSource = Analyser.GroupByGasTemperature(Parser.Data, BenzTimingFilterCuting, x => x.Ratio_b1, y => y.Ratio_b2);
+            dataGridViewRIDData.DataSource = Analyser.GroupByRIDTemperature(Parser.Data, BenzTimingFilterCuting, x => x.Ratio_b1, y => y.Ratio_b2);
 
             BuildAnalises(Analyser, Parser.Data, x => x.Ratio_b1, x => x.Ratio_b2);
         }
         private void ButtonAnalyze2_Click(object sender, EventArgs e)
         {
             if (Parser?.Data is null) return;
-
-            dataGridViewGroupByTemp.DataSource = Analyser.GroupByTemperature(Parser.Data, BenzTimingFilterCuting, x => x.FAST_b1, y => y.FAST_b2);
+            dataGridViewGasData.DataSource = Analyser.GroupByGasTemperature(Parser.Data, BenzTimingFilterCuting, x => x.FAST_b1, y => y.FAST_b2);
+            dataGridViewRIDData.DataSource = Analyser.GroupByRIDTemperature(Parser.Data, BenzTimingFilterCuting, x => x.FAST_b1, y => y.FAST_b2);
 
             BuildAnalises(Analyser, Parser.Data, x => x.FAST_b1, x => x.FAST_b2);
         }
@@ -224,21 +226,25 @@ namespace LPGDataAnalyzer
                 legendPanel.Refresh();
             };
         }
-        static (int minDiffIndex, int maxDiffIndex, double minDiff, double maxDiff) HighlightDifferencesHeatmapWithValues(
-                                                        DataGridView dgv1, DataGridView dgv2, double tolerance = 0.0)
+        static (int minDiffIndex, int maxDiffIndex, double minDiff, double maxDiff)
+        HighlightDifferencesHeatmapWithValues(
+            DataGridView dgv1, DataGridView dgv2, double tolerance = 0.0)
         {
             if (dgv1.RowCount != dgv2.RowCount || dgv1.ColumnCount != dgv2.ColumnCount)
                 throw new ArgumentException("DataGridViews must have the same dimensions.");
 
             int rowCount = dgv1.RowCount;
             int colCount = dgv1.ColumnCount;
-            double[,] differences = new double[rowCount, colCount];
-            double maxDiff = double.MinValue;
-            double minDiff = double.MaxValue;
+
+            double[,] diffs = new double[rowCount, colCount];
+
+            double maxAbsDiff = double.MinValue;
+            double minAbsDiff = double.MaxValue;
+
             int minDiffIndex = -1;
             int maxDiffIndex = -1;
 
-            // Step 1: Compute differences
+            // Step 1: compute signed differences
             for (int row = 0; row < rowCount; row++)
             {
                 for (int col = 0; col < colCount; col++)
@@ -246,66 +252,77 @@ namespace LPGDataAnalyzer
                     double val1 = dgv1.Rows[row].Cells[col].Value != null
                         ? Convert.ToDouble(dgv1.Rows[row].Cells[col].Value)
                         : 0.0;
+
                     double val2 = dgv2.Rows[row].Cells[col].Value != null
                         ? Convert.ToDouble(dgv2.Rows[row].Cells[col].Value)
                         : 0.0;
 
-                    double diff = Math.Abs(val1 - val2);
-                    differences[row, col] = diff;
+                    double diff = val1 - val2; // SIGNED
+                    double absDiff = Math.Abs(diff);
 
-                    if (diff > tolerance)
+                    diffs[row, col] = diff;
+
+                    if (absDiff > tolerance)
                     {
-                        if (diff > maxDiff)
+                        if (absDiff > maxAbsDiff)
                         {
-                            maxDiff = diff;
+                            maxAbsDiff = absDiff;
                             maxDiffIndex = row * colCount + col;
                         }
-                        if (diff < minDiff)
+                        if (absDiff < minAbsDiff)
                         {
-                            minDiff = diff;
+                            minAbsDiff = absDiff;
                             minDiffIndex = row * colCount + col;
                         }
                     }
                 }
             }
 
-            if (maxDiff <= tolerance)
+            if (maxAbsDiff <= tolerance)
             {
-                maxDiff = tolerance + 1e-6; // avoid division by zero
-                minDiff = tolerance;
+                maxAbsDiff = tolerance + 1e-6;
+                minAbsDiff = tolerance;
             }
 
-            // Step 2: Apply heatmap colors
+            // Step 2: apply heatmap colors
             for (int row = 0; row < rowCount; row++)
             {
                 for (int col = 0; col < colCount; col++)
                 {
-                    double diff = differences[row, col];
+                    double diff = diffs[row, col];
+                    double absDiff = Math.Abs(diff);
 
-                    if (diff <= tolerance)
+                    if (absDiff <= tolerance)
                     {
                         dgv1.Rows[row].Cells[col].Style.BackColor = Color.White;
                         dgv2.Rows[row].Cells[col].Style.BackColor = Color.White;
+                        continue;
+                    }
+
+                    double normalized = (absDiff - minAbsDiff) / (maxAbsDiff - minAbsDiff);
+                    normalized = Math.Max(0, Math.Min(1, normalized));
+
+                    Color cellColor;
+
+                    if (diff < 0)
+                    {
+                        // Positive → red gradient
+                        int gb = (int)(230 - 130 * normalized); // 230 → 100
+                        cellColor = Color.FromArgb(255, gb, gb);
                     }
                     else
                     {
-                        // Normalize difference
-                        double normalized = (diff - minDiff) / (maxDiff - minDiff);
-                        if (normalized < 0) normalized = 0;
-                        if (normalized > 1) normalized = 1;
-
-                        // Map to light red gradient
-                        int greenBlue = (int)(230 - 130 * normalized); // 230 → 100
-                        if (greenBlue < 0) greenBlue = 0;
-
-                        Color cellColor = Color.FromArgb(255, greenBlue, greenBlue);
-                        dgv1.Rows[row].Cells[col].Style.BackColor = cellColor;
-                        dgv2.Rows[row].Cells[col].Style.BackColor = cellColor;
+                        // Negative → blue gradient
+                        int rg = (int)(230 - 130 * normalized); // 230 → 100
+                        cellColor = Color.FromArgb(rg, rg, 255);
                     }
+
+                    dgv1.Rows[row].Cells[col].Style.BackColor = cellColor;
+                    dgv2.Rows[row].Cells[col].Style.BackColor = cellColor;
                 }
             }
 
-            return (minDiffIndex, maxDiffIndex, minDiff, maxDiff);
+            return (minDiffIndex, maxDiffIndex, minAbsDiff, maxAbsDiff);
         }
         private void buttonAFR_Click(object sender, EventArgs e)
         {
@@ -414,6 +431,35 @@ namespace LPGDataAnalyzer
             {
                 MessageBox.Show(ex.Message, "Errors");
             }
+        }
+
+        private void buttonReducerPrediction_Click(object sender, EventArgs e)
+        {
+            Dictionary<string, int> currentCorrections = new Dictionary<string, int>();
+            currentCorrections.Add("Temp_to_20", -3);
+            currentCorrections.Add("Temp_21_25", -2);
+            currentCorrections.Add("Temp_26_30", -1);
+            currentCorrections.Add("Temp_31_35", 0);
+            currentCorrections.Add("Temp_36_40", 0);
+            currentCorrections.Add("Temp_41_50", 0);
+            currentCorrections.Add("Temp_51_60", 0);
+            currentCorrections.Add("Temp_61_70", 1);
+            currentCorrections.Add("Temp_71_over", 2);
+
+
+            var result = new ReducerPrediction().PredictNewReducerTempCorrections(Parser.Data, currentCorrections, 1.5);
+            MessageBox.Show(string.Join(",", result.Select(x => x.Value)), "LPG Reducer correction");
+
+        }
+
+        private void buttonExtraInjectionCalculator_Click(object sender, EventArgs e)
+        {
+            var res = ExtraInjectionCalculator.CalculateIdentTime(Parser.Data);
+            MessageBox.Show("The result is : " + res, "Info");
+
+            var res2 = ExtraInjectionCalculator.PrintHistogram(Parser.Data);
+
+            MessageBox.Show(res2, "Histogram");
         }
     }
 }

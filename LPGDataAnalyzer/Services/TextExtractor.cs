@@ -1,7 +1,7 @@
 ﻿using LPGDataAnalyzer.Models;
 using Tesseract;
 
-namespace LPGDataAnalyzer
+namespace LPGDataAnalyzer.Services
 {
     internal class TextExtractor
     {

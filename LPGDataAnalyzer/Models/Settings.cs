@@ -1,4 +1,4 @@
-﻿namespace LPGDataAnalyzer
+﻿namespace LPGDataAnalyzer.Models
 {
     internal class Settings
     {
