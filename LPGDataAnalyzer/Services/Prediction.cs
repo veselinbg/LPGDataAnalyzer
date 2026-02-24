@@ -176,7 +176,10 @@ namespace LPGDataAnalyzer.Services
                 var log = logs[i];
 
                 int rpm = Math.Clamp(log.RPM, rpmMin, rpmMax);
-                double inj = Math.Clamp(log.BENZ_b1, injMin, injMax);
+
+                var benz = (log.BENZ_b1 + log.BENZ_b2) / 2;
+
+                double inj = Math.Clamp(benz, injMin, injMax);
 
                 double avgTrim =
                     ((log.FAST_b1 + log.SLOW_b1) +

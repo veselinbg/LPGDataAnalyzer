@@ -82,6 +82,8 @@ namespace LPGDataAnalyzer.Services
         }
         public IEnumerable<DataItem> FilterByTemp(IEnumerable<DataItem> data, string sLPGTempGroup, string sReductorTempGroup)
         {
+            if (sReductorTempGroup == Settings.ALL)
+                return data;
             var lpgRange = Settings.GasTemperatureRanges
                 .FirstOrDefault(r => r.Label == sLPGTempGroup);
 

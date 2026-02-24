@@ -34,85 +34,20 @@ namespace LPGDataAnalyzer
             comboBoxReductorTempGroup2.DataSource = Settings.ReductorTempGroups.Clone();
             comboBoxReductorTempGroup2.SelectedIndex = 1;
 
+                SearchAndPrepareGrid(this.Controls);
         }
-        private void BtnSelectFile_Click(object sender, EventArgs e)
+        private static void SearchAndPrepareGrid(Control.ControlCollection parentControl)
         {
-            using OpenFileDialog ofd = new OpenFileDialog();
-            ofd.Filter = "Text files (*.txt)|*.txt|All files (*.*)|*.*";
-
-            if (ofd.ShowDialog() == DialogResult.OK)
+            foreach (Control control in parentControl)
             {
-                txtFilePath.Text = ofd.FileName;
-                AppSettings.LastSavedFilePath = ofd.FileName;
-                _appSettingManager.Save(AppSettings);
-
-                LoadParsedData();
-            }
-        }
-        void LoadParsedData()
-        {
-            if (string.IsNullOrEmpty(AppSettings.LastSavedFilePath))
-                return;
-
-            Parser.Load(AppSettings.LastSavedFilePath);
-
-            if (Parser.Data.Any())
-            {
-                dataGridViewMainData.DataSource = Parser.Data;
-                buttonAnalyze.Enabled = true;
-                buttonAnalyzeFastTrim.Enabled = true;
-
-                toolStripSummary.Text = $"Total Rows: {Parser.Data.Count} " +
-                    $"LPG: Min Temp: {Parser.Data.Min(x => x.Temp_GAS)} Max Temp: {Parser.Data.Max(x => x.Temp_GAS)}" +
-                    $" Min PRESS: {Parser.Data.Min(x => x.PRESS)} Max PRESS: {Parser.Data.Max(x => x.PRESS)} Avarige PRESS: {(Parser.Data.Average(x => x.PRESS)).Round()}" +
-                    $" % of change Min {Analyzer.PercentageChange(Parser.Data.Average(x => x.PRESS), Parser.Data.Min(x => x.PRESS)).Round()} Max{Analyzer.PercentageChange(Parser.Data.Average(x => x.PRESS), Parser.Data.Max(x => x.PRESS)).Round()}";
-            }
-            else MessageBox.Show("Invalid data.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-        }
-        private void ButtonAnalyze_Click(object sender, EventArgs e)
-        {
-            if (Parser?.Data is null) return;
-
-            dataGridViewGasData.DataSource = Analyser.GroupByGasTemperature(Parser.Data, BenzTimingFilterCuting, x => x.Ratio_b1, y => y.Ratio_b2);
-            dataGridViewRIDData.DataSource = Analyser.GroupByRIDTemperature(Parser.Data, BenzTimingFilterCuting, x => x.Ratio_b1, y => y.Ratio_b2);
-
-            BuildAnalises(Analyser, Parser.Data, x => x.Ratio_b1, x => x.Ratio_b2);
-        }
-        private void ButtonAnalyze2_Click(object sender, EventArgs e)
-        {
-            if (Parser?.Data is null) return;
-            dataGridViewGasData.DataSource = Analyser.GroupByGasTemperature(Parser.Data, BenzTimingFilterCuting, x => x.FAST_b1, y => y.FAST_b2);
-            dataGridViewRIDData.DataSource = Analyser.GroupByRIDTemperature(Parser.Data, BenzTimingFilterCuting, x => x.FAST_b1, y => y.FAST_b2);
-
-            BuildAnalises(Analyser, Parser.Data, x => x.FAST_b1, x => x.FAST_b2);
-        }
-        double BenzTimingFilterCuting
-        {
-            get
-            {
-                if (!double.TryParse(tbBenzTimingFilterCuting.Text.Trim(), out var benzTimingFilterCuting))
+                if (control is DataGridView dg)
                 {
-                    benzTimingFilterCuting = 0;
-                    tbBenzTimingFilterCuting.Text = "0";
+                    PrepareGrid(dg);
                 }
-                return benzTimingFilterCuting;
+                // Recursively search child controls
+                SearchAndPrepareGrid(control.Controls);
             }
         }
-        void BuildAnalises(Analyzer analyser, IEnumerable<DataItem> lpgdata, Func<DataItem, double?> selector1, Func<DataItem, double?> selector2)
-        {
-            //temp1
-            IEnumerable<DataItem> filteredLPGDataByTemp1 = analyser.FilterByTemp(lpgdata, comboBoxTemperature1.SelectedValue.ToString(), comboBoxReductorTempGroup1.SelectedValue.ToString());
-
-            GridBuilder(dataGridViewAnalyzeDataBank1t1, analyser.BuildTable(filteredLPGDataByTemp1, x => x.BENZ_b1, selector1));
-            GridBuilder(dataGridViewAnalyzeDataBank2t1, analyser.BuildTable(filteredLPGDataByTemp1, x => x.BENZ_b2, selector2));
-            HighlightDifferencesHeatmapWithValues(dataGridViewAnalyzeDataBank1t1, dataGridViewAnalyzeDataBank2t1);
-            //temp2
-            IEnumerable<DataItem> filteredLPGDataByTemp2 = analyser.FilterByTemp(lpgdata, comboBoxTemperature2.SelectedValue.ToString(), comboBoxReductorTempGroup2.SelectedValue.ToString());
-
-            GridBuilder(dataGridViewAnalyzeDataBank1t2, analyser.BuildTable(filteredLPGDataByTemp2, x => x.BENZ_b1, selector1));
-            GridBuilder(dataGridViewAnalyzeDataBank2t2, analyser.BuildTable(filteredLPGDataByTemp2, x => x.BENZ_b2, selector2));
-        }
-
         static void GridBuilder(DataGridView dgv, IEnumerable<TableRow> data)
         {
             PrepareGrid(dgv);
@@ -324,6 +259,85 @@ namespace LPGDataAnalyzer
 
             return (minDiffIndex, maxDiffIndex, minAbsDiff, maxAbsDiff);
         }
+        private void BtnSelectFile_Click(object sender, EventArgs e)
+        {
+            using OpenFileDialog ofd = new OpenFileDialog();
+            ofd.Filter = "Text files (*.txt)|*.txt|All files (*.*)|*.*";
+
+            if (ofd.ShowDialog() == DialogResult.OK)
+            {
+                txtFilePath.Text = ofd.FileName;
+                AppSettings.LastSavedFilePath = ofd.FileName;
+                _appSettingManager.Save(AppSettings);
+
+                LoadParsedData();
+            }
+        }
+        void LoadParsedData()
+        {
+            if (string.IsNullOrEmpty(AppSettings.LastSavedFilePath))
+                return;
+
+            Parser.Load(AppSettings.LastSavedFilePath);
+
+            if (Parser.Data.Any())
+            {
+                dataGridViewMainData.DataSource = Parser.Data;
+                buttonAnalyze.Enabled = true;
+                buttonAnalyzeFastTrim.Enabled = true;
+
+                toolStripSummary.Text = $"Total Rows: {Parser.Data.Count} " +
+                    $"LPG: Min Temp: {Parser.Data.Min(x => x.Temp_GAS)} Max Temp: {Parser.Data.Max(x => x.Temp_GAS)}" +
+                    $" Min PRESS: {Parser.Data.Min(x => x.PRESS)} Max PRESS: {Parser.Data.Max(x => x.PRESS)} Avarige PRESS: {(Parser.Data.Average(x => x.PRESS)).Round()}" +
+                    $" % of change Min {Analyzer.PercentageChange(Parser.Data.Average(x => x.PRESS), Parser.Data.Min(x => x.PRESS)).Round()} Max{Analyzer.PercentageChange(Parser.Data.Average(x => x.PRESS), Parser.Data.Max(x => x.PRESS)).Round()}";
+            }
+            else MessageBox.Show("Invalid data.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
+        private void ButtonAnalyze_Click(object sender, EventArgs e)
+        {
+            if (Parser?.Data is null) return;
+
+            dataGridViewGasData.DataSource = Analyser.GroupByGasTemperature(Parser.Data, BenzTimingFilterCuting, x => x.Ratio_b1, y => y.Ratio_b2);
+            dataGridViewRIDData.DataSource = Analyser.GroupByRIDTemperature(Parser.Data, BenzTimingFilterCuting, x => x.Ratio_b1, y => y.Ratio_b2);
+
+            BuildAnalises(Analyser, Parser.Data, x => x.Ratio_b1, x => x.Ratio_b2);
+        }
+        private void ButtonAnalyze2_Click(object sender, EventArgs e)
+        {
+            if (Parser?.Data is null) return;
+            dataGridViewGasData.DataSource = Analyser.GroupByGasTemperature(Parser.Data, BenzTimingFilterCuting, x => x.FAST_b1, y => y.FAST_b2);
+            dataGridViewRIDData.DataSource = Analyser.GroupByRIDTemperature(Parser.Data, BenzTimingFilterCuting, x => x.FAST_b1, y => y.FAST_b2);
+
+            BuildAnalises(Analyser, Parser.Data, x => x.FAST_b1, x => x.FAST_b2);
+        }
+        double BenzTimingFilterCuting
+        {
+            get
+            {
+                if (!double.TryParse(tbBenzTimingFilterCuting.Text.Trim(), out var benzTimingFilterCuting))
+                {
+                    benzTimingFilterCuting = 0;
+                    tbBenzTimingFilterCuting.Text = "0";
+                }
+                return benzTimingFilterCuting;
+            }
+        }
+        void BuildAnalises(Analyzer analyser, IEnumerable<DataItem> lpgdata, Func<DataItem, double?> selector1, Func<DataItem, double?> selector2)
+        {
+            //temp1
+            IEnumerable<DataItem> filteredLPGDataByTemp1 = analyser.FilterByTemp(lpgdata, comboBoxTemperature1.SelectedValue.ToString(), comboBoxReductorTempGroup1.SelectedValue.ToString());
+
+            GridBuilder(dataGridViewAnalyzeDataBank1t1, analyser.BuildTable(filteredLPGDataByTemp1, x => x.BENZ_b1, selector1));
+            GridBuilder(dataGridViewAnalyzeDataBank2t1, analyser.BuildTable(filteredLPGDataByTemp1, x => x.BENZ_b2, selector2));
+            HighlightDifferencesHeatmapWithValues(dataGridViewAnalyzeDataBank1t1, dataGridViewAnalyzeDataBank2t1);
+            //temp2
+            IEnumerable<DataItem> filteredLPGDataByTemp2 = analyser.FilterByTemp(lpgdata, comboBoxTemperature2.SelectedValue.ToString(), comboBoxReductorTempGroup2.SelectedValue.ToString());
+
+            GridBuilder(dataGridViewAnalyzeDataBank1t2, analyser.BuildTable(filteredLPGDataByTemp2, x => x.BENZ_b1, selector1));
+            GridBuilder(dataGridViewAnalyzeDataBank2t2, analyser.BuildTable(filteredLPGDataByTemp2, x => x.BENZ_b2, selector2));
+        }
+
+
         private void buttonAFR_Click(object sender, EventArgs e)
         {
             BuildAnalises(Analyser, Parser.Data, s => (15.6 / (1.0 + ((s.FAST_b1 + s.SLOW_b1) / 100.0))).Round(), s => (15.6 / (1.0 + ((s.FAST_b2 + s.SLOW_b2) / 100.0))).Round());
@@ -436,26 +450,24 @@ namespace LPGDataAnalyzer
 
         private void buttonReducerPrediction_Click(object sender, EventArgs e)
         {
-            Dictionary<string, int> currentCorrections = new Dictionary<string, int>();
-            currentCorrections.Add("Temp_to_20", -2);
-            currentCorrections.Add("Temp_21_25", -2);
-            currentCorrections.Add("Temp_26_30", -1);
-            currentCorrections.Add("Temp_31_35", 0);
-            currentCorrections.Add("Temp_36_40", 0);
-            currentCorrections.Add("Temp_41_50", 0);
-            currentCorrections.Add("Temp_51_60", 0);
-            currentCorrections.Add("Temp_61_70", 1);
-            currentCorrections.Add("Temp_71_over", 2);
+            Dictionary<string, int> currentCorrections = [];
 
+            var values = textBoxReducerTempValues.Text.Split(',', StringSplitOptions.RemoveEmptyEntries);
 
-            var result = new ReducerPrediction().PredictNewReducerTempCorrections(Parser.Data, currentCorrections, 1.5);
+            for (int i = 0; i < Settings.ReductorTemperatureRanges.Length; i++)
+            {
+                currentCorrections.Add(Settings.ReductorTemperatureRanges[i].Label, int.Parse(values[i]));
+            }
+          
+            var result = new ReducerPrediction().PredictNewReducerTempCorrections(Parser.Data, currentCorrections, double.Parse(textBoxReferencePressure.Text.Trim()));
+
             MessageBox.Show(string.Join(",", result.Select(x => x.Value)), "LPG Reducer correction");
-
         }
 
         private void buttonExtraInjectionCalculator_Click(object sender, EventArgs e)
         {
             var res = ExtraInjectionCalculator.CalculateIdentTime(Parser.Data);
+
             MessageBox.Show("The result is : " + res, "Info");
 
             var res2 = ExtraInjectionCalculator.PrintHistogram(Parser.Data);

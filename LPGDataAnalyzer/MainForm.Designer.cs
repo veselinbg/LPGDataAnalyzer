@@ -62,6 +62,10 @@
             dataGridViewPrediction = new DataGridView();
             dataGridViewOrig = new DataGridView();
             tabPageReducerPred = new TabPage();
+            labelRefPressure = new Label();
+            textBoxReferencePressure = new TextBox();
+            labelCurrent = new Label();
+            textBoxReducerTempValues = new TextBox();
             buttonReducerPrediction = new Button();
             buttonAnalyzeFastTrim = new Button();
             buttonAnalyze = new Button();
@@ -270,9 +274,9 @@
             // 
             dataGridViewRIDData.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Right;
             dataGridViewRIDData.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dataGridViewRIDData.Location = new Point(653, 3);
+            dataGridViewRIDData.Location = new Point(502, 3);
             dataGridViewRIDData.Name = "dataGridViewRIDData";
-            dataGridViewRIDData.Size = new Size(747, 725);
+            dataGridViewRIDData.Size = new Size(898, 728);
             dataGridViewRIDData.TabIndex = 2;
             // 
             // dataGridViewGasData
@@ -281,7 +285,7 @@
             dataGridViewGasData.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             dataGridViewGasData.Location = new Point(3, 3);
             dataGridViewGasData.Name = "dataGridViewGasData";
-            dataGridViewGasData.Size = new Size(644, 731);
+            dataGridViewGasData.Size = new Size(843, 731);
             dataGridViewGasData.TabIndex = 0;
             // 
             // tabPageMapAnalysis
@@ -441,6 +445,10 @@
             // 
             // tabPageReducerPred
             // 
+            tabPageReducerPred.Controls.Add(labelRefPressure);
+            tabPageReducerPred.Controls.Add(textBoxReferencePressure);
+            tabPageReducerPred.Controls.Add(labelCurrent);
+            tabPageReducerPred.Controls.Add(textBoxReducerTempValues);
             tabPageReducerPred.Controls.Add(buttonReducerPrediction);
             tabPageReducerPred.Location = new Point(4, 24);
             tabPageReducerPred.Name = "tabPageReducerPred";
@@ -449,13 +457,48 @@
             tabPageReducerPred.Text = "Reducer prediction";
             tabPageReducerPred.UseVisualStyleBackColor = true;
             // 
+            // labelRefPressure
+            // 
+            labelRefPressure.AutoSize = true;
+            labelRefPressure.Location = new Point(234, 101);
+            labelRefPressure.Name = "labelRefPressure";
+            labelRefPressure.Size = new Size(106, 15);
+            labelRefPressure.TabIndex = 25;
+            labelRefPressure.Text = "Reference Pressure";
+            // 
+            // textBoxReferencePressure
+            // 
+            textBoxReferencePressure.Location = new Point(372, 98);
+            textBoxReferencePressure.Name = "textBoxReferencePressure";
+            textBoxReferencePressure.RightToLeft = RightToLeft.Yes;
+            textBoxReferencePressure.Size = new Size(62, 23);
+            textBoxReferencePressure.TabIndex = 24;
+            textBoxReferencePressure.Text = "1.5";
+            // 
+            // labelCurrent
+            // 
+            labelCurrent.AutoSize = true;
+            labelCurrent.Location = new Point(231, 22);
+            labelCurrent.Name = "labelCurrent";
+            labelCurrent.Size = new Size(97, 15);
+            labelCurrent.TabIndex = 23;
+            labelCurrent.Text = "Current Values (,)";
+            // 
+            // textBoxReducerTempValues
+            // 
+            textBoxReducerTempValues.Location = new Point(227, 43);
+            textBoxReducerTempValues.Name = "textBoxReducerTempValues";
+            textBoxReducerTempValues.Size = new Size(207, 23);
+            textBoxReducerTempValues.TabIndex = 22;
+            textBoxReducerTempValues.Text = "-2,-2,-1,0,0,0,0,1,2";
+            // 
             // buttonReducerPrediction
             // 
-            buttonReducerPrediction.Location = new Point(482, 43);
+            buttonReducerPrediction.Location = new Point(453, 43);
             buttonReducerPrediction.Name = "buttonReducerPrediction";
-            buttonReducerPrediction.Size = new Size(75, 23);
+            buttonReducerPrediction.Size = new Size(133, 23);
             buttonReducerPrediction.TabIndex = 21;
-            buttonReducerPrediction.Text = "ReducerPrediction";
+            buttonReducerPrediction.Text = "Reducer Prediction";
             buttonReducerPrediction.UseVisualStyleBackColor = true;
             buttonReducerPrediction.Click += buttonReducerPrediction_Click;
             // 
@@ -609,6 +652,7 @@
             ((System.ComponentModel.ISupportInitialize)dataGridViewPrediction).EndInit();
             ((System.ComponentModel.ISupportInitialize)dataGridViewOrig).EndInit();
             tabPageReducerPred.ResumeLayout(false);
+            tabPageReducerPred.PerformLayout();
             ResumeLayout(false);
             PerformLayout();
         }
@@ -660,5 +704,9 @@
         private TabPage tabPageReducerPred;
         private Button buttonExtraInjectionCalculator;
         private DataGridView dataGridViewRIDData;
+        private TextBox textBoxReducerTempValues;
+        private Label labelCurrent;
+        private TextBox textBoxReferencePressure;
+        private Label labelRefPressure;
     }
 }
