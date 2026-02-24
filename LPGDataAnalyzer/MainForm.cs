@@ -414,8 +414,8 @@ namespace LPGDataAnalyzer
 
             dataGridViewDiagnostics.DataSource = newfuelTable.Diagnostics;
             textBoxLastPredictedFuelTable.Text = FuelCellBuilder.BuildTableRow(newfuelTable.UpdatedCells).ToText();
-            AppSettings.LastPredictedFuelTable = textBoxParsedData.Text;
-
+            AppSettings.LastPredictedFuelTable = textBoxLastPredictedFuelTable.Text;
+            _appSettingManager.Save(AppSettings);
         }
 
         private void ButtonValidate_Click(object sender, EventArgs e)
@@ -424,6 +424,7 @@ namespace LPGDataAnalyzer
             {
                 textExtractor.Validate(textBoxParsedData.Text);
                 AppSettings.LastLoadedFuelTable = textBoxParsedData.Text;
+                AppSettings.LastPredictedFuelTable = textBoxLastPredictedFuelTable.Text;
                 _appSettingManager.Save(AppSettings);
                 MessageBox.Show("Ok, no errors!", "Info");
             }
@@ -436,7 +437,7 @@ namespace LPGDataAnalyzer
         private void buttonReducerPrediction_Click(object sender, EventArgs e)
         {
             Dictionary<string, int> currentCorrections = new Dictionary<string, int>();
-            currentCorrections.Add("Temp_to_20", -3);
+            currentCorrections.Add("Temp_to_20", -2);
             currentCorrections.Add("Temp_21_25", -2);
             currentCorrections.Add("Temp_26_30", -1);
             currentCorrections.Add("Temp_31_35", 0);
