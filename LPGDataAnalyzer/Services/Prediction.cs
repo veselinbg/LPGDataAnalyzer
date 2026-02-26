@@ -102,7 +102,7 @@ namespace LPGDataAnalyzer.Services
             for (int i = 0; i < count; i++)
             {
                 var l = logs[i];
-                double trim = (l.FAST_b1 + l.SLOW_b1 + l.FAST_b2 + l.SLOW_b2) / 2.0;
+                double trim = GetTrims(l);
 
                 sum += trim;
                 sumSq += trim * trim;
@@ -125,7 +125,13 @@ namespace LPGDataAnalyzer.Services
 
             return (baseRate, minWeight, maxDelta, targetHit);
         }
-
+        public static double GetTrims(DataItem log)
+        {
+            var val = ((log.FAST_b1 + log.SLOW_b1) +
+                     (log.FAST_b2 + log.SLOW_b2)) / 2.0;
+            
+            return val;
+        }
         private static Dictionary<(int, double), CellAccumulator>
             AccumulateDeltas(IList<DataItem> logs, double baseRate)
         {
@@ -149,9 +155,8 @@ namespace LPGDataAnalyzer.Services
 
                 double inj = Math.Clamp(benz, injMin, injMax);
 
-                double avgTrim =
-                    ((log.FAST_b1 + log.SLOW_b1) +
-                     (log.FAST_b2 + log.SLOW_b2)) / 2.0;
+                double avgTrim = GetTrims(log);
+
 
                 double correction = Math.Clamp(1.0 + avgTrim / 100.0, 0.95, 1.08);
 
