@@ -125,12 +125,12 @@ namespace LPGDataAnalyzer.Services
 
             return (baseRate, minWeight, maxDelta, targetHit);
         }
-        public static double GetTrims(DataItem log)
+        private static double GetTrims(DataItem log)
         {
-            var val = ((log.FAST_b1 + log.SLOW_b1) +
-                     (log.FAST_b2 + log.SLOW_b2)) / 2.0;
-            
-            return val;
+            double slow = (log.SLOW_b1 + log.SLOW_b2) / 2.0;
+            double fast = (log.FAST_b1 + log.FAST_b2) / 2.0;
+
+            return (0.7 * slow) + (0.3 * fast);
         }
         private static Dictionary<(int, double), CellAccumulator>
             AccumulateDeltas(IList<DataItem> logs, double baseRate)
