@@ -1,6 +1,5 @@
 using LPGDataAnalyzer.Models;
 using LPGDataAnalyzer.Services;
-using static LPGDataAnalyzer.Services.Prediction;
 
 namespace LPGDataAnalyzer
 {

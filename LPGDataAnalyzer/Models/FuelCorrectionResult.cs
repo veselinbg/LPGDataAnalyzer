@@ -2,12 +2,9 @@
 
 namespace LPGDataAnalyzer.Services
 {
-    internal sealed partial class Prediction
+    internal class FuelCorrectionResult
     {
-        public class FuelCorrectionResult
-        {
-            public List<FuelCell> UpdatedCells { get; set; } = [];
-            public List<FuelCellUpdate> Diagnostics { get; set; } = [];
-        }
+        public List<FuelCell> UpdatedCells { get; set; } = [];
+        public List<FuelCellUpdate> Diagnostics { get; set; } = [];
     }
 }
