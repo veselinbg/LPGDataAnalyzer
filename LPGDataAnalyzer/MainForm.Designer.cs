@@ -358,11 +358,12 @@
             // 
             // panelLegend
             // 
-            panelLegend.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            panelLegend.Location = new Point(3, 348);
+            panelLegend.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
+            panelLegend.Location = new Point(3, 350);
             panelLegend.Name = "panelLegend";
             panelLegend.Size = new Size(818, 45);
             panelLegend.TabIndex = 24;
+            panelLegend.Paint += LegendPanel_Paint;
             // 
             // dataGridViewDiagnostics
             // 

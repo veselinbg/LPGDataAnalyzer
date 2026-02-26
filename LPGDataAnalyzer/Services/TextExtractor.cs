@@ -31,7 +31,7 @@ namespace LPGDataAnalyzer.Services
                 SplitToThreeDigitInts(item);
             }
         }
-        public List<FuelCell> BuildFinalTable(string text)
+        public IEnumerable<FuelCell> BuildFinalTable(string text)
         {
             var data = text.Split(Environment.NewLine, StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
 
@@ -42,14 +42,8 @@ namespace LPGDataAnalyzer.Services
                 items.AddRange(SplitToThreeDigitInts(item));
             }
 
-            int i = 0;
+            var fuelCellTable = FuelCellBuilder.BuildTable(items);
 
-            var fuelCellTable = FuelCellBuilder.BuildTable();
-
-            foreach (var fuelCell in fuelCellTable)
-            {
-                fuelCell.Value = items[i++];
-            }
             return fuelCellTable;
         }
         private static List<int> SplitToThreeDigitInts(string input)

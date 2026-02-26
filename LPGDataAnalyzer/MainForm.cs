@@ -1,5 +1,6 @@
 using LPGDataAnalyzer.Models;
 using LPGDataAnalyzer.Services;
+using static LPGDataAnalyzer.Services.Prediction;
 
 namespace LPGDataAnalyzer
 {
@@ -12,14 +13,25 @@ namespace LPGDataAnalyzer
         private AppSettings AppSettings { get; set; }
         public MainForm(AppSettingManager appSettingManager)
         {
+            //this.ControlAdded += (s, e) =>
+            //{
+            //    if (e.Control is DataGridView dg)
+            //        PrepareGrid(dg);
+            //};
+
             InitializeComponent();
 
+            //SearchAndPrepareGrid(this.Controls);
+
             _appSettingManager = appSettingManager;
+
             AppSettings = _appSettingManager.Load();
+
             txtFilePath.Text = AppSettings.LastSavedFilePath;
             textBoxParsedData.Text = AppSettings.LastLoadedFuelTable;
             textBoxImagePath.Text = AppSettings.ImagePath;
             textBoxLastPredictedFuelTable.Text = AppSettings.LastPredictedFuelTable;
+
             LoadParsedData();
 
             comboBoxTemperature1.DataSource = Settings.LPGTempGroups.Clone();
@@ -34,7 +46,6 @@ namespace LPGDataAnalyzer
             comboBoxReductorTempGroup2.DataSource = Settings.ReductorTempGroups.Clone();
             comboBoxReductorTempGroup2.SelectedIndex = 1;
 
-                SearchAndPrepareGrid(this.Controls);
         }
         private static void SearchAndPrepareGrid(Control.ControlCollection parentControl)
         {
@@ -44,11 +55,14 @@ namespace LPGDataAnalyzer
                 {
                     PrepareGrid(dg);
                 }
-                // Recursively search child controls
-                SearchAndPrepareGrid(control.Controls);
+                else
+                {
+                    // Recursively search child controls
+                    SearchAndPrepareGrid(control.Controls);
+                }
             }
         }
-        static void GridBuilder(DataGridView dgv, IEnumerable<TableRow> data)
+        private static void GridBuilder(DataGridView dgv, IEnumerable<TableRow> data)
         {
             PrepareGrid(dgv);
 
@@ -56,7 +70,7 @@ namespace LPGDataAnalyzer
 
             FillRows(dgv, data);
         }
-        static void PrepareGrid(DataGridView dgv)
+        private static void PrepareGrid(DataGridView dgv)
         {
             dgv.DataSource = null;
             dgv.Columns.Clear();
@@ -67,14 +81,11 @@ namespace LPGDataAnalyzer
             dgv.SelectionMode = DataGridViewSelectionMode.CellSelect;
             dgv.RowHeadersVisible = false;
         }
-        static void LoadDataSource(DataGridView dgv, object? dataSource)
+        private static void LoadDataSource(DataGridView dgv, object? dataSource)
         {
-            dgv.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.AllCells;
-            dgv.ReadOnly = true;
-            dgv.AllowUserToAddRows = false;
             dgv.DataSource = dataSource;
         }
-        static void CreateColumns(DataGridView dgv, IEnumerable<int> rpmColumns)
+        private static void CreateColumns(DataGridView dgv, IEnumerable<int> rpmColumns)
         {
             dgv.Columns.Add("InjectionTime", "Inj.Time");
 
@@ -83,7 +94,7 @@ namespace LPGDataAnalyzer
                 dgv.Columns.Add($"RPM_{rpm}", rpm.ToString());
             }
         }
-        static void FillRows(DataGridView dgv, IEnumerable<TableRow> table)
+        private static void FillRows(DataGridView dgv, IEnumerable<TableRow> table)
         {
             foreach (var row in table)
             {
@@ -100,165 +111,200 @@ namespace LPGDataAnalyzer
                 }
             }
         }
-        void CreateDynamicHorizontalHeatmapLegend(Panel legendPanel, DataGridView dgv, double minDiff, double maxDiff)
+        private static AxisSplit<int> HighlightDifferencesHeatmapWithValues(DataGridView dgv1, DataGridView dgv2, double tolerance = 0.01)
         {
-            if (legendPanel == null || dgv == null) return;
+            if (dgv1.RowCount != dgv2.RowCount ||
+                dgv1.ColumnCount != dgv2.ColumnCount)
+                throw new ArgumentException("DataGridViews must have same dimensions.");
 
-            // Adjust legend width to match DataGridView width
-            legendPanel.Width = dgv.Width;
+            int rows = dgv1.RowCount;
+            int cols = dgv1.ColumnCount;
 
-            legendPanel.Controls.Clear();
-            legendPanel.Paint += (s, e) =>
+            double[,] diffs = new double[rows, cols];
+
+            double minSigned = double.MaxValue;
+            double maxSigned = double.MinValue;
+
+            int minIndex = -1;
+            int maxIndex = -1;
+
+            // ---- STEP 1: Compute signed differences ----
+            for (int r = 0; r < rows; r++)
             {
-                int width = legendPanel.Width;
-                int height = legendPanel.Height;
-
-                // Draw gradient left → right
-                for (int x = 0; x < width; x++)
+                for (int c = 0; c < cols; c++)
                 {
-                    double normalized = (double)x / (width - 1); // 0 at left, 1 at right
-                    int greenBlue = (int)(230 - 130 * normalized); // same gradient as table
-                    if (greenBlue < 0) greenBlue = 0;
-                    Color color = Color.FromArgb(255, greenBlue, greenBlue);
-
-                    using (Pen pen = new Pen(color))
-                    {
-                        e.Graphics.DrawLine(pen, x, 0, x, height);
-                    }
-                }
-
-                // Draw ticks for min, 25%, 50%, 75%, max
-                using (Font font = new Font("Segoe UI", 8))
-                using (Brush brush = new SolidBrush(Color.Black))
-                using (Pen tickPen = new Pen(Color.Black))
-                {
-                    double[] percents = { 0, 0.25, 0.5, 0.75, 1.0 };
-                    foreach (double p in percents)
-                    {
-                        double value = minDiff + p * (maxDiff - minDiff);
-                        int x = (int)(p * (width - 1));
-                        x = Math.Max(0, Math.Min(width - 1, x));
-
-                        // Draw vertical tick line
-                        e.Graphics.DrawLine(tickPen, x, 0, x, 5);
-
-                        // Draw label below tick
-                        string text = value.ToString("F4");
-                        SizeF textSize = e.Graphics.MeasureString(text, font);
-                        float textX = x - textSize.Width / 2;
-                        float textY = 6;
-                        e.Graphics.DrawString(text, font, brush, textX, textY);
-                    }
-                }
-            };
-
-            legendPanel.Refresh();
-
-            // Optional: handle DataGridView resizing
-            dgv.SizeChanged += (s, e) =>
-            {
-                legendPanel.Width = dgv.Width;
-                legendPanel.Refresh();
-            };
-        }
-        static (int minDiffIndex, int maxDiffIndex, double minDiff, double maxDiff)
-        HighlightDifferencesHeatmapWithValues(
-            DataGridView dgv1, DataGridView dgv2, double tolerance = 0.0)
-        {
-            if (dgv1.RowCount != dgv2.RowCount || dgv1.ColumnCount != dgv2.ColumnCount)
-                throw new ArgumentException("DataGridViews must have the same dimensions.");
-
-            int rowCount = dgv1.RowCount;
-            int colCount = dgv1.ColumnCount;
-
-            double[,] diffs = new double[rowCount, colCount];
-
-            double maxAbsDiff = double.MinValue;
-            double minAbsDiff = double.MaxValue;
-
-            int minDiffIndex = -1;
-            int maxDiffIndex = -1;
-
-            // Step 1: compute signed differences
-            for (int row = 0; row < rowCount; row++)
-            {
-                for (int col = 0; col < colCount; col++)
-                {
-                    double val1 = dgv1.Rows[row].Cells[col].Value != null
-                        ? Convert.ToDouble(dgv1.Rows[row].Cells[col].Value)
+                    double v1 = dgv1.Rows[r].Cells[c].Value != null
+                        ? Convert.ToDouble(dgv1.Rows[r].Cells[c].Value)
                         : 0.0;
 
-                    double val2 = dgv2.Rows[row].Cells[col].Value != null
-                        ? Convert.ToDouble(dgv2.Rows[row].Cells[col].Value)
+                    double v2 = dgv2.Rows[r].Cells[c].Value != null
+                        ? Convert.ToDouble(dgv2.Rows[r].Cells[c].Value)
                         : 0.0;
 
-                    double diff = val1 - val2; // SIGNED
-                    double absDiff = Math.Abs(diff);
+                    double diff = v1 - v2;
+                    diffs[r, c] = diff;
 
-                    diffs[row, col] = diff;
-
-                    if (absDiff > tolerance)
+                    if (Math.Abs(diff) > tolerance)
                     {
-                        if (absDiff > maxAbsDiff)
+                        if (diff < minSigned)
                         {
-                            maxAbsDiff = absDiff;
-                            maxDiffIndex = row * colCount + col;
+                            minSigned = diff;
+                            minIndex = r * cols + c;
                         }
-                        if (absDiff < minAbsDiff)
+
+                        if (diff > maxSigned)
                         {
-                            minAbsDiff = absDiff;
-                            minDiffIndex = row * colCount + col;
+                            maxSigned = diff;
+                            maxIndex = r * cols + c;
                         }
                     }
                 }
             }
 
-            if (maxAbsDiff <= tolerance)
+            if (minSigned == double.MaxValue)
             {
-                maxAbsDiff = tolerance + 1e-6;
-                minAbsDiff = tolerance;
+                minSigned = -1e-6;
+                maxSigned = 1e-6;
             }
 
-            // Step 2: apply heatmap colors
-            for (int row = 0; row < rowCount; row++)
-            {
-                for (int col = 0; col < colCount; col++)
-                {
-                    double diff = diffs[row, col];
-                    double absDiff = Math.Abs(diff);
+            double maxAbs = Math.Max(Math.Abs(minSigned),
+                                     Math.Abs(maxSigned));
 
-                    if (absDiff <= tolerance)
+            if (maxAbs < 1e-12)
+                maxAbs = 1e-12;
+
+            // ---- STEP 2: Apply smooth diverging heatmap ----
+            for (int r = 0; r < rows; r++)
+            {
+                for (int c = 0; c < cols; c++)
+                {
+                    double diff = diffs[r, c];
+
+                    if (Math.Abs(diff) <= tolerance)
                     {
-                        dgv1.Rows[row].Cells[col].Style.BackColor = Color.White;
-                        dgv2.Rows[row].Cells[col].Style.BackColor = Color.White;
+                        dgv1.Rows[r].Cells[c].Style.BackColor = Color.White;
+                        dgv2.Rows[r].Cells[c].Style.BackColor = Color.White;
                         continue;
                     }
 
-                    double normalized = (absDiff - minAbsDiff) / (maxAbsDiff - minAbsDiff);
-                    normalized = Math.Max(0, Math.Min(1, normalized));
+                    double normalized = diff / maxAbs;   // -1 → +1
 
-                    Color cellColor;
+                    Color color = InterpolateDiverging(normalized);
 
-                    if (diff < 0)
-                    {
-                        // Positive → red gradient
-                        int gb = (int)(230 - 130 * normalized); // 230 → 100
-                        cellColor = Color.FromArgb(255, gb, gb);
-                    }
-                    else
-                    {
-                        // Negative → blue gradient
-                        int rg = (int)(230 - 130 * normalized); // 230 → 100
-                        cellColor = Color.FromArgb(rg, rg, 255);
-                    }
-
-                    dgv1.Rows[row].Cells[col].Style.BackColor = cellColor;
-                    dgv2.Rows[row].Cells[col].Style.BackColor = cellColor;
+                    dgv1.Rows[r].Cells[c].Style.BackColor = color;
+                    dgv2.Rows[r].Cells[c].Style.BackColor = color;
                 }
             }
 
-            return (minDiffIndex, maxDiffIndex, minAbsDiff, maxAbsDiff);
+            return new AxisSplit<int>(minIndex, maxIndex, minSigned, maxSigned);
         }
+        private static Color InterpolateDiverging(double value)
+        {
+            value = Math.Max(-1, Math.Min(1, value));
+
+            Color blue = Color.FromArgb(180, 180, 255);     // strong blue
+            Color white = Color.White;
+            Color red = Color.FromArgb(255, 180, 180);       // strong red
+
+            if (value < 0)
+            {
+                return Blend(blue, white, (value + 1));
+            }
+            else
+            {
+                return Blend(white, red, value);
+            }
+        }
+
+        private static Color Blend(Color c1, Color c2, double t)
+        {
+            t = Math.Max(0, Math.Min(1, t));
+
+            int r = (int)(c1.R + (c2.R - c1.R) * t);
+            int g = (int)(c1.G + (c2.G - c1.G) * t);
+            int b = (int)(c1.B + (c2.B - c1.B) * t);
+
+            return Color.FromArgb(r, g, b);
+        }
+        private void LegendPanel_Paint(object sender, PaintEventArgs e)
+        {
+            if (sender is not Panel panel)
+                return;
+
+            if (panel.Tag is not ValueTuple<double, double> data)
+                return;
+
+            double minSigned = data.Item1;
+            double maxSigned = data.Item2;
+
+            int width = panel.Width;
+            int height = panel.Height;
+
+            if (width <= 1 || height <= 1)
+                return;
+
+            double maxAbs = Math.Max(Math.Abs(minSigned), Math.Abs(maxSigned));
+            if (maxAbs < 1e-12)
+                maxAbs = 1e-12;
+
+            e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.None;
+
+            // ===== Gradient =====
+            using (Pen gradientPen = new Pen(Color.Black))
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    double normalized = (x / (double)(width - 1)) * 2.0 - 1.0;
+                    gradientPen.Color = InterpolateDiverging(normalized);
+                    e.Graphics.DrawLine(gradientPen, x, 0, x, height);
+                }
+            }
+
+            // ===== Ticks & Labels =====
+            using Font font = new Font("Segoe UI", 8f);
+            using Brush textBrush = new SolidBrush(Color.Black);
+            using Pen tickPen = new Pen(Color.Black, 1f);
+
+            double[] ticks = { -maxAbs, 0.0, maxAbs };
+
+            foreach (double val in ticks)
+            {
+                double normalized = (val / maxAbs + 1.0) / 2.0;
+                int x = (int)Math.Round(normalized * (width - 1));
+
+                e.Graphics.DrawLine(tickPen, x, 0, x, 6);
+
+                string text = val.ToString("F2");
+                SizeF size = e.Graphics.MeasureString(text, font);
+
+                e.Graphics.DrawString(
+                    text,
+                    font,
+                    textBrush,
+                    x - size.Width / 2,
+                    8);
+            }
+        }
+        void CreateDynamicHorizontalHeatmapLegend(
+                                                Panel legendPanel,
+                                                DataGridView dgv,
+                                                double minSigned,
+                                                double maxSigned)
+        {
+            if (legendPanel == null || dgv == null)
+                return;
+
+            legendPanel.Tag = (minSigned, maxSigned);          
+
+            int newWidth = dgv.ClientSize.Width;
+
+            if (legendPanel.Width != newWidth)
+                legendPanel.Width = newWidth;
+
+            legendPanel.Invalidate();
+        }
+
+       
         private void BtnSelectFile_Click(object sender, EventArgs e)
         {
             using OpenFileDialog ofd = new OpenFileDialog();
@@ -418,11 +464,10 @@ namespace LPGDataAnalyzer
             GridBuilder(dataGridViewPrediction, FuelCellBuilder.BuildTableRow(newfuelTable.UpdatedCells));
 
             // Apply heatmap to DataGridViews
-            var (minIndex, maxIndex, minDiff, maxDiff) =
-                HighlightDifferencesHeatmapWithValues(dataGridViewOrig, dataGridViewPrediction, tolerance: 0.001);
+           var vals = HighlightDifferencesHeatmapWithValues(dataGridViewPrediction, dataGridViewOrig, tolerance: 0.1);
 
             // Create horizontal legend aligned with DataGridView
-            CreateDynamicHorizontalHeatmapLegend(panelLegend, dataGridViewOrig, minDiff, maxDiff);
+            CreateDynamicHorizontalHeatmapLegend(panelLegend, dataGridViewPrediction, vals.WLow, vals.WHigh);
 
             PrepareGrid(dataGridViewDiagnostics);
 
@@ -473,6 +518,49 @@ namespace LPGDataAnalyzer
             var res2 = ExtraInjectionCalculator.PrintHistogram(Parser.Data);
 
             MessageBox.Show(res2, "Histogram");
+
+            var res3 = ExtraInjectionCalculator.CalculateExtraInjectionTime(Parser.Data.ToList());
+
+            MessageBox.Show(res3.ToString(), "ExtraInjectionTime");
+            ///////////////////////////////////////////////////////////////////
+            return;
+            //open all saved files and parse the and use the data. 
+            List<string> txtFiles = new List<string>();
+            var directoryPath = "C:\\Users\\veselin.ivanov\\Documents\\MultipointInj\\Acquisition";
+            try
+            {
+                // Check if the directory exists
+                if (Directory.Exists(directoryPath))
+                {
+                    // Get all .txt files in the directory (including subdirectories)
+                    string[] files = Directory.GetFiles(directoryPath, "*.txt", SearchOption.AllDirectories);
+
+                    foreach (var file in files)
+                    {
+                        txtFiles.Add(file); // Add file path to the list
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("The directory does not exist.");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"An error occurred: {ex.Message}");
+            }
+            (string, double)[] result =new (string, double)[txtFiles.Count()];
+            int i = 0;
+            foreach (var file in txtFiles)
+            {
+                var p = new Parser();
+                p.Load(file);
+
+                var res1 = ExtraInjectionCalculator.CalculateExtraInjectionTime(p.Data.ToList());
+                result[i].Item1 = file;
+                result[i++].Item2 = res1;
+            }
+
         }
     }
 }

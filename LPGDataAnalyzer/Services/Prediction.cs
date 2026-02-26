@@ -2,24 +2,8 @@
 
 namespace LPGDataAnalyzer.Services
 {
-    internal sealed class Prediction
+    internal sealed partial class Prediction
     {
-        public readonly struct AxisSplit<T> where T : IComparable<T>
-        {
-            public readonly T Low;
-            public readonly T High;
-            public readonly double WLow;
-            public readonly double WHigh;
-
-            public AxisSplit(T low, T high, double wLow, double wHigh)
-            {
-                Low = low;
-                High = high;
-                WLow = wLow;
-                WHigh = wHigh;
-            }
-        }
-
         public static AxisSplit<int> RpmSplit(int rpm)
         {
             var cols = Settings.RpmColumns;
@@ -85,21 +69,6 @@ namespace LPGDataAnalyzer.Services
             return new AxisSplit<double>(last.Label, last.Label, 1, 0);
         }
 
-        public class FuelCellUpdate
-        {
-            public int Rpm { get; set; }
-            public double Inj { get; set; }
-            public double AppliedDelta { get; set; }
-            public double Confidence { get; set; }
-            public bool Propagated { get; set; } = false;
-        }
-
-        public class FuelCorrectionResult
-        {
-            public List<FuelCell> UpdatedCells { get; set; } = [];
-            public List<FuelCellUpdate> Diagnostics { get; set; } = [];
-        }
-
 
         private sealed class CellAccumulator
         {
@@ -121,8 +90,7 @@ namespace LPGDataAnalyzer.Services
             }
         }
 
-        private (double BaseLearningRate, double MinEffectiveWeight,
-                 double MaxDeltaPerCell, int TargetHitCount)
+        private static (double BaseLearningRate, double MinEffectiveWeight, double MaxDeltaPerCell, int TargetHitCount)
             ComputeAdaptiveConstants(IList<DataItem> logs)
         {
             int count = logs.Count;
@@ -158,7 +126,7 @@ namespace LPGDataAnalyzer.Services
             return (baseRate, minWeight, maxDelta, targetHit);
         }
 
-        private Dictionary<(int, double), CellAccumulator>
+        private static Dictionary<(int, double), CellAccumulator>
             AccumulateDeltas(IList<DataItem> logs, double baseRate)
         {
             var accumulators = new Dictionary<(int, double), CellAccumulator>(256);
@@ -226,7 +194,7 @@ namespace LPGDataAnalyzer.Services
             acc.Add(delta, weight);
         }
 
-        private void PropagateEdgeDeltas(
+        private static void PropagateEdgeDeltas(
             Dictionary<(int, double), CellAccumulator> acc,
             IList<int> rpmLabels,
             IList<double> injLabels,
@@ -285,7 +253,7 @@ namespace LPGDataAnalyzer.Services
 
 
         // Apply deltas to fuel table
-        private FuelCorrectionResult ApplyDeltasToFuelTable(Dictionary<(int, double), CellAccumulator> accumulators,
+        private static FuelCorrectionResult ApplyDeltasToFuelTable(Dictionary<(int, double), CellAccumulator> accumulators,
             Dictionary<(int, double), FuelCell> cellMap,
             (double BaseLearningRate, double MinEffectiveWeight, double MaxDeltaPerCell, int TargetHitCount) constants)
         {
@@ -320,7 +288,7 @@ namespace LPGDataAnalyzer.Services
             return result;
         }
 
-        private void SmoothFuelMap(
+        private static void SmoothFuelMap(
             Dictionary<(int, double), FuelCell> cellMap,
             IList<int> rpmLabels,
             IList<double> injLabels,
@@ -389,7 +357,7 @@ namespace LPGDataAnalyzer.Services
 
         public FuelCorrectionResult AutoCorrectFuelTable(
             IEnumerable<DataItem> validLogs,
-            List<FuelCell> fuelTable)
+            IEnumerable<FuelCell> fuelTable)
         {
             var logs = validLogs as IList<DataItem> ?? validLogs.ToList();
             if (logs.Count == 0)
@@ -399,10 +367,10 @@ namespace LPGDataAnalyzer.Services
                 c => (c.RpmBin, c.InjBin));
 
             var rpmLabels = Settings.RpmColumns
-                .Select(c => c.Label).ToList();
+                .Select(c => c.Label).ToArray();
 
             var injLabels = Settings.InjectionRanges
-                .Select(r => r.Label).ToList();
+                .Select(r => r.Label).ToArray();
             // 2. Compute adaptive constants
             var constants = ComputeAdaptiveConstants(logs);
             // 3. Accumulate deltas from logs

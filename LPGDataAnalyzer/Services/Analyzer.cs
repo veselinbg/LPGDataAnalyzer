@@ -17,7 +17,7 @@ namespace LPGDataAnalyzer.Services
         {
             return ((newValue - baseValue) / baseValue) * 100;
         }
-        public ICollection<GroupByTemp> GroupByGasTemperature(
+        public ICollection<object> GroupByGasTemperature(
     IEnumerable<DataItem> data,
     double benzTimingFilterCuting,
     Func<DataItem, double> selector1,
@@ -33,9 +33,9 @@ namespace LPGDataAnalyzer.Services
                     var bank2 = x.Select(selector2);
                     var Temp_RID = x.Select(y => y.Temp_RID);
 
-                    return new GroupByTemp
+                    return new
                     {
-                        Temp = x.Key,
+                        GasTemp = x.Key,
                         AverageB1 = bank1.Average().Round(),
                         AverageB2 = bank2.Average().Round(),
                         MinB1 = bank1.Min().Round(),
