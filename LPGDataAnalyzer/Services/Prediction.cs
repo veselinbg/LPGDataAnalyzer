@@ -250,7 +250,34 @@ namespace LPGDataAnalyzer.Services
                 if (!any) break;
             }
         }
+        // Compute a smooth k-factor based on RPM and Injection bins
+        private static double ComputeKFactor(FuelCell cell)
+        {
+            // Economy area (low RPM, low injection)
+            double economyFactor = 1.0;
+            if (cell.RpmBin < 1500 && cell.InjBin < 3.5)
+            {
+                // Linear fade from 0 RPM → 1500 RPM and 0 → 3.5 inj
+                double rpmWeight = 1.0 - (double)cell.RpmBin / 1500.0;   // 1 at 0 RPM, 0 at 1500
+                double injWeight = 1.0 - (cell.InjBin / 3.5);             // 1 at 0 inj, 0 at 3.5 inj
+                economyFactor = 0.95 + 0.05 * (1.0 - rpmWeight * injWeight);
+                // This ensures a smooth transition toward 0.95 at very low load
+            }
 
+            // High load area (high RPM, high injection)
+            double highLoadFactor = 1.0;
+            if (cell.RpmBin > 1500 && cell.InjBin > 8)
+            {
+                // Linear fade for RPM >1500 and inj >8
+                double rpmWeight = Math.Min((cell.RpmBin - 1500) / 2000.0, 1.0);  // adjust max fade as needed
+                double injWeight = Math.Min((cell.InjBin - 8) / 4.0, 1.0);         // adjust max fade as needed
+                highLoadFactor = 1.0 + 0.02 * rpmWeight * injWeight;              // smoothly ramp toward 1.02
+            }
+
+            // Combine economy and high-load smoothly
+            double k = 1.0 * economyFactor * highLoadFactor;
+            return k;
+        }
         // ===================== APPLY DELTAS =====================
         private static void ApplyDeltas(Dictionary<(int, double), CellAccumulator> acc, Dictionary<(int, double), FuelCell> cellMap, (double BaseLearningRate, double MinEffectiveWeight, double MaxDeltaPerCell, int TargetHitCount, double MeanTrim, double StdTrim) c)
         {
@@ -263,12 +290,7 @@ namespace LPGDataAnalyzer.Services
                 double delta = kv.Value.GetDelta(confidence);
                 delta = Math.Clamp(delta, -c.MaxDeltaPerCell, c.MaxDeltaPerCell);
 
-                double k = 1;
-
-                if (cell.InjBin < 3.5 && cell.RpmBin < 1500)
-                    k = 0.95;  // protect economy area
-                else if (cell.InjBin > 8 && cell.RpmBin > 1500)
-                    k = 1.02;
+                double k = ComputeKFactor(cell);
 
                 cell.Value *= (k + delta);
             }
