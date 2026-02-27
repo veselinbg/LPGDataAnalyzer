@@ -74,15 +74,16 @@
             (int.MinValue, int.MaxValue,  ALL)
         };
 
-        public static readonly (double Min, double Max, string Label)[] MapModes =
-        {
+        public static readonly (double Min, double Max, string Label)[] MapRanges =
+       {
             (0, 0.3,  "Slow Down"),
             (0.3, 0.4,  "Idle"),
             (0.4, 0.6,  "Cruise"),
             (0.6, 0.8,  "Acceleration"),
             (0.8, int.MaxValue,  "High load"),
-            (int.MinValue, int.MaxValue,  ALL)
         };
+
+        public static readonly (double Min, double Max, string Label)[] MapModes = [(int.MinValue, int.MaxValue, ALL),.. MapRanges];
 
     }
 }

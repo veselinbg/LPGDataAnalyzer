@@ -285,7 +285,7 @@ namespace LPGDataAnalyzer.Services
                 delta = Math.Clamp(delta, -c.MaxDeltaPerCell, c.MaxDeltaPerCell);
 
                 // NO rounding here
-                cell.Value *= (1.0 + delta);
+                cell.Value *= (1 + delta);
             }
         }
 
