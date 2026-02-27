@@ -65,14 +65,16 @@
         };
         public static readonly string[] ReductorTempGroups = [ALL, ..ReductorTemperatureRanges.Select(t => t.Label)];
 
-        public static readonly (double Min, double Max, string Label)[] DrivingModes =
+        public static readonly (double Min, double Max, string Label)[] DrivingRanges =
         {
             (0, 2.8,  "Idle"),
             (2.8, 6.5,  "Cruise"),
             (6.5, 8,  "Acceleration"),
             (8, int.MaxValue,  "High load"),
-            (int.MinValue, int.MaxValue,  ALL)
         };
+
+        public static readonly (double Min, double Max, string Label)[] DrivingModes = [(int.MinValue, int.MaxValue, ALL), .. DrivingRanges];
+
 
         public static readonly (double Min, double Max, string Label)[] MapRanges =
        {
