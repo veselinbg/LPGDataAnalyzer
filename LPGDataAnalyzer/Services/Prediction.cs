@@ -5,8 +5,12 @@ namespace LPGDataAnalyzer.Services
 {
     internal sealed partial class Prediction
     {
-        // ===================== AXIS SPLITS =====================
+        // ===================== TUNING =====================
+        // Controls how aggressively the algorithm switches from slow → fast trims during transients
+        // 0 = always slow (very stable), 1 = normal, >1 = more aggressive toward fast
+        private const double TransientWeight = 1.0;
 
+        // ===================== AXIS SPLITS =====================
         public static AxisSplit<int> RpmSplit(int rpm)
         {
             var cols = Settings.RpmColumns;
@@ -14,7 +18,6 @@ namespace LPGDataAnalyzer.Services
 
             if (rpm <= cols[0].Min)
                 return new(cols[0].Label, cols[0].Label, 1, 0);
-
             if (rpm >= cols[last].Max)
                 return new(cols[last].Label, cols[last].Label, 1, 0);
 
@@ -29,7 +32,6 @@ namespace LPGDataAnalyzer.Services
                 }
             }
 
-            // fail-soft for imperfect bins
             return new(cols[last].Label, cols[last].Label, 1, 0);
         }
 
@@ -40,7 +42,6 @@ namespace LPGDataAnalyzer.Services
 
             if (inj <= ranges[0].Min)
                 return new(ranges[0].Label, ranges[0].Label, 1, 0);
-
             if (inj >= ranges[last].Max)
                 return new(ranges[last].Label, ranges[last].Label, 1, 0);
 
@@ -58,38 +59,17 @@ namespace LPGDataAnalyzer.Services
             return new(ranges[last].Label, ranges[last].Label, 1, 0);
         }
 
-        // ===================== TRIM =====================
-
-        private static double GetRawTrim(DataItem log)
+        // ===================== SMOOTHSTEP =====================
+        private static double SmoothStep(double edge0, double edge1, double x)
         {
-            double slow = (log.SLOW_b1 + log.SLOW_b2) * 0.5;
-            double fast = (log.FAST_b1 + log.FAST_b2) * 0.5;
-            return (0.7 * slow) + (0.3 * fast);
-        }
+            if (x <= edge0) return 0;
+            if (x >= edge1) return 1;
 
-        private static bool TryGetValidTrim(
-            DataItem log,
-            double mean,
-            double stdDev,
-            out double trim)
-        {
-            trim = GetRawTrim(log);
-
-            if (Math.Abs(trim) > 25)
-                return false;
-
-            if (stdDev > 0)
-            {
-                double z = (trim - mean) / stdDev;
-                if (Math.Abs(z) > 2.5)
-                    return false;
-            }
-
-            return true;
+            double t = (x - edge0) / (edge1 - edge0);
+            return t * t * (3 - 2 * t);
         }
 
         // ===================== ACCUMULATOR =====================
-
         private sealed class CellAccumulator
         {
             public double DeltaSum;
@@ -105,30 +85,67 @@ namespace LPGDataAnalyzer.Services
 
             public double GetDelta(double confidence)
             {
-                if (WeightSum <= 0)
-                    return 0;
-
+                if (WeightSum <= 0) return 0;
                 return (DeltaSum / WeightSum) * confidence;
             }
         }
 
-        private static double SmoothStep(double edge0, double edge1, double x)
+        private static void Add(
+            Dictionary<(int, double), CellAccumulator> dict,
+            int rpm,
+            double inj,
+            double delta,
+            double weight)
         {
-            if (x <= edge0) return 0;
-            if (x >= edge1) return 1;
+            if (weight <= 0) return;
 
-            double t = (x - edge0) / (edge1 - edge0);
-            return t * t * (3 - 2 * t);
+            var key = (rpm, inj);
+            ref var acc = ref CollectionsMarshal.GetValueRefOrAddDefault(dict, key, out _);
+            acc ??= new CellAccumulator();
+            acc.Add(delta, weight);
         }
 
-        // ===================== LEARNING =====================
+        // ===================== TRIM / TRANSIENT LOGIC =====================
+        private static double ComputeTransientTrim(DataItem log, DataItem? prevLog)
+        {
+            double slow = (log.SLOW_b1 + log.SLOW_b2) * 0.5;
+            double fast = (log.FAST_b1 + log.FAST_b2) * 0.5;
 
-        private static Dictionary<(int, double), CellAccumulator>
-            AccumulateDeltas(
-                IList<DataItem> logs,
-                double baseRate,
-                double mean,
-                double stdDev)
+            double deltaMAP = 0;
+            double deltaRPM = 0;
+            if (prevLog != null)
+            {
+                deltaMAP = Math.Abs(log.MAP - prevLog.MAP);
+                deltaRPM = Math.Abs(log.RPM - prevLog.RPM) / 1000.0; // normalize
+            }
+
+            double transientMetric = Math.Sqrt(deltaMAP * deltaMAP + deltaRPM * deltaRPM);
+
+            const double MAP_slope_min = 0.1;
+            const double MAP_slope_max = 1.0;
+
+            double t = SmoothStep(MAP_slope_min, MAP_slope_max, transientMetric);
+
+            // Apply transient tuning factor
+            t *= TransientWeight;
+            t = Math.Clamp(t, 0, 1);
+
+            return (1 - t) * slow + t * fast;
+        }
+
+        private static bool TryGetValidTrim(DataItem log, DataItem? prevLog, double mean, double stdDev, out double trim)
+        {
+            trim = ComputeTransientTrim(log, prevLog);
+
+            if (Math.Abs(trim) > 25) return false;
+
+            if (stdDev > 0 && Math.Abs((trim - mean) / stdDev) > 2.5) return false;
+
+            return true;
+        }
+
+        // ===================== ACCUMULATION =====================
+        private static Dictionary<(int, double), CellAccumulator> AccumulateDeltas(IList<DataItem> logs, double baseRate, double mean, double stdDev)
         {
             var acc = new Dictionary<(int, double), CellAccumulator>(256);
 
@@ -145,29 +162,36 @@ namespace LPGDataAnalyzer.Services
             double injFadeStart = injRanges[0].Min;
             double injFadeEnd = injRanges[1].Max;
 
+            DataItem? prevLog = null;
+
             foreach (var log in logs)
             {
                 int rpm = Math.Clamp(log.RPM, rpmMin, rpmMax);
-                double inj = Math.Clamp(
-                    (log.BENZ_b1 + log.BENZ_b2) * 0.5,
-                    injMin,
-                    injMax);
+                double inj = Math.Clamp((log.BENZ_b1 + log.BENZ_b2) * 0.5, injMin, injMax);
 
-                if (!TryGetValidTrim(log, mean, stdDev, out double trim))
+                if (!TryGetValidTrim(log, prevLog, mean, stdDev, out double trim))
+                {
+                    prevLog = log;
                     continue;
+                }
 
                 double correction = 1.0 + trim / 100.0;
                 if (correction < 0.95 || correction > 1.08)
+                {
+                    prevLog = log;
                     continue;
+                }
 
                 double rpmFactor = SmoothStep(rpmFadeStart, rpmFadeEnd, rpm);
                 double injFactor = SmoothStep(injFadeStart, injFadeEnd, inj);
+                double regionFactor = 0.3 + 0.7 * Math.Sqrt(rpmFactor * injFactor);
 
-                double regionFactor = 0.1 + 0.9 * rpmFactor * injFactor;
                 double delta = (correction - 1.0) * baseRate * regionFactor;
-
                 if (Math.Abs(delta) < 1e-9)
+                {
+                    prevLog = log;
                     continue;
+                }
 
                 var r = RpmSplit(rpm);
                 var i = InjSplit(inj);
@@ -176,41 +200,17 @@ namespace LPGDataAnalyzer.Services
                 Add(acc, r.Low, i.High, delta, r.WLow * i.WHigh);
                 Add(acc, r.High, i.Low, delta, r.WHigh * i.WLow);
                 Add(acc, r.High, i.High, delta, r.WHigh * i.WHigh);
+
+                prevLog = log;
             }
 
             return acc;
         }
 
-        private static void Add(
-            Dictionary<(int, double), CellAccumulator> dict,
-            int rpm,
-            double inj,
-            double delta,
-            double weight)
-        {
-            if (weight <= 0)
-                return;
-
-            var key = (rpm, inj);
-            ref var acc = ref CollectionsMarshal.GetValueRefOrAddDefault(
-                dict, key, out _);
-
-            acc ??= new CellAccumulator();
-            acc.Add(delta, weight);
-        }
-
         // ===================== EDGE PROPAGATION =====================
+        private static readonly (int di, int dj)[] Neighbors = { (-1, 0), (1, 0), (0, -1), (0, 1) };
 
-        private static readonly (int di, int dj)[] Neighbors =
-        {
-            (-1, 0), (1, 0), (0, -1), (0, 1)
-        };
-
-        private static void PropagateEdgeDeltas(
-            Dictionary<(int, double), CellAccumulator> acc,
-            IList<int> rpmLabels,
-            IList<double> injLabels,
-            double minWeight)
+        private static void PropagateEdgeDeltas(Dictionary<(int, double), CellAccumulator> acc, IList<int> rpmLabels, IList<double> injLabels, double minWeight)
         {
             const double Damping = 0.5;
             const int MaxIterations = 20;
@@ -224,24 +224,18 @@ namespace LPGDataAnalyzer.Services
                     for (int j = 0; j < injLabels.Count; j++)
                     {
                         var key = (rpmLabels[i], injLabels[j]);
-
-                        if (acc.TryGetValue(key, out var cur) &&
-                            cur.WeightSum > minWeight)
+                        if (acc.TryGetValue(key, out var cur) && cur.WeightSum > minWeight)
                             continue;
 
                         foreach (var (di, dj) in Neighbors)
                         {
                             int ni = i + di;
                             int nj = j + dj;
-
-                            if (ni < 0 || nj < 0 ||
-                                ni >= rpmLabels.Count ||
-                                nj >= injLabels.Count)
+                            if (ni < 0 || nj < 0 || ni >= rpmLabels.Count || nj >= injLabels.Count)
                                 continue;
 
                             var nKey = (rpmLabels[ni], injLabels[nj]);
-                            if (!acc.TryGetValue(nKey, out var nAcc) ||
-                                nAcc.WeightSum < minWeight)
+                            if (!acc.TryGetValue(nKey, out var nAcc) || nAcc.WeightSum < minWeight)
                                 continue;
 
                             cur ??= acc[key] = new CellAccumulator();
@@ -253,61 +247,44 @@ namespace LPGDataAnalyzer.Services
                     }
                 }
 
-                if (!any)
-                    break;
+                if (!any) break;
             }
         }
 
-        // ===================== APPLY =====================
-
-        private static void ApplyDeltas(
-            Dictionary<(int, double), CellAccumulator> acc,
-            Dictionary<(int, double), FuelCell> cellMap,
-            (double BaseLearningRate,
-             double MinEffectiveWeight,
-             double MaxDeltaPerCell,
-             int TargetHitCount,
-             double MeanTrim,
-             double StdTrim) c)
+        // ===================== APPLY DELTAS =====================
+        private static void ApplyDeltas(Dictionary<(int, double), CellAccumulator> acc, Dictionary<(int, double), FuelCell> cellMap, (double BaseLearningRate, double MinEffectiveWeight, double MaxDeltaPerCell, int TargetHitCount, double MeanTrim, double StdTrim) c)
         {
             foreach (var kv in acc)
             {
-                if (kv.Value.WeightSum <= c.MinEffectiveWeight)
-                    continue;
+                if (kv.Value.WeightSum <= c.MinEffectiveWeight) continue;
+                if (!cellMap.TryGetValue(kv.Key, out var cell)) continue;
 
-                if (!cellMap.TryGetValue(kv.Key, out var cell))
-                    continue;
-
-                double confidence =
-                    Math.Min(1.0, (double)kv.Value.HitCount / c.TargetHitCount);
-
+                double confidence = Math.Min(1.0, (double)kv.Value.HitCount / c.TargetHitCount);
                 double delta = kv.Value.GetDelta(confidence);
                 delta = Math.Clamp(delta, -c.MaxDeltaPerCell, c.MaxDeltaPerCell);
 
-                // NO rounding here
-                cell.Value *= (1 + delta);
+                double k = 1;
+
+                if (cell.InjBin < 3.5 && cell.RpmBin < 1500)
+                    k = 0.95;  // protect economy area
+                else if (cell.InjBin > 8 && cell.RpmBin > 1500)
+                    k = 1.02;
+
+                cell.Value *= (k + delta);
             }
         }
 
         // ===================== SMOOTH =====================
-
-        private static void SmoothFuelMap(
-            Dictionary<(int, double), FuelCell> cellMap,
-            IList<int> rpmLabels,
-            IList<double> injLabels,
-            int kernelSize,
-            double sigma)
+        private static void SmoothFuelMap(Dictionary<(int, double), FuelCell> cellMap, IList<int> rpmLabels, IList<double> injLabels, int kernelSize, double sigma)
         {
-            if (kernelSize % 2 == 0)
-                throw new ArgumentException("kernelSize must be odd.");
+            if (kernelSize % 2 == 0) throw new ArgumentException("kernelSize must be odd.");
 
             int half = kernelSize / 2;
             double[,] kernel = new double[kernelSize, kernelSize];
 
             for (int di = -half; di <= half; di++)
                 for (int dj = -half; dj <= half; dj++)
-                    kernel[di + half, dj + half] =
-                        Math.Exp(-(di * di + dj * dj) / (2 * sigma * sigma));
+                    kernel[di + half, dj + half] = Math.Exp(-(di * di + dj * dj) / (2 * sigma * sigma));
 
             var newValues = new Dictionary<(int, double), double>(cellMap.Count);
 
@@ -316,8 +293,7 @@ namespace LPGDataAnalyzer.Services
                 for (int j = 0; j < injLabels.Count; j++)
                 {
                     var key = (rpmLabels[i], injLabels[j]);
-                    if (!cellMap.TryGetValue(key, out var cell))
-                        continue;
+                    if (!cellMap.TryGetValue(key, out var cell)) continue;
 
                     double sumW = 0, sumV = 0;
 
@@ -331,9 +307,7 @@ namespace LPGDataAnalyzer.Services
                             int nj = j + dj;
                             if (nj < 0 || nj >= injLabels.Count) continue;
 
-                            if (!cellMap.TryGetValue(
-                                (rpmLabels[ni], injLabels[nj]), out var n))
-                                continue;
+                            if (!cellMap.TryGetValue((rpmLabels[ni], injLabels[nj]), out var n)) continue;
 
                             double w = kernel[di + half, dj + half];
                             sumW += w;
@@ -350,34 +324,27 @@ namespace LPGDataAnalyzer.Services
                 cellMap[kv.Key].Value = kv.Value;
         }
 
-        // ===================== FINAL ROUND =====================
-
-        private static void RoundFuelMap(
-            Dictionary<(int, double), FuelCell> cellMap)
+        // ===================== ROUND =====================
+        private static void RoundFuelMap(Dictionary<(int, double), FuelCell> cellMap)
         {
             foreach (var cell in cellMap.Values)
                 cell.Value = cell.Value.Round(0);
         }
 
-        // ===================== CONSTANTS =====================
-
-        private static (
-            double BaseLearningRate,
-            double MinEffectiveWeight,
-            double MaxDeltaPerCell,
-            int TargetHitCount,
-            double MeanTrim,
-            double StdTrim)
+        // ===================== ADAPTIVE CONSTANTS =====================
+        private static (double BaseLearningRate, double MinEffectiveWeight, double MaxDeltaPerCell, int TargetHitCount, double MeanTrim, double StdTrim)
             ComputeAdaptiveConstants(IList<DataItem> logs)
         {
             double sum = 0, sumSq = 0, maxAbs = 0;
+            DataItem? prevLog = null;
 
             foreach (var log in logs)
             {
-                double t = GetRawTrim(log);
-                sum += t;
-                sumSq += t * t;
-                maxAbs = Math.Max(maxAbs, Math.Abs(t));
+                double trim = ComputeTransientTrim(log, prevLog);
+                sum += trim;
+                sumSq += trim * trim;
+                maxAbs = Math.Max(maxAbs, Math.Abs(trim));
+                prevLog = log;
             }
 
             double mean = sum / logs.Count;
@@ -387,24 +354,16 @@ namespace LPGDataAnalyzer.Services
             double minWeight = 1.0 / logs.Count;
             double maxDelta = Math.Clamp(maxAbs / 300.0, 0.01, 0.05);
 
-            int targetHit = Math.Max(
-                5,
-                logs.Count /
-                (Settings.RpmColumns.Length *
-                 Settings.InjectionRanges.Length));
+            int targetHit = Math.Max(5, logs.Count / (Settings.RpmColumns.Length * Settings.InjectionRanges.Length));
 
             return (baseRate, minWeight, maxDelta, targetHit, mean, std);
         }
 
         // ===================== PUBLIC ENTRY =====================
-
-        public FuelCorrectionResult AutoCorrectFuelTable(
-            IEnumerable<DataItem> validLogs,
-            IEnumerable<FuelCell> fuelTable)
+        public FuelCorrectionResult AutoCorrectFuelTable(IEnumerable<DataItem> validLogs, IEnumerable<FuelCell> fuelTable)
         {
             var logs = validLogs as IList<DataItem> ?? validLogs.ToList();
-            if (logs.Count == 0)
-                throw new InvalidOperationException("No valid logs provided.");
+            if (logs.Count == 0) throw new InvalidOperationException("No valid logs provided.");
 
             var cellMap = fuelTable.ToDictionary(c => (c.RpmBin, c.InjBin));
 
@@ -413,33 +372,17 @@ namespace LPGDataAnalyzer.Services
 
             var constants = ComputeAdaptiveConstants(logs);
 
-            var acc = AccumulateDeltas(
-                logs,
-                constants.BaseLearningRate,
-                constants.MeanTrim,
-                constants.StdTrim);
+            var acc = AccumulateDeltas(logs, constants.BaseLearningRate, constants.MeanTrim, constants.StdTrim);
 
-            PropagateEdgeDeltas(
-                acc,
-                rpmLabels,
-                injLabels,
-                constants.MinEffectiveWeight);
+            PropagateEdgeDeltas(acc, rpmLabels, injLabels, constants.MinEffectiveWeight);
 
             ApplyDeltas(acc, cellMap, constants);
 
-            SmoothFuelMap(
-                cellMap,
-                rpmLabels,
-                injLabels,
-                kernelSize: 5,
-                sigma: 1.2);
+            SmoothFuelMap(cellMap, rpmLabels, injLabels, kernelSize: 5, sigma: 1.2);
 
             RoundFuelMap(cellMap);
 
-            return new FuelCorrectionResult
-            {
-                UpdatedCells = cellMap.Values.ToList()
-            };
+            return new FuelCorrectionResult { UpdatedCells = cellMap.Values.ToList() };
         }
     }
 }
