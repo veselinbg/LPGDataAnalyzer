@@ -458,7 +458,7 @@ namespace LPGDataAnalyzer
             GridBuilder(dataGridViewOrig, FuelCellBuilder.BuildTableRow(fuelCellTable));
 
             //Auto-correction algorithm
-            var newfuelTable = new Prediction().AutoCorrectFuelTable(Parser.Data, fuelCellTable);
+            var newfuelTable = new Prediction(null).AutoCorrectFuelTable(Parser.Data, fuelCellTable);
 
             GridBuilder(dataGridViewPrediction, FuelCellBuilder.BuildTableRow(newfuelTable.UpdatedCells));
 
