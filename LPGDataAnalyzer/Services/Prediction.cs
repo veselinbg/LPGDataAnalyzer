@@ -97,7 +97,12 @@ namespace LPGDataAnalyzer.Services
             double t = (x - edge0) / (edge1 - edge0);
             return t * t * (3 - 2 * t);
         }
-
+        /// <summary>
+        /// For best fuel efficiency → bias more toward slow trim (0.8–0.9)
+        /// For best performance → bias more toward fast trim(0.5–0.6)
+        /// </summary>
+        /// <param name="log"></param>
+        /// <returns></returns>
         private static double GetRawTrim(DataItem log)
         {
             double slow = (log.SLOW_b1 + log.SLOW_b2) / 2.0;
@@ -166,12 +171,16 @@ namespace LPGDataAnalyzer.Services
                 double correction =
                     Math.Clamp(1.0 + trim / 100.0, 0.95, 1.08);
 
-                double rpmFactor = SmoothStep(800, 1100, rpm);
-                double injFactor = SmoothStep(1.5, 2.5, inj);
+                var rpmFadeStart = Settings.RpmColumns[0].Label;
+                var rpmFadeEnd = Settings.RpmColumns[1].Label;
 
-                double regionFactor =
-                    0.1 + 0.9 * rpmFactor * injFactor;
+                var injFadeStart = Settings.InjectionRanges[0].Label;
+                var injFadeEnd = Settings.InjectionRanges[1].Label;
 
+                double rpmFactor = SmoothStep(rpmFadeStart, rpmFadeEnd, rpm);
+                double injFactor = SmoothStep(injFadeStart, injFadeEnd, inj);
+
+                double regionFactor = 0.1 + 0.9 * rpmFactor * injFactor;
                 double delta =
                     (correction - 1.0) *
                     baseRate *
