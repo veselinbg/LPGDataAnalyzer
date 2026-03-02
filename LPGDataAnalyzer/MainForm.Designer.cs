@@ -53,7 +53,6 @@
             tabPagePredictions = new TabPage();
             textBoxLastPredictedFuelTable = new TextBox();
             panelLegend = new Panel();
-            dataGridViewDiagnostics = new DataGridView();
             textBoxImagePath = new TextBox();
             textBoxParsedData = new TextBox();
             buttonValidate = new Button();
@@ -95,7 +94,6 @@
             ((System.ComponentModel.ISupportInitialize)dataGridViewInjectionTimeAnalisys).BeginInit();
             ((System.ComponentModel.ISupportInitialize)dataGridViewMapAnalysis).BeginInit();
             tabPagePredictions.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)dataGridViewDiagnostics).BeginInit();
             ((System.ComponentModel.ISupportInitialize)dataGridViewPrediction).BeginInit();
             ((System.ComponentModel.ISupportInitialize)dataGridViewOrig).BeginInit();
             tabPageReducerPred.SuspendLayout();
@@ -333,7 +331,6 @@
             // 
             tabPagePredictions.Controls.Add(textBoxLastPredictedFuelTable);
             tabPagePredictions.Controls.Add(panelLegend);
-            tabPagePredictions.Controls.Add(dataGridViewDiagnostics);
             tabPagePredictions.Controls.Add(textBoxImagePath);
             tabPagePredictions.Controls.Add(textBoxParsedData);
             tabPagePredictions.Controls.Add(buttonValidate);
@@ -364,16 +361,6 @@
             panelLegend.Size = new Size(818, 45);
             panelLegend.TabIndex = 24;
             panelLegend.Paint += LegendPanel_Paint;
-            // 
-            // dataGridViewDiagnostics
-            // 
-            dataGridViewDiagnostics.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            dataGridViewDiagnostics.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dataGridViewDiagnostics.Location = new Point(883, 359);
-            dataGridViewDiagnostics.Name = "dataGridViewDiagnostics";
-            dataGridViewDiagnostics.ReadOnly = true;
-            dataGridViewDiagnostics.Size = new Size(522, 375);
-            dataGridViewDiagnostics.TabIndex = 23;
             // 
             // textBoxImagePath
             // 
@@ -649,7 +636,6 @@
             ((System.ComponentModel.ISupportInitialize)dataGridViewMapAnalysis).EndInit();
             tabPagePredictions.ResumeLayout(false);
             tabPagePredictions.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)dataGridViewDiagnostics).EndInit();
             ((System.ComponentModel.ISupportInitialize)dataGridViewPrediction).EndInit();
             ((System.ComponentModel.ISupportInitialize)dataGridViewOrig).EndInit();
             tabPageReducerPred.ResumeLayout(false);
@@ -698,7 +684,6 @@
         private Button buttonValidate;
         private TextBox textBoxParsedData;
         private TextBox textBoxImagePath;
-        private DataGridView dataGridViewDiagnostics;
         private Panel panelLegend;
         private TextBox textBoxLastPredictedFuelTable;
         private Button buttonReducerPrediction;

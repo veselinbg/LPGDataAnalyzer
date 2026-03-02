@@ -1,4 +1,5 @@
 using LPGDataAnalyzer.Models;
+using LPGDataAnalyzer.Models.Common;
 using LPGDataAnalyzer.Services;
 
 namespace LPGDataAnalyzer
@@ -458,9 +459,9 @@ namespace LPGDataAnalyzer
             GridBuilder(dataGridViewOrig, FuelCellBuilder.BuildTableRow(fuelCellTable));
 
             //Auto-correction algorithm
-            var newfuelTable = new Prediction(null).AutoCorrectFuelTable(Parser.Data, fuelCellTable);
+            var newfuelTable = new Prediction().AutoCorrectFuelTable(Parser.Data, fuelCellTable);
 
-            GridBuilder(dataGridViewPrediction, FuelCellBuilder.BuildTableRow(newfuelTable.UpdatedCells));
+            GridBuilder(dataGridViewPrediction, FuelCellBuilder.BuildTableRow(newfuelTable));
 
             // Apply heatmap to DataGridViews
            var vals = HighlightDifferencesHeatmapWithValues(dataGridViewPrediction, dataGridViewOrig, tolerance: 0.1);
@@ -468,10 +469,7 @@ namespace LPGDataAnalyzer
             // Create horizontal legend aligned with DataGridView
             CreateDynamicHorizontalHeatmapLegend(panelLegend, dataGridViewPrediction, vals.WLow, vals.WHigh);
 
-            PrepareGrid(dataGridViewDiagnostics);
-
-            dataGridViewDiagnostics.DataSource = newfuelTable.Diagnostics;
-            textBoxLastPredictedFuelTable.Text = FuelCellBuilder.BuildTableRow(newfuelTable.UpdatedCells).ToText();
+            textBoxLastPredictedFuelTable.Text = FuelCellBuilder.BuildTableRow(newfuelTable).ToText();
             AppSettings.LastPredictedFuelTable = textBoxLastPredictedFuelTable.Text;
             _appSettingManager.Save(AppSettings);
         }

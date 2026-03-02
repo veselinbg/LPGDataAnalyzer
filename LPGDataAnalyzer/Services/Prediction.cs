@@ -1,123 +1,88 @@
 ﻿using LPGDataAnalyzer.Models;
+using LPGDataAnalyzer.Models.Common;
+using System.Numerics;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace LPGDataAnalyzer.Services
-{ 
-public sealed class PredictionConfig
 {
-    public double TransientWeight { get; set; } = 1.0;
-
-    // Region factor smoothing
-    public double RegionRpmCenter { get; set; } = 3000;
-    public double RegionInjCenter { get; set; } = 5.0;
-    public double RegionRpmSigma { get; set; } = 1000;
-    public double RegionInjSigma { get; set; } = 2.0;
-    public double RegionMinFactor { get; set; } = 0.3;
-    public double RegionMaxFactor { get; set; } = 1.0;
-
-    // K-factor tuning
-    public double EconomyK { get; set; } = 0.95;
-    public double EconomyRpmMax { get; set; } = 1500;
-    public double EconomyInjMax { get; set; } = 3.5;
-    public double HighLoadK { get; set; } = 1.02;
-    public double HighLoadRpmMin { get; set; } = 1500;
-    public double HighLoadInjMin { get; set; } = 8.0;
-
-    // Edge propagation
-    public double EdgeDecay { get; set; } = 0.5;
-
-    // Adaptive smoothing
-    public int SmoothingKernelSize { get; set; } = 7;
-    public double SmoothingBaseSigma { get; set; } = 1.2;
-
-    // Dynamic delta limits
-    public double IdleMaxDelta { get; set; } = 0.01;
-    public double CruiseMaxDelta { get; set; } = 0.03;
-    public double HighLoadMaxDelta { get; set; } = 0.01;
-}
-internal sealed partial class Prediction
+    internal sealed partial class Prediction
     {
-        private readonly PredictionConfig _config;
+        private const int KernelSize = 5;
+        private const double KernelSigma = 1.2;
+        private const double MapSlopeMin = 0.1;
+        private const double MapSlopeMax = 1.0;
+        private const double Damping = 0.5;
+        private const int MaxIterations = 20;
 
-        public Prediction(PredictionConfig config)
-        {
-            _config = config ?? new PredictionConfig();
-        }
-
+        // ===================== TUNING =====================
+        // Controls how aggressively the algorithm switches from slow → fast trims during transients
+        // 0 = always slow (very stable), 1 = normal, >1 = more aggressive toward fast
+        private const double TransientWeight = 1.0;
         // ===================== AXIS SPLITS =====================
-        public static AxisSplit<int> RpmSplit(int rpm)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static AxisSplit<TLabel> Split<T, TLabel>(T value, ReadOnlySpan<(T Min, T Max, TLabel Label)> ranges) where T : INumber<T>
         {
-            var cols = Settings.RpmColumns;
-            int last = cols.Length - 1;
-
-            if (rpm <= cols[0].Min) return new(cols[0].Label, cols[0].Label, 1, 0);
-            if (rpm >= cols[last].Max) return new(cols[last].Label, cols[last].Label, 1, 0);
-
-            for (int i = 0; i < last; i++)
-            {
-                var c = cols[i];
-                if (rpm > c.Min && rpm <= c.Max)
-                {
-                    var n = cols[i + 1];
-                    double w = (double)(rpm - c.Min) / (c.Max - c.Min);
-                    return new(c.Label, n.Label, 1.0 - w, w);
-                }
-            }
-
-            return new(cols[last].Label, cols[last].Label, 1, 0);
-        }
-
-        public static AxisSplit<double> InjSplit(double inj)
-        {
-            var ranges = Settings.InjectionRanges;
             int last = ranges.Length - 1;
 
-            if (inj <= ranges[0].Min) return new(ranges[0].Label, ranges[0].Label, 1, 0);
-            if (inj >= ranges[last].Max) return new(ranges[last].Label, ranges[last].Label, 1, 0);
+            ref readonly var first = ref ranges[0];
+            ref readonly var lastRange = ref ranges[last];
 
+            if (value <= first.Min)
+                return new(first.Label, first.Label, 1d, 0d);
+
+            if (value >= lastRange.Max)
+                return new(lastRange.Label, lastRange.Label, 1d, 0d);
+
+            // Linear scan (fast for small N like 12 bins)
             for (int i = 0; i < last; i++)
             {
-                var r = ranges[i];
-                if (inj > r.Min && inj <= r.Max)
+                ref readonly var r = ref ranges[i];
+
+                if (value <= r.Max)
                 {
-                    var n = ranges[i + 1];
-                    double w = (inj - r.Min) / (r.Max - r.Min);
-                    return new(r.Label, n.Label, 1.0 - w, w);
+                    ref readonly var next = ref ranges[i + 1];
+
+                    T local = (value - r.Min) / (r.Max - r.Min);
+
+                    double w = double.CreateChecked(local);
+
+                    return new(
+                        r.Label,
+                        next.Label,
+                        1d - w,
+                        w);
                 }
             }
 
-            return new(ranges[last].Label, ranges[last].Label, 1, 0);
+            return new(lastRange.Label, lastRange.Label, 1d, 0d);
         }
-
-        // ===================== SMOOTHSTEP / LERP =====================
+        // ===================== SMOOTHSTEP =====================
         private static double SmoothStep(double edge0, double edge1, double x)
         {
-            if (x <= edge0) return 0;
-            if (x >= edge1) return 1;
+            if (x <= edge0) return 0d;
+            if (x >= edge1) return 1d;
             double t = (x - edge0) / (edge1 - edge0);
+            t = Math.Clamp(t, 0d, 1d);
             return t * t * (3 - 2 * t);
         }
-
-        private static double Lerp(double a, double b, double t) => a + (b - a) * t;
-
         // ===================== ACCUMULATOR =====================
         private sealed class CellAccumulator
         {
             public double DeltaSum;
             public double WeightSum;
-            public double HitScore;
+            public int HitCount;
 
-            public void Add(double delta, double weight, double trimConfidence = 1.0)
+            public void Add(double delta, double weight)
             {
                 DeltaSum += delta * weight;
                 WeightSum += weight;
-                HitScore += trimConfidence * weight;
+                HitCount++;
             }
 
-            public double GetDelta(double targetHitCount)
+            public double GetDelta(double confidence)
             {
                 if (WeightSum <= 0) return 0;
-                double confidence = 1 - Math.Exp(-HitScore / targetHitCount);
                 return (DeltaSum / WeightSum) * confidence;
             }
         }
@@ -127,124 +92,91 @@ internal sealed partial class Prediction
             int rpm,
             double inj,
             double delta,
-            double weight,
-            double trimConfidence = 1.0)
+            double weight)
         {
             if (weight <= 0) return;
+
             var key = (rpm, inj);
             ref var acc = ref CollectionsMarshal.GetValueRefOrAddDefault(dict, key, out _);
             acc ??= new CellAccumulator();
-            acc.Add(delta, weight, trimConfidence);
+            acc.Add(delta, weight);
         }
 
-        // ===================== TRANSIENT / TRIM =====================
-        private double ComputeTransientTrim(DataItem log, DataItem? prevLog)
+        // ===================== TRIM / TRANSIENT LOGIC =====================
+        private static double ComputeTransientTrim(DataItem log, DataItem? prevLog)
         {
             double slow = (log.SLOW_b1 + log.SLOW_b2) * 0.5;
             double fast = (log.FAST_b1 + log.FAST_b2) * 0.5;
 
             double deltaMAP = 0;
             double deltaRPM = 0;
+
             if (prevLog != null)
             {
                 deltaMAP = Math.Abs(log.MAP - prevLog.MAP);
-                deltaRPM = Math.Abs(log.RPM - prevLog.RPM) / 1000.0;
+                deltaRPM = Math.Abs(log.RPM - prevLog.RPM) / 1000.0; // normalize
             }
 
             double transientMetric = Math.Sqrt(deltaMAP * deltaMAP + deltaRPM * deltaRPM);
-            const double MAP_slope_min = 0.1;
-            const double MAP_slope_max = 1.0;
 
-            double t = SmoothStep(MAP_slope_min, MAP_slope_max, transientMetric) * _config.TransientWeight;
+
+            double t = SmoothStep(MapSlopeMin, MapSlopeMax, transientMetric);
+
+            // Apply transient tuning factor
+            t *= TransientWeight;
             t = Math.Clamp(t, 0, 1);
 
             return (1 - t) * slow + t * fast;
         }
-
-        private bool TryGetValidTrim(DataItem log, DataItem? prevLog, double mean, double stdDev, out double trim, out double transientMetric)
-        {
-            trim = ComputeTransientTrim(log, prevLog);
-            transientMetric = prevLog != null
-                ? Math.Sqrt(Math.Pow(log.MAP - prevLog.MAP, 2) + Math.Pow((log.RPM - prevLog.RPM) / 1000.0, 2))
-                : 0;
-
-            if (Math.Abs(trim) > 25) return false;
-            if (stdDev > 0 && Math.Abs((trim - mean) / stdDev) > 2.5) return false;
-
-            return true;
-        }
-
-        // ===================== REGION FACTOR =====================
-        private double ComputeRegionFactor(int rpm, double inj)
-        {
-            double rpmWeight = Math.Exp(-Math.Pow(rpm - _config.RegionRpmCenter, 2) / (2 * _config.RegionRpmSigma * _config.RegionRpmSigma));
-            double injWeight = Math.Exp(-Math.Pow(inj - _config.RegionInjCenter, 2) / (2 * _config.RegionInjSigma * _config.RegionInjSigma));
-            return _config.RegionMinFactor + (_config.RegionMaxFactor - _config.RegionMinFactor) * (rpmWeight * injWeight);
-        }
-
-        // ===================== K-FACTOR =====================
-        private double ComputeKFactor(FuelCell cell)
-        {
-            double k = 1.0;
-
-            if (cell.RpmBin < _config.EconomyRpmMax && cell.InjBin < _config.EconomyInjMax)
-            {
-                double rpmW = 1.0 - cell.RpmBin / _config.EconomyRpmMax;
-                double injW = 1.0 - cell.InjBin / _config.EconomyInjMax;
-                k *= _config.EconomyK + (1 - rpmW * injW) * (1 - _config.EconomyK);
-            }
-
-            if (cell.RpmBin > _config.HighLoadRpmMin && cell.InjBin > _config.HighLoadInjMin)
-            {
-                double rpmW = Math.Min((cell.RpmBin - _config.HighLoadRpmMin) / 2000.0, 1.0);
-                double injW = Math.Min((cell.InjBin - _config.HighLoadInjMin) / 4.0, 1.0);
-                k *= 1.0 + (_config.HighLoadK - 1.0) * rpmW * injW;
-            }
-
-            return k;
-        }
-
         // ===================== ACCUMULATION =====================
-        private Dictionary<(int, double), CellAccumulator> AccumulateDeltas(IList<DataItem> logs, double baseRate, double mean, double stdDev)
+        private static Dictionary<(int, double), CellAccumulator> AccumulateDeltas(IEnumerable<DataItem> logs, double baseRate, double mean, double stdDev)
         {
             var acc = new Dictionary<(int, double), CellAccumulator>(256);
-            int rpmMin = Settings.RpmColumns[0].Min;
-            int rpmMax = Settings.RpmColumns[^1].Max;
-            double injMin = Settings.InjectionRanges[0].Min;
-            double injMax = Settings.InjectionRanges[^1].Max;
+
+            var rpmCols = Settings.RpmColumns;
+            var injRanges = Settings.InjectionRanges;
+
+            int rpmMin = rpmCols[0].Min;
+            int rpmMax = rpmCols[^1].Max;
+            double injMin = injRanges[0].Min;
+            double injMax = injRanges[^1].Max;
+
+            double rpmFadeStart = rpmCols[0].Min;
+            double rpmFadeEnd = rpmCols[1].Max;
+            double injFadeStart = injRanges[0].Min;
+            double injFadeEnd = injRanges[1].Max;
 
             DataItem? prevLog = null;
 
             foreach (var log in logs)
             {
                 int rpm = Math.Clamp(log.RPM, rpmMin, rpmMax);
+
                 double inj = Math.Clamp((log.BENZ_b1 + log.BENZ_b2) * 0.5, injMin, injMax);
 
-                if (!TryGetValidTrim(log, prevLog, mean, stdDev, out double trim, out double transientMetric))
-                {
-                    prevLog = log;
-                    continue;
-                }
+                var trim = ComputeTransientTrim(log, prevLog);
 
                 double correction = 1.0 + trim / 100.0;
-                if (correction < 1.0 - _config.HighLoadMaxDelta || correction > 1.0 + _config.HighLoadMaxDelta)
+
+                double rpmFactor = SmoothStep(rpmFadeStart, rpmFadeEnd, rpm);
+                double injFactor = SmoothStep(injFadeStart, injFadeEnd, inj);
+                double regionFactor = 0.3 + 0.7 * Math.Sqrt(rpmFactor * injFactor);
+
+                double delta = (correction - 1.0) * baseRate * regionFactor;
+
+                if (Math.Abs(delta) < 1e-9) //0.000000001
                 {
                     prevLog = log;
                     continue;
                 }
 
-                double regionFactor = ComputeRegionFactor(rpm, inj);
-                double delta = (correction - 1.0) * baseRate * regionFactor;
-                if (Math.Abs(delta) < 1e-9) { prevLog = log; continue; }
+                var r = Split(rpm, Settings.RpmColumns);
+                var i = Split(inj, Settings.InjectionRanges);
 
-                var r = RpmSplit(rpm);
-                var i = InjSplit(inj);
-                double trimConfidence = 1.0 - Math.Clamp(transientMetric, 0, 1.0);
-
-                Add(acc, r.Low, i.Low, delta, r.WLow * i.WLow, trimConfidence);
-                Add(acc, r.Low, i.High, delta, r.WLow * i.WHigh, trimConfidence);
-                Add(acc, r.High, i.Low, delta, r.WHigh * i.WLow, trimConfidence);
-                Add(acc, r.High, i.High, delta, r.WHigh * i.WHigh, trimConfidence);
+                Add(acc, r.Low, i.Low, delta, r.WLow * i.WLow);
+                Add(acc, r.Low, i.High, delta, r.WLow * i.WHigh);
+                Add(acc, r.High, i.Low, delta, r.WHigh * i.WLow);
+                Add(acc, r.High, i.High, delta, r.WHigh * i.WHigh);
 
                 prevLog = log;
             }
@@ -253,85 +185,94 @@ internal sealed partial class Prediction
         }
 
         // ===================== EDGE PROPAGATION =====================
-        private void PropagateEdgeDeltasSmarter(
-            Dictionary<(int, double), CellAccumulator> acc,
-            IList<int> rpmLabels,
-            IList<double> injLabels,
-            double minWeight)
+        private static IEnumerable<(int ni, int nj)> GetValidNeighbors(int i, int j, int maxI, int maxJ)
         {
-            var queue = new Queue<((int rpm, double inj) key, int distance)>();
-            foreach (var kv in acc)
+            var offsets = new (int di, int dj)[] { (-1, 0), (1, 0), (0, -1), (0, 1) };
+            foreach (var (di, dj) in offsets)
             {
-                if (kv.Value.WeightSum >= minWeight)
-                    queue.Enqueue((kv.Key, 0));
-            }
-
-            while (queue.Count > 0)
-            {
-                var (currentKey, dist) = queue.Dequeue();
-                if (!acc.TryGetValue(currentKey, out var cur)) continue;
-
-                int i = rpmLabels.IndexOf(currentKey.rpm);
-                int j = injLabels.IndexOf(currentKey.inj);
-
-                foreach (var (di, dj) in new (int, int)[] { (-1, 0), (1, 0), (0, -1), (0, 1) })
-                {
-                    int ni = i + di;
-                    int nj = j + dj;
-                    if (ni < 0 || ni >= rpmLabels.Count || nj < 0 || nj >= injLabels.Count) continue;
-
-                    var neighborKey = (rpmLabels[ni], injLabels[nj]);
-                    ref var neighbor = ref CollectionsMarshal.GetValueRefOrAddDefault(acc, neighborKey, out _);
-                    neighbor ??= new CellAccumulator();
-
-                    double weightFactor = _config.EdgeDecay / (1 + dist);
-                    neighbor.DeltaSum += cur.DeltaSum * weightFactor;
-                    neighbor.WeightSum += cur.WeightSum * weightFactor;
-                    neighbor.HitScore += cur.HitScore;
-
-                    if (neighbor.WeightSum < minWeight) queue.Enqueue((neighborKey, dist + 1));
-                }
+                int ni = i + di;
+                int nj = j + dj;
+                if (ni >= 0 && ni < maxI && nj >= 0 && nj < maxJ)
+                    yield return (ni, nj);
             }
         }
-
-        private double GetRegionMaxDelta(int rpm, double inj)
+        private static void PropagateEdgeDeltas(Dictionary<(int, double), CellAccumulator> acc, IList<int> rpmLabels, IList<double> injLabels, double minWeight)
         {
-            if (rpm < _config.EconomyRpmMax && inj < _config.EconomyInjMax) return _config.IdleMaxDelta;
-            if (rpm < _config.HighLoadRpmMin && inj < _config.HighLoadInjMin) return _config.CruiseMaxDelta;
-            return _config.HighLoadMaxDelta;
+            for (int iter = 0; iter < MaxIterations; iter++)
+            {
+                bool any = false;
+
+                for (int i = 0; i < rpmLabels.Count; i++)
+                {
+                    for (int j = 0; j < injLabels.Count; j++)
+                    {
+                        var key = (rpmLabels[i], injLabels[j]);
+                        if (acc.TryGetValue(key, out var cur) && cur.WeightSum > minWeight)
+                        {
+                            continue;
+                        }
+                        foreach (var (ni, nj) in GetValidNeighbors(i, j, rpmLabels.Count, injLabels.Count))
+                        {
+                            var nKey = (rpmLabels[ni], injLabels[nj]);
+
+                            if (!acc.TryGetValue(nKey, out var nAcc) || nAcc.WeightSum < minWeight)
+                            {
+                                continue;
+                            }
+
+                            cur ??= acc[key] = new CellAccumulator();
+
+                            double propagatedWeight = nAcc.WeightSum * Damping;
+                            double neighborMean = nAcc.DeltaSum / nAcc.WeightSum;
+
+                            cur.DeltaSum += neighborMean * propagatedWeight;
+                            cur.WeightSum += propagatedWeight;
+
+                            // HitCount untouched
+                            any = true;
+                        }
+                    }
+                }
+
+                if (!any) break;
+            }
         }
 
         // ===================== APPLY DELTAS =====================
-        private void ApplyDeltas(
-            Dictionary<(int, double), CellAccumulator> acc,
-            Dictionary<(int, double), FuelCell> cellMap,
-            (double BaseLearningRate, double MinEffectiveWeight, double MaxDeltaPerCell, int TargetHitCount, double MeanTrim, double StdTrim) c)
+        private static void ApplyDeltas(Dictionary<(int, double), CellAccumulator> acc, Dictionary<(int, double), FuelCell> cellMap, (double BaseLearningRate, double MinEffectiveWeight, double MaxDeltaPerCell, int TargetHitCount, double MeanTrim, double StdTrim) c)
         {
             foreach (var kv in acc)
             {
                 if (kv.Value.WeightSum <= c.MinEffectiveWeight) continue;
                 if (!cellMap.TryGetValue(kv.Key, out var cell)) continue;
 
-                double delta = kv.Value.GetDelta(c.TargetHitCount);
-                double stabilityFactor = Math.Min(1.0, kv.Value.WeightSum / c.TargetHitCount);
-                double maxDelta = GetRegionMaxDelta(cell.RpmBin, cell.InjBin) * stabilityFactor;
-                delta = Math.Clamp(delta, -maxDelta, maxDelta);
+                double confidence = Math.Min(1.0, (double)kv.Value.HitCount / c.TargetHitCount);
+                double delta = kv.Value.GetDelta(confidence);
+                delta = Math.Clamp(delta, -c.MaxDeltaPerCell, c.MaxDeltaPerCell);
 
-                double k = ComputeKFactor(cell);
-                double confidence = 1 - Math.Exp(-kv.Value.HitScore / c.TargetHitCount);
+                double k = 1;
 
-                cell.Value = Lerp(cell.Value, cell.Value * (1 + delta), confidence);
-                cell.Value *= k;
+                //if (cell.InjBin < 3.5 && cell.RpmBin < 1500)
+                //    k = 0.95;  // protect economy area
+                //else if (cell.InjBin > 8 && cell.RpmBin > 1500)
+                //    k = 1.02;
+
+                cell.Value *= (k + delta);
             }
         }
 
-        // ===================== ADAPTIVE SMOOTHING =====================
-        private void SmoothFuelMap(
-            Dictionary<(int, double), FuelCell> cellMap,
-            IList<int> rpmLabels,
-            IList<double> injLabels)
+        // ===================== SMOOTH =====================
+        private static void SmoothFuelMap(Dictionary<(int, double), FuelCell> cellMap, IList<int> rpmLabels, IList<double> injLabels, int kernelSize, double sigma)
         {
-            int half = _config.SmoothingKernelSize / 2;
+            if (kernelSize % 2 == 0) throw new ArgumentException("kernelSize must be odd.");
+
+            int half = kernelSize / 2;
+            double[,] kernel = new double[kernelSize, kernelSize];
+
+            for (int di = -half; di <= half; di++)
+                for (int dj = -half; dj <= half; dj++)
+                    kernel[di + half, dj + half] = Math.Exp(-(di * di + dj * dj) / (2 * sigma * sigma));
+
             var newValues = new Dictionary<(int, double), double>(cellMap.Count);
 
             for (int i = 0; i < rpmLabels.Count; i++)
@@ -341,41 +282,36 @@ internal sealed partial class Prediction
                     var key = (rpmLabels[i], injLabels[j]);
                     if (!cellMap.TryGetValue(key, out var cell)) continue;
 
-                    double sum = 0, sumSq = 0, count = 0;
-                    for (int di = -1; di <= 1; di++)
-                        for (int dj = -1; dj <= 1; dj++)
-                        {
-                            int ni = i + di;
-                            int nj = j + dj;
-                            if (ni < 0 || ni >= rpmLabels.Count || nj < 0 || nj >= injLabels.Count) continue;
-                            if (!cellMap.TryGetValue((rpmLabels[ni], injLabels[nj]), out var n)) continue;
-                            sum += n.Value; sumSq += n.Value * n.Value; count++;
-                        }
-
-                    double mean = sum / count;
-                    double variance = Math.Sqrt(sumSq / count - mean * mean);
-                    double sigma = _config.SmoothingBaseSigma / (1 + variance * 5);
-
                     double sumW = 0, sumV = 0;
+
                     for (int di = -half; di <= half; di++)
+                    {
+                        int ni = i + di;
+                        if (ni < 0 || ni >= rpmLabels.Count) continue;
+
                         for (int dj = -half; dj <= half; dj++)
                         {
-                            int ni = i + di;
                             int nj = j + dj;
-                            if (ni < 0 || ni >= rpmLabels.Count || nj < 0 || nj >= injLabels.Count) continue;
+                            if (nj < 0 || nj >= injLabels.Count) continue;
+
                             if (!cellMap.TryGetValue((rpmLabels[ni], injLabels[nj]), out var n)) continue;
-                            if (Math.Abs(n.Value - cell.Value) > 0.1) continue;
-                            double w = Math.Exp(-(di * di + dj * dj) / (2 * sigma * sigma));
+
+                            double w = kernel[di + half, dj + half];
                             sumW += w;
                             sumV += n.Value * w;
                         }
-                    if (sumW > 0) newValues[key] = sumV / sumW;
+                    }
+
+                    if (sumW > 0)
+                        newValues[key] = sumV / sumW;
                 }
             }
 
-            foreach (var kv in newValues) cellMap[kv.Key].Value = kv.Value;
+            foreach (var kv in newValues)
+                cellMap[kv.Key].Value = kv.Value;
         }
 
+        // ===================== ROUND =====================
         private static void RoundFuelMap(Dictionary<(int, double), FuelCell> cellMap)
         {
             foreach (var cell in cellMap.Values)
@@ -383,11 +319,15 @@ internal sealed partial class Prediction
         }
 
         // ===================== ADAPTIVE CONSTANTS =====================
-        private (double BaseLearningRate, double MinEffectiveWeight, double MaxDeltaPerCell, int TargetHitCount, double MeanTrim, double StdTrim)
-            ComputeAdaptiveConstants(IList<DataItem> logs)
+        private static (double BaseLearningRate, double MinEffectiveWeight, double MaxDeltaPerCell, int TargetHitCount, double MeanTrim, double StdTrim)
+            ComputeAdaptiveConstants(IEnumerable<DataItem> logs)
         {
             double sum = 0, sumSq = 0, maxAbs = 0;
+
+            var lCount = logs.Count();
+
             DataItem? prevLog = null;
+
             foreach (var log in logs)
             {
                 double trim = ComputeTransientTrim(log, prevLog);
@@ -396,25 +336,26 @@ internal sealed partial class Prediction
                 maxAbs = Math.Max(maxAbs, Math.Abs(trim));
                 prevLog = log;
             }
-            double mean = sum / logs.Count;
-            double std = Math.Sqrt(sumSq / logs.Count - mean * mean);
+
+            double mean = sum / lCount;
+            double std = Math.Sqrt((sumSq / lCount) - (mean * mean));
 
             double baseRate = Math.Clamp(std / 50.0, 0.1, 0.5);
-            double minWeight = 1.0 / logs.Count;
+            double minWeight = 1.0 / lCount;
             double maxDelta = Math.Clamp(maxAbs / 300.0, 0.01, 0.05);
 
-            int targetHit = Math.Max(5, logs.Count / (Settings.RpmColumns.Length * Settings.InjectionRanges.Length));
+            int targetHit = Math.Max(5, lCount / (Settings.RpmColumns.Length * Settings.InjectionRanges.Length));
 
             return (baseRate, minWeight, maxDelta, targetHit, mean, std);
         }
 
         // ===================== PUBLIC ENTRY =====================
-        public FuelCorrectionResult AutoCorrectFuelTable(IEnumerable<DataItem> validLogs, IEnumerable<FuelCell> fuelTable)
+        public List<FuelCell> AutoCorrectFuelTable(IEnumerable<DataItem> logs, IEnumerable<FuelCell> fuelTable)
         {
-            var logs = validLogs as IList<DataItem> ?? validLogs.ToList();
-            if (logs.Count == 0) throw new InvalidOperationException("No valid logs provided.");
+            if (logs.Count() == 0) throw new InvalidOperationException("No valid logs provided.");
 
             var cellMap = fuelTable.ToDictionary(c => (c.RpmBin, c.InjBin));
+
             var rpmLabels = Settings.RpmColumns.Select(c => c.Label).ToArray();
             var injLabels = Settings.InjectionRanges.Select(r => r.Label).ToArray();
 
@@ -422,15 +363,15 @@ internal sealed partial class Prediction
 
             var acc = AccumulateDeltas(logs, constants.BaseLearningRate, constants.MeanTrim, constants.StdTrim);
 
-            PropagateEdgeDeltasSmarter(acc, rpmLabels, injLabels, constants.MinEffectiveWeight);
+            PropagateEdgeDeltas(acc, rpmLabels, injLabels, constants.MinEffectiveWeight);
 
             ApplyDeltas(acc, cellMap, constants);
 
-            SmoothFuelMap(cellMap, rpmLabels, injLabels);
+            SmoothFuelMap(cellMap, rpmLabels, injLabels, KernelSize, KernelSigma);
 
             RoundFuelMap(cellMap);
 
-            return new FuelCorrectionResult { UpdatedCells = cellMap.Values.ToList() };
+            return [.. cellMap.Values];
         }
     }
 }
