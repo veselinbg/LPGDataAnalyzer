@@ -6,7 +6,7 @@
         public double Key { get; set; }
 
         // RPM axis (column)
-        public Dictionary<int, double?> Columns { get; set; } = new();
+        public Dictionary<int, double?> Columns { get; set; } = [];
 
         private static Dictionary<(int rpm, double inj), double>
            FlattenTable(IEnumerable<TableRow> table) =>
