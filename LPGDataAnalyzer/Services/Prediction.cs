@@ -434,92 +434,89 @@ namespace LPGDataAnalyzer.Services
         {
             int rpmLength = cellMap.GetLength(0);
             int injLength = cellMap.GetLength(1);
-
             double[,] result = new double[rpmLength, injLength];
+
+            // Precompute logs grouped by injection ranges for faster filtering
+            var logsByInjection = new List<DataItem>[injLength];
+            for (int injIndex = 0; injIndex < injLength; injIndex++)
+            {
+                var inj = Settings.InjectionRanges[injIndex];
+                logsByInjection[injIndex] = logs
+                    .Where(d => d.BENZ_b1 > inj.Min && d.BENZ_b2 > inj.Min &&
+                                d.BENZ_b1 <= inj.Max && d.BENZ_b2 <= inj.Max)
+                    .ToList();
+            }
 
             for (int injIndex = 0; injIndex < injLength; injIndex++)
             {
                 var inj = Settings.InjectionRanges[injIndex];
+                var injLogs = logsByInjection[injIndex];
+
                 for (int rpmIndex = 0; rpmIndex < rpmLength; rpmIndex++)
                 {
                     var rpm = Settings.RpmColumns[rpmIndex];
+                    var rpmLogs = injLogs.Where(d => d.RPM > rpm.Min && d.RPM <= rpm.Max)
+                                         .Select(d => d.Trim)
+                                         .ToArray();
 
-                    var values = logs
-                        .Where(d =>
-                            (d.BENZ_b1 > inj.Min && d.BENZ_b2 > inj.Min) &&
-                            (d.BENZ_b1 <= inj.Max && d.BENZ_b2 <= inj.Max) &&
-                            d.RPM > rpm.Min && d.RPM <= rpm.Max)
-                        .Select(d => d.Trim).ToArray();
-
-                    double trim = 1.0d;
-                    bool found = values.Any();
+                    double trim = 1.0;
+                    bool found = rpmLogs.Any();
 
                     if (found)
                     {
-                        trim = 1 + values.Median() / 100;
+                        trim = 1 + rpmLogs.Median() / 100;
                         result[rpmIndex, injIndex] = cellMap[rpmIndex, injIndex] * trim;
+                        continue;
                     }
-                    else if (enableInterpolation && rpm.Label > 3500 && inj.Label >= 5.5) // keep your condition
+
+                    if (enableInterpolation && rpm.Label > 3500 && inj.Label >= 5.5)
                     {
-                        var t = 1.0d;
-                        var rpmSave = 0;
+                        double t = 1.0;
+                        int rpmSave = rpmIndex;
+
                         for (int lowerRpm = rpmIndex - 1; lowerRpm >= 0; lowerRpm--)
                         {
-                            values = logs
-                                     .Where(d =>
-                                         (d.BENZ_b1 > inj.Min && d.BENZ_b2 > inj.Min) &&
-                                         (d.BENZ_b1 <= inj.Max && d.BENZ_b2 <= inj.Max) &&
-                                         d.RPM > Settings.RpmColumns[lowerRpm].Min && d.RPM <= Settings.RpmColumns[lowerRpm].Max)
-                                     .Select(d => d.Trim).ToArray();
-                            if(rpm.Label == 4000 && inj.Label ==6.5)
-                            {
+                            var lowerLogs = injLogs.Where(d => d.RPM > Settings.RpmColumns[lowerRpm].Min &&
+                                                               d.RPM <= Settings.RpmColumns[lowerRpm].Max)
+                                                   .Select(d => d.Trim)
+                                                   .ToArray();
 
+                            if (!lowerLogs.Any()) continue;
+
+                            double tNew = 1 + lowerLogs.Median() / 100;
+
+                            if (tNew > t)
+                            {
+                                t = tNew;
+                                rpmSave = lowerRpm;
+                            }
+                            else
+                            {
+                                if (t == 1.0) t = tNew;
+                                rpmSave = rpmIndex;
+                                break;
                             }
 
-                            found = values.Any();
-
-                            if (found)
-                            {
-                                var tNew = 1 + values.Median() / 100;
-
-                                if (t < tNew)
-                                {
-                                    t = tNew;
-                                    rpmSave = lowerRpm;
-                                    found = true;
-                                }
-                                else
-                                {
-                                    if(t == 1.0d)
-                                        t = tNew;
-                                    rpmSave = rpmIndex;
-                                   
-                                    break;
-                                }
-                                if (inj.Label <= 5.5)
-                                    break;
-                            }
+                            if (inj.Label <= 5.5) break;
                         }
 
-                        var newValue = (cellMap[rpmIndex, injIndex] * t);
-                        if(inj.Label > 4.5)
-                            newValue += rpmIndex - rpmSave;
-
+                        double newValue = cellMap[rpmIndex, injIndex] * t;
+                        if (inj.Label > 4.5) newValue += rpmIndex - rpmSave;
                         result[rpmIndex, injIndex] = newValue;
-                       
                     }
-                    if(!found)
+                    else
+                    {
                         result[rpmIndex, injIndex] = cellMap[rpmIndex, injIndex] * trim;
-
+                    }
                 }
             }
-            if(enableSmooth)
-             FuelMapSmoother.Smooth(result, KernelSize, KernelSigma);
+
+            if (enableSmooth)
+                FuelMapSmoother.Smooth(result, KernelSize, KernelSigma);
 
             RoundFuelMap(result);
-            
+
             return result;
-            
         }
     }
 }

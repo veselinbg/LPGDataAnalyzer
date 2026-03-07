@@ -509,7 +509,7 @@ namespace LPGDataAnalyzer
                     .ToArray();
             table = Prediction.BuildTable(data, table, cbEnableSmooth.Checked, cbInterpolation.Checked);
             //Auto-correction algorithm
-            //new Prediction().AutoCorrectFuelTable(data, fuelCellTable);
+            //new Prediction().AutoCorrectFuelTable(data, table, cbEnableSmooth.Checked);
 
             GridBuilder(dataGridViewPrediction, table);
 
