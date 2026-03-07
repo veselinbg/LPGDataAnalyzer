@@ -29,5 +29,21 @@
         public double Ratio_b1 { get; set; }
         public double Ratio_b2 { get; set; }
         public double RatioDifference { get; set; }
+        /// <summary>
+        /// Fast Trim sum of two banks
+        /// </summary>
+        public double Fast { get; set; }
+        /// <summary>
+        /// Slow Trim sum of two banks
+        /// </summary>
+        public double Slow { get; set; }
+        /// <summary>
+        /// Slow + fast trim for two banks
+        /// </summary>
+        public double Trim{ get; set; }
+        public double Trim_b1 { get; set; }
+        public double Trim_b2 { get; set; }
+        public double AFR_b1 { get;set;  }
+        public double AFR_b2 { get; set; }
     }
 }

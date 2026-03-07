@@ -122,7 +122,7 @@ namespace LPGDataAnalyzer.Services
                             .Select(d => valueBankSelector(d)!.Value);
 
                         return values.Any()
-                            ? values.Average().Round()
+                            ? values.ToArray().Median().Round()
                             : (double?)null;
                     })
             });

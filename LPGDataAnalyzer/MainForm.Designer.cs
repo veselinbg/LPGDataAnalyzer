@@ -51,6 +51,7 @@
             dataGridViewInjectionTimeAnalisys = new DataGridView();
             dataGridViewMapAnalysis = new DataGridView();
             tabPagePredictions = new TabPage();
+            cbEnableSmooth = new CheckBox();
             textBoxLastPredictedFuelTable = new TextBox();
             panelLegend = new Panel();
             textBoxImagePath = new TextBox();
@@ -77,6 +78,7 @@
             button2 = new Button();
             buttonAFR = new Button();
             buttonExtraInjectionCalculator = new Button();
+            cbInterpolation = new CheckBox();
             statusBar.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)dataGridViewMainData).BeginInit();
             ((System.ComponentModel.ISupportInitialize)dataGridViewAnalyzeDataBank1t2).BeginInit();
@@ -215,7 +217,7 @@
             dataGridViewAnalyzeDataBank1t1.SelectionMode = DataGridViewSelectionMode.CellSelect;
             dataGridViewAnalyzeDataBank1t1.Size = new Size(751, 350);
             dataGridViewAnalyzeDataBank1t1.TabIndex = 0;
-            dataGridViewAnalyzeDataBank1t1.CellClick += dataGridViewAnalyzeDataBank1t1_CellClick;
+            dataGridViewAnalyzeDataBank1t1.CellClick += dataGridViewAnalyzeDataBank1_CellClick;
             // 
             // tabControlMain
             // 
@@ -329,6 +331,8 @@
             // 
             // tabPagePredictions
             // 
+            tabPagePredictions.Controls.Add(cbInterpolation);
+            tabPagePredictions.Controls.Add(cbEnableSmooth);
             tabPagePredictions.Controls.Add(textBoxLastPredictedFuelTable);
             tabPagePredictions.Controls.Add(panelLegend);
             tabPagePredictions.Controls.Add(textBoxImagePath);
@@ -344,6 +348,16 @@
             tabPagePredictions.TabIndex = 4;
             tabPagePredictions.Text = "Prediction";
             tabPagePredictions.UseVisualStyleBackColor = true;
+            // 
+            // cbEnableSmooth
+            // 
+            cbEnableSmooth.AutoSize = true;
+            cbEnableSmooth.Location = new Point(1169, 322);
+            cbEnableSmooth.Name = "cbEnableSmooth";
+            cbEnableSmooth.Size = new Size(68, 19);
+            cbEnableSmooth.TabIndex = 26;
+            cbEnableSmooth.Text = "Smooth";
+            cbEnableSmooth.UseVisualStyleBackColor = true;
             // 
             // textBoxLastPredictedFuelTable
             // 
@@ -494,11 +508,11 @@
             // 
             buttonAnalyzeFastTrim.Location = new Point(631, 40);
             buttonAnalyzeFastTrim.Name = "buttonAnalyzeFastTrim";
-            buttonAnalyzeFastTrim.Size = new Size(75, 23);
+            buttonAnalyzeFastTrim.Size = new Size(58, 23);
             buttonAnalyzeFastTrim.TabIndex = 15;
-            buttonAnalyzeFastTrim.Text = "Fast Trim";
+            buttonAnalyzeFastTrim.Text = "Trim";
             buttonAnalyzeFastTrim.UseVisualStyleBackColor = true;
-            buttonAnalyzeFastTrim.Click += ButtonAnalyze2_Click;
+            buttonAnalyzeFastTrim.Click += ButtonShowTrims_Click;
             // 
             // buttonAnalyze
             // 
@@ -508,7 +522,7 @@
             buttonAnalyze.TabIndex = 14;
             buttonAnalyze.Text = "Ration";
             buttonAnalyze.UseVisualStyleBackColor = true;
-            buttonAnalyze.Click += ButtonAnalyze_Click;
+            buttonAnalyze.Click += ButtonShowRatio_Click;
             // 
             // comboBoxReductorTempGroup2
             // 
@@ -591,6 +605,16 @@
             buttonExtraInjectionCalculator.Text = "Extra Injection Calculator";
             buttonExtraInjectionCalculator.UseVisualStyleBackColor = true;
             buttonExtraInjectionCalculator.Click += buttonExtraInjectionCalculator_Click;
+            // 
+            // cbInterpolation
+            // 
+            cbInterpolation.AutoSize = true;
+            cbInterpolation.Location = new Point(1239, 324);
+            cbInterpolation.Name = "cbInterpolation";
+            cbInterpolation.Size = new Size(94, 19);
+            cbInterpolation.TabIndex = 27;
+            cbInterpolation.Text = "Interpolation";
+            cbInterpolation.UseVisualStyleBackColor = true;
             // 
             // MainForm
             // 
@@ -694,5 +718,7 @@
         private Label labelCurrent;
         private TextBox textBoxReferencePressure;
         private Label labelRefPressure;
+        private CheckBox cbEnableSmooth;
+        private CheckBox cbInterpolation;
     }
 }

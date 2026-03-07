@@ -1,6 +1,7 @@
 using LPGDataAnalyzer.Models;
 using LPGDataAnalyzer.Models.Common;
 using LPGDataAnalyzer.Services;
+using static LPGDataAnalyzer.Services.Prediction;
 
 namespace LPGDataAnalyzer
 {
@@ -62,13 +63,21 @@ namespace LPGDataAnalyzer
                 }
             }
         }
-        private static void GridBuilder(DataGridView dgv, IEnumerable<TableRow> data)
+        private static void GridBuilder(DataGridView dgv, IEnumerable<TableRow> table)
         {
             PrepareGrid(dgv);
 
             CreateColumns(dgv, Settings.RpmColumns.Select(x => x.Label));
 
-            FillRows(dgv, data);
+            FillRows(dgv, table);
+        }
+        private static void GridBuilder(DataGridView dgv, double[,] table)
+        {
+            PrepareGrid(dgv);
+
+            CreateColumns(dgv, Settings.RpmColumns.Select(x => x.Label));
+
+            FillRows(dgv, table);
         }
         private static void PrepareGrid(DataGridView dgv)
         {
@@ -92,6 +101,36 @@ namespace LPGDataAnalyzer
             foreach (int rpm in rpmColumns)
             {
                 dgv.Columns.Add($"RPM_{rpm}", rpm.ToString());
+            }
+        }
+        private static void FillRows(DataGridView dgv, double[,] table)
+        {
+            dgv.SuspendLayout();
+            try
+            {
+                dgv.Rows.Clear();
+
+                for (var injIndex =0;injIndex< Settings.InjectionRanges.Length; injIndex++)
+                {
+                    var row = new DataGridViewRow();
+                    row.CreateCells(dgv);
+
+                    row.Cells[dgv.Columns["InjectionTime"].Index].Value = Settings.InjectionRanges[injIndex].Label;
+
+                    for (var rpmIndex =0; rpmIndex< Settings.RpmColumns.Length; rpmIndex++)
+                    {
+                        
+                       
+                            row.Cells[dgv.Columns[$"RPM_{Settings.RpmColumns[rpmIndex].Label}"].Index].Value = table[rpmIndex, injIndex];
+                        
+                    }
+
+                    dgv.Rows.Add(row);
+                }
+            }
+            finally
+            {
+                dgv.ResumeLayout();
             }
         }
         private static void FillRows(DataGridView dgv, IEnumerable<TableRow> table)
@@ -339,7 +378,7 @@ namespace LPGDataAnalyzer
             }
             else MessageBox.Show("Invalid data.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
-        private void ButtonAnalyze_Click(object sender, EventArgs e)
+        private void ButtonShowRatio_Click(object sender, EventArgs e)
         {
             if (Parser?.Data is null) return;
 
@@ -348,13 +387,13 @@ namespace LPGDataAnalyzer
 
             BuildAnalises(Analyser, Parser.Data, x => x.Ratio_b1, x => x.Ratio_b2);
         }
-        private void ButtonAnalyze2_Click(object sender, EventArgs e)
+        private void ButtonShowTrims_Click(object sender, EventArgs e)
         {
             if (Parser?.Data is null) return;
-            dataGridViewGasData.DataSource = Analyser.GroupByGasTemperature(Parser.Data, BenzTimingFilterCuting, x => x.FAST_b1, y => y.FAST_b2);
-            dataGridViewRIDData.DataSource = Analyser.GroupByRIDTemperature(Parser.Data, BenzTimingFilterCuting, x => x.FAST_b1, y => y.FAST_b2);
+            dataGridViewGasData.DataSource = Analyser.GroupByGasTemperature(Parser.Data, BenzTimingFilterCuting, x =>x.Trim_b1, y => y.Trim_b2);
+            dataGridViewRIDData.DataSource = Analyser.GroupByRIDTemperature(Parser.Data, BenzTimingFilterCuting, x => x.Trim_b1, y => y.Trim_b2);
 
-            BuildAnalises(Analyser, Parser.Data, x => x.FAST_b1, x => x.FAST_b2);
+            BuildAnalises(Analyser, Parser.Data, x => x.Trim_b1, y => y.Trim_b2);
         }
         double BenzTimingFilterCuting
         {
@@ -386,10 +425,10 @@ namespace LPGDataAnalyzer
 
         private void buttonAFR_Click(object sender, EventArgs e)
         {
-            BuildAnalises(Analyser, Parser.Data, s => (15.6 / (1.0 + ((s.FAST_b1 + s.SLOW_b1) / 100.0))).Round(), s => (15.6 / (1.0 + ((s.FAST_b2 + s.SLOW_b2) / 100.0))).Round());
+            BuildAnalises(Analyser, Parser.Data, s => s.AFR_b1.Round(), s => s.AFR_b2.Round());
         }
 
-        private void dataGridViewAnalyzeDataBank1t1_CellClick(object sender, DataGridViewCellEventArgs e)
+        private void dataGridViewAnalyzeDataBank1_CellClick(object sender, DataGridViewCellEventArgs e)
         {
             if (e.ColumnIndex == 0)
             {
@@ -402,7 +441,7 @@ namespace LPGDataAnalyzer
 
             var data = Parser.Data.Where(x => x.RPM > rpm.Min && x.RPM <= rpm.Max && x.BENZ_b1 > range.Min && x.BENZ_b1 <= range.Max);
 
-            var message = string.Join("\r \n", data.GroupBy(x => x.Ratio_b1).Select(x => $"Ratio_b1:{x.Key} Count: {x.Count()} PRESS: {Math.Round(data.Where(y => y.Ratio_b1 == x.Key).Select(y => y.PRESS).Average(), 2)}"));
+            var message = string.Join("\r \n", data.GroupBy(x => $"{x.SLOW_b1.Round()}_{x.FAST_b1.Round()}").Select(x => $"S_F Trim:{x.Key} Count: {x.Count()} PRESS: {data.Where(y => $"{y.SLOW_b1.Round()}_{y.FAST_b1.Round()}" == x.Key).Average(y => y.PRESS).Round()}"));
 
             MessageBox.Show(message, "Info");
         }
@@ -454,14 +493,25 @@ namespace LPGDataAnalyzer
 
         private void ButtonPredict_Click(object sender, EventArgs e)
         {
-            var fuelCellTable = textExtractor.BuildFinalTable(textBoxParsedData.Text);
+            var table = textExtractor.BuildFinalTable(textBoxParsedData.Text);
 
-            GridBuilder(dataGridViewOrig, FuelCellBuilder.BuildTableRow(fuelCellTable));
-
+            GridBuilder(dataGridViewOrig, table);
+            var maxTrim = 9;
+            var minTrim = -9;
+            var data = Parser.Data
+                .Where(x =>
+                (minTrim<=x.FAST_b1 && x.FAST_b1 <= maxTrim) &&
+                (minTrim <= x.FAST_b1 && x.FAST_b1 <= maxTrim) && 
+                x.FAST_b1 != 0 && 
+                x.FAST_b2 != 0 && 
+                x.SLOW_b1 != 0 && 
+                x.SLOW_b2 != 0 && x.PRESS < 3)
+                    .ToArray();
+            table = Prediction.BuildTable(data, table, cbEnableSmooth.Checked, cbInterpolation.Checked);
             //Auto-correction algorithm
-            var newfuelTable = new Prediction().AutoCorrectFuelTable(Parser.Data, fuelCellTable);
+            //new Prediction().AutoCorrectFuelTable(data, fuelCellTable);
 
-            GridBuilder(dataGridViewPrediction, FuelCellBuilder.BuildTableRow(newfuelTable));
+            GridBuilder(dataGridViewPrediction, table);
 
             // Apply heatmap to DataGridViews
            var vals = HighlightDifferencesHeatmapWithValues(dataGridViewPrediction, dataGridViewOrig, tolerance: 0.1);
@@ -469,7 +519,7 @@ namespace LPGDataAnalyzer
             // Create horizontal legend aligned with DataGridView
             CreateDynamicHorizontalHeatmapLegend(panelLegend, dataGridViewPrediction, vals.WLow, vals.WHigh);
 
-            textBoxLastPredictedFuelTable.Text = FuelCellBuilder.BuildTableRow(newfuelTable).ToText();
+            textBoxLastPredictedFuelTable.Text = table.ToText();
             AppSettings.LastPredictedFuelTable = textBoxLastPredictedFuelTable.Text;
             _appSettingManager.Save(AppSettings);
         }

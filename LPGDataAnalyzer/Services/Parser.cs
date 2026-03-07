@@ -4,6 +4,7 @@ namespace LPGDataAnalyzer.Services
 {
     internal class Parser()
     {
+        const int ExpectedColumns = 22;
         public ICollection<DataItem> Data { get; protected set; } = [];
 
         public virtual void Load(string _datapath)
@@ -17,44 +18,56 @@ namespace LPGDataAnalyzer.Services
         }
         private static DataItem ParseLine(string line)
         {
-            string[] f = line.Split('\t', StringSplitOptions.None);
-            
-            if (f.Length < 22) return new DataItem();
+            Span<Range> ranges = stackalloc Range[32];
+            var span = line.AsSpan();
 
-            var lpgDataLine = new DataItem
+            int count = span.Split(ranges, '\t');
+
+            if (count < ExpectedColumns)
+                return new DataItem();
+
+            var item = new DataItem
             {
-                TEMPO = f[0].ToInt(),
-                RPM = f[1].ToInt(),
-                LAMBDA_b1 = f[2].ToDouble(),
-                GAS_b1 = f[3].ToDouble(),
-                BENZ_b1 = f[4].ToDouble(),
-                PRESS = f[5].ToDouble(),
-                MAP = f[6].ToDouble(),
-                Temp_RID = f[7].ToDouble(),
-                Temp_GAS = f[8].ToDouble(),
-                LIV = f[9].ToDouble(),
-                SLOW_b1 = f[10].ToDouble(),
-                FAST_b1 = f[11].ToDouble(),
-                OX_b1 = f[12].ToDouble(),
-                LAMBDA_b2 = f[13].ToDouble(),
-                GAS_b2 = f[14].ToDouble(),
-                BENZ_b2 = f[15].ToDouble(),
-                SLOW_b2 = f[16].ToDouble(),
-                FAST_b2 = f[17].ToDouble(),
-                OX_b2 = f[18].ToDouble(),
-
-                MARKER = f[19].ToInt(),
-                AUTOMARKER = f[20].ToInt(),
-                ECUMARKER = f[21].ToInt()
+                TEMPO = span[ranges[0]].ToInt(),
+                RPM = span[ranges[1]].ToInt(),
+                LAMBDA_b1 = span[ranges[2]].ToDouble(),
+                GAS_b1 = span[ranges[3]].ToDouble(),
+                BENZ_b1 = span[ranges[4]].ToDouble(),
+                PRESS = span[ranges[5]].ToDouble(),
+                MAP = span[ranges[6]].ToDouble(),
+                Temp_RID = span[ranges[7]].ToDouble(),
+                Temp_GAS = span[ranges[8]].ToDouble(),
+                LIV = span[ranges[9]].ToDouble(),
+                SLOW_b1 = span[ranges[10]].ToDouble(),
+                FAST_b1 = span[ranges[11]].ToDouble(),
+                OX_b1 = span[ranges[12]].ToDouble(),
+                LAMBDA_b2 = span[ranges[13]].ToDouble(),
+                GAS_b2 = span[ranges[14]].ToDouble(),
+                BENZ_b2 = span[ranges[15]].ToDouble(),
+                SLOW_b2 = span[ranges[16]].ToDouble(),
+                FAST_b2 = span[ranges[17]].ToDouble(),
+                OX_b2 = span[ranges[18]].ToDouble(),
+                MARKER = span[ranges[19]].ToInt(),
+                AUTOMARKER = span[ranges[20]].ToInt(),
+                ECUMARKER = span[ranges[21]].ToInt()
             };
+            
+            item.Ratio_b1 = Math.Round(item.BENZ_b1 != 0 ? item.GAS_b1 / item.BENZ_b1 : 0, 2, MidpointRounding.AwayFromZero);
 
-            lpgDataLine.Ratio_b1 = Math.Round(lpgDataLine.BENZ_b1 != 0 ? lpgDataLine.GAS_b1 / lpgDataLine.BENZ_b1 : 0, 2, MidpointRounding.AwayFromZero);
+            item.Ratio_b2 = Math.Round(item.BENZ_b2 != 0 ? item.GAS_b2 / item.BENZ_b2 : 0, 2, MidpointRounding.AwayFromZero);
 
-            lpgDataLine.Ratio_b2 = Math.Round(lpgDataLine.BENZ_b2 != 0 ? lpgDataLine.GAS_b2 / lpgDataLine.BENZ_b2 : 0, 2, MidpointRounding.AwayFromZero);
+            item.RatioDifference = Math.Round(item.Ratio_b1 - item.Ratio_b2, 1, MidpointRounding.AwayFromZero);
 
-            lpgDataLine.RatioDifference = Math.Round(lpgDataLine.Ratio_b1 - lpgDataLine.Ratio_b2, 1, MidpointRounding.AwayFromZero);
+            item.Fast = (item.FAST_b1 + item.FAST_b2)/2;
+            item.Slow = (item.SLOW_b1 + item.SLOW_b2)/2;
+            item.Trim = (item.Slow + item.Fast)/2;
+            item.Trim_b1 = (item.SLOW_b1 + item.FAST_b1) / 2;
+            item.Trim_b2 = (item.SLOW_b2 + item.FAST_b2) / 2;
 
-            return lpgDataLine;
+            item.AFR_b1 = (15.6 / ((1 + item.FAST_b1 / 100) * (1 + item.SLOW_b1 / 100)));
+            item.AFR_b2 = (15.6 / ((1 + item.FAST_b2 / 100) * (1 + item.SLOW_b2 / 100)));
+
+            return item;
         }
     }
 }

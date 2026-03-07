@@ -1,5 +1,7 @@
 ﻿using LPGDataAnalyzer.Models;
+using LPGDataAnalyzer.Models.Common;
 using Tesseract;
+using static LPGDataAnalyzer.Services.Prediction;
 
 namespace LPGDataAnalyzer.Services
 {
@@ -31,7 +33,7 @@ namespace LPGDataAnalyzer.Services
                 SplitToThreeDigitInts(item);
             }
         }
-        public IEnumerable<FuelCell> BuildFinalTable(string text)
+        public double[,] BuildFinalTable(string text)
         {
             var data = text.Split(Environment.NewLine, StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
 
@@ -42,9 +44,27 @@ namespace LPGDataAnalyzer.Services
                 items.AddRange(SplitToThreeDigitInts(item));
             }
 
-            var fuelCellTable = FuelCellBuilder.BuildTable(items);
+            var fuelCellTable = BuildTable(items);
 
             return fuelCellTable;
+        }
+        internal static double[,] BuildTable(IList<int> values)
+        {
+            int rpmLength = Settings.RpmColumns.Length;
+            int injLength = Settings.InjectionRanges.Length;
+
+            double[,] table = new double[rpmLength, injLength];
+
+            int index = 0;
+            for (int inj = 0; inj < injLength; inj++)
+            {
+                for (int rpm = 0; rpm < rpmLength; rpm++)
+                {
+                    table[rpm, inj] = index < values.Count ? values[index++] : 0;
+                }
+            }
+
+            return table;
         }
         private static List<int> SplitToThreeDigitInts(string input)
         {
