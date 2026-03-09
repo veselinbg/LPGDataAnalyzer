@@ -50,6 +50,17 @@
         };
         public static readonly string[] LPGTempGroups = [ALL,.. GasTemperatureRanges.Select(t => t.Label)];
 
+        public static string[] GetExistGasTemperatureRanges(DataItem[] data)
+        {
+            // Guard against null or empty
+            if (data == null || data.Length == 0)
+                return [];
+
+            var usedRanges = GasTemperatureRanges
+                .Where(range => data.Any(item => item.Temp_GAS >= range.Min && item.Temp_GAS <= range.Max)).Select(t => t.Label);
+
+            return [ALL,.. usedRanges];
+        }
 
         public static readonly (int Min, int Max, string Label)[] ReductorTemperatureRanges =
         {
@@ -64,7 +75,17 @@
             (71, int.MaxValue, "Temp_71_over"),           
         };
         public static readonly string[] ReductorTempGroups = [ALL, ..ReductorTemperatureRanges.Select(t => t.Label)];
+        public static string[] GetExistReductorTempGroups(DataItem[] data)
+        {
+            // Guard against null or empty
+            if (data == null || data.Length == 0)
+                return [];
 
+            var usedRanges = ReductorTemperatureRanges
+                .Where(range => data.Any(item => item.Temp_RID >= range.Min && item.Temp_RID <= range.Max)).Select(t => t.Label);
+
+            return [ALL, .. usedRanges];
+        }
         public static readonly (double Min, double Max, string Label)[] DrivingRanges =
         {
             (0, 2.8,  "Idle"),
@@ -86,6 +107,12 @@
         };
 
         public static readonly (double Min, double Max, string Label)[] MapModes = [(int.MinValue, int.MaxValue, ALL),.. MapRanges];
-
+        public enum Aggregation
+        {
+            Median,
+            Min,
+            Max,
+            Average
+        }
     }
 }

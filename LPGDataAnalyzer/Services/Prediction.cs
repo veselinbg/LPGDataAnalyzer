@@ -3,7 +3,6 @@ using LPGDataAnalyzer.Models.Common;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace LPGDataAnalyzer.Services
 {
@@ -18,7 +17,7 @@ namespace LPGDataAnalyzer.Services
         /// <param name="sigma">Standard deviation of Gaussian</param>
         /// <param name="useParallel">Whether to use multi-threading for large maps</param>
         /// <param name="inPlace">If true, modifies cellMap directly; otherwise uses temporary buffer</param>
-        public static void Smooth(double[,] cellMap, int kernelSize, double sigma, bool useParallel = true, bool inPlace = false)
+        public static void Smooth(double?[,] cellMap, int kernelSize, double sigma, bool useParallel = true, bool inPlace = false)
         {
             if (kernelSize % 2 == 0)
                 throw new ArgumentException("Kernel size must be odd.");
@@ -28,16 +27,16 @@ namespace LPGDataAnalyzer.Services
             int half = kernelSize / 2;
 
             // Precompute normalized Gaussian kernel
-            double[,] kernel = PrecomputeKernel(kernelSize, sigma);
+            var kernel = PrecomputeKernel(kernelSize, sigma);
 
             // Temporary buffer if not in-place
-            double[,] buffer = inPlace ? cellMap : new double[rpmLength, injLength];
+            var buffer = inPlace ? cellMap : new double?[rpmLength, injLength];
 
             Action<int> processRow = rpmIndex =>
             {
                 for (int injIndex = 0; injIndex < injLength; injIndex++)
                 {
-                    double sum = 0.0;
+                    double? sum = 0.0;
                     double weightSum = 0.0;
 
                     for (int di = -half; di <= half; di++)
@@ -51,7 +50,7 @@ namespace LPGDataAnalyzer.Services
                             if (nj < 0 || nj >= injLength) continue;
 
                             double w = kernel[di + half, dj + half];
-                            sum += cellMap[ni, nj] * w;
+                            sum += cellMap[ni, nj].SafeMultiply(w);
                             weightSum += w;
                         }
                     }
@@ -85,7 +84,7 @@ namespace LPGDataAnalyzer.Services
         private static double[,] PrecomputeKernel(int size, double sigma)
         {
             int half = size / 2;
-            double[,] kernel = new double[size, size];
+            var kernel = new double[size, size];
             double sum = 0.0;
 
             for (int i = -half; i <= half; i++)
@@ -345,7 +344,7 @@ namespace LPGDataAnalyzer.Services
         }
 
         // ===================== APPLY DELTAS =====================
-        private static void ApplyDeltas(Dictionary<CellKey, CellAccumulator> accumulators, double[,] cellMap, (double BaseLearningRate, double MinEffectiveWeight, double MaxDeltaPerCell, int TargetHitCount, double MeanTrim, double StdTrim) c)
+        private static void ApplyDeltas(Dictionary<CellKey, CellAccumulator> accumulators, double?[,] cellMap, (double BaseLearningRate, double MinEffectiveWeight, double MaxDeltaPerCell, int TargetHitCount, double MeanTrim, double StdTrim) c)
         {
             foreach (var kv in accumulators)
             {
@@ -367,7 +366,7 @@ namespace LPGDataAnalyzer.Services
             }
         }
         // ===================== ROUND =====================
-        private static void RoundFuelMap(double[,] cellMap)
+        private static void RoundFuelMap(double?[,] cellMap)
         {
             int rows = cellMap.GetLength(0);
             int cols = cellMap.GetLength(1);
@@ -376,7 +375,7 @@ namespace LPGDataAnalyzer.Services
             {
                 for (int j = 0; j < cols; j++)
                 {
-                    cellMap[i, j] = cellMap[i, j].Round(0);
+                    cellMap[i, j] = cellMap[i, j]?.Round(0);
                 }
             }
         }
@@ -413,7 +412,7 @@ namespace LPGDataAnalyzer.Services
         }
 
         // ===================== PUBLIC ENTRY =====================
-        public void AutoCorrectFuelTable(DataItem[] logs, double[,] cellMap)
+        public void AutoCorrectFuelTable(DataItem[] logs, double?[,] cellMap)
         {
             var rpmLength = Settings.RpmColumns.Length;
             var injLength = Settings.InjectionRanges.Length;
@@ -430,13 +429,13 @@ namespace LPGDataAnalyzer.Services
 
             RoundFuelMap(cellMap);
         }
-        public static double[,] BuildTable(DataItem[] logs, double[,] cellMap, bool enableSmooth, bool enableInterpolation)
+        public static double?[,] BuildTable(DataItem[] logs, double?[,] cellMap, bool enableSmooth, bool enableInterpolation)
         {
             int rpmLength = cellMap.GetLength(0);
             int injLength = cellMap.GetLength(1);
-            double[,] result = new double[rpmLength, injLength];
+            var result = new double?[rpmLength, injLength];
 
-            // Precompute logs grouped by injection ranges for faster filtering
+            // Precompute logs grouped by injection ranges
             var logsByInjection = new List<DataItem>[injLength];
             for (int injIndex = 0; injIndex < injLength; injIndex++)
             {
@@ -455,17 +454,17 @@ namespace LPGDataAnalyzer.Services
                 for (int rpmIndex = 0; rpmIndex < rpmLength; rpmIndex++)
                 {
                     var rpm = Settings.RpmColumns[rpmIndex];
-                    var rpmLogs = injLogs.Where(d => d.RPM > rpm.Min && d.RPM <= rpm.Max)
-                                         .Select(d => d.Trim)
-                                         .ToArray();
+                    var rpmLogs = injLogs
+                        .Where(d => d.RPM > rpm.Min && d.RPM <= rpm.Max)
+                        .Select(d => d.Trim)
+                        .ToArray();
 
                     double trim = 1.0;
-                    bool found = rpmLogs.Any();
 
-                    if (found)
+                    if (rpmLogs.Length > 0)
                     {
                         trim = 1 + rpmLogs.Median() / 100;
-                        result[rpmIndex, injIndex] = cellMap[rpmIndex, injIndex] * trim;
+                        result[rpmIndex, injIndex] = cellMap[rpmIndex, injIndex].SafeMultiply(trim);
                         continue;
                     }
 
@@ -476,10 +475,11 @@ namespace LPGDataAnalyzer.Services
 
                         for (int lowerRpm = rpmIndex - 1; lowerRpm >= 0; lowerRpm--)
                         {
-                            var lowerLogs = injLogs.Where(d => d.RPM > Settings.RpmColumns[lowerRpm].Min &&
-                                                               d.RPM <= Settings.RpmColumns[lowerRpm].Max)
-                                                   .Select(d => d.Trim)
-                                                   .ToArray();
+                            var lowerLogs = injLogs
+                                .Where(d => d.RPM > Settings.RpmColumns[lowerRpm].Min &&
+                                            d.RPM <= Settings.RpmColumns[lowerRpm].Max)
+                                .Select(d => d.Trim)
+                                .ToArray();
 
                             if (!lowerLogs.Any()) continue;
 
@@ -492,21 +492,18 @@ namespace LPGDataAnalyzer.Services
                             }
                             else
                             {
-                                if (t == 1.0) t = tNew;
                                 rpmSave = rpmIndex;
                                 break;
                             }
-
-                            if (inj.Label <= 5.5) break;
                         }
 
-                        double newValue = cellMap[rpmIndex, injIndex] * t;
+                        var newValue = cellMap[rpmIndex, injIndex].SafeMultiply(t);
                         if (inj.Label > 4.5) newValue += rpmIndex - rpmSave;
                         result[rpmIndex, injIndex] = newValue;
                     }
                     else
                     {
-                        result[rpmIndex, injIndex] = cellMap[rpmIndex, injIndex] * trim;
+                        result[rpmIndex, injIndex] = cellMap[rpmIndex, injIndex].SafeMultiply(trim);
                     }
                 }
             }

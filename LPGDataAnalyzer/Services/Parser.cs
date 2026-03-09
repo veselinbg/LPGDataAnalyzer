@@ -5,7 +5,7 @@ namespace LPGDataAnalyzer.Services
     internal class Parser()
     {
         const int ExpectedColumns = 22;
-        public ICollection<DataItem> Data { get; protected set; } = [];
+        public DataItem[] Data { get; protected set; } = [];
 
         public virtual void Load(string _datapath)
         {
@@ -51,12 +51,12 @@ namespace LPGDataAnalyzer.Services
                 AUTOMARKER = span[ranges[20]].ToInt(),
                 ECUMARKER = span[ranges[21]].ToInt()
             };
-            
-            item.Ratio_b1 = Math.Round(item.BENZ_b1 != 0 ? item.GAS_b1 / item.BENZ_b1 : 0, 2, MidpointRounding.AwayFromZero);
 
-            item.Ratio_b2 = Math.Round(item.BENZ_b2 != 0 ? item.GAS_b2 / item.BENZ_b2 : 0, 2, MidpointRounding.AwayFromZero);
+            item.Ratio_b1 = item.BENZ_b1 != 0 ? (item.GAS_b1 / item.BENZ_b1).Round() : 0;
 
-            item.RatioDifference = Math.Round(item.Ratio_b1 - item.Ratio_b2, 1, MidpointRounding.AwayFromZero);
+            item.Ratio_b2 = item.BENZ_b2 != 0 ? (item.GAS_b2 / item.BENZ_b2).Round() : 0;
+
+            item.RatioDifference = (item.Ratio_b1 - item.Ratio_b2).Round(1);
 
             item.Fast = (item.FAST_b1 + item.FAST_b2)/2;
             item.Slow = (item.SLOW_b1 + item.SLOW_b2)/2;
@@ -66,6 +66,10 @@ namespace LPGDataAnalyzer.Services
 
             item.AFR_b1 = (15.6 / ((1 + item.FAST_b1 / 100) * (1 + item.SLOW_b1 / 100)));
             item.AFR_b2 = (15.6 / ((1 + item.FAST_b2 / 100) * (1 + item.SLOW_b2 / 100)));
+            item.AFR = (15.6 / ((1 + item.Fast / 100) * (1 + item.Slow / 100)));
+
+            item.GAS = (item.GAS_b1 + item.GAS_b2) / 2;
+            item.BENZ = (item.BENZ_b1 + item.BENZ_b2) / 2;
 
             return item;
         }

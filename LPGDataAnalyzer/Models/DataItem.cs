@@ -30,20 +30,30 @@
         public double Ratio_b2 { get; set; }
         public double RatioDifference { get; set; }
         /// <summary>
-        /// Fast Trim sum of two banks
+        /// Fast Trim sum of two banks /2
         /// </summary>
         public double Fast { get; set; }
         /// <summary>
-        /// Slow Trim sum of two banks
+        /// Slow Trim sum of two banks /2
         /// </summary>
         public double Slow { get; set; }
         /// <summary>
-        /// Slow + fast trim for two banks
+        /// Slow + fast trim for two banks /2
         /// </summary>
         public double Trim{ get; set; }
         public double Trim_b1 { get; set; }
         public double Trim_b2 { get; set; }
+        public double AFR { get; set; }
         public double AFR_b1 { get;set;  }
         public double AFR_b2 { get; set; }
+        /// <summary>
+        /// GAS time sum of two banks /2
+        /// </summary>
+        public double GAS { get; set; }
+        /// <summary>
+        /// BENZ time sum of two banks /2
+        /// </summary>
+        public double BENZ { get; set; }
+
     }
 }

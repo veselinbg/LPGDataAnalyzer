@@ -1,7 +1,7 @@
 using LPGDataAnalyzer.Models;
 using LPGDataAnalyzer.Models.Common;
 using LPGDataAnalyzer.Services;
-using static LPGDataAnalyzer.Services.Prediction;
+using static LPGDataAnalyzer.Models.Settings;
 
 namespace LPGDataAnalyzer
 {
@@ -35,18 +35,19 @@ namespace LPGDataAnalyzer
 
             LoadParsedData();
 
-            comboBoxTemperature1.DataSource = Settings.LPGTempGroups.Clone();
-            comboBoxTemperature1.SelectedIndex = 0;
+            comboBoxGasTemperatureb1.DataSource = GetExistGasTemperatureRanges(Parser.Data);
+            comboBoxGasTemperatureb1.SelectedIndex = 0;
 
-            comboBoxTemperature2.DataSource = Settings.LPGTempGroups.Clone();
-            comboBoxTemperature2.SelectedIndex = 1;
+            comboBoxGasTemperatureb2.DataSource = GetExistGasTemperatureRanges(Parser.Data);
+            comboBoxGasTemperatureb2.SelectedIndex = 0;
 
-            comboBoxReductorTempGroup1.DataSource = Settings.ReductorTempGroups.Clone();
+            comboBoxReductorTempGroup1.DataSource = GetExistReductorTempGroups(Parser.Data);
             comboBoxReductorTempGroup1.SelectedIndex = 0;
 
-            comboBoxReductorTempGroup2.DataSource = Settings.ReductorTempGroups.Clone();
-            comboBoxReductorTempGroup2.SelectedIndex = 1;
+            comboBoxReductorTempGroup2.DataSource = GetExistReductorTempGroups(Parser.Data);
+            comboBoxReductorTempGroup2.SelectedIndex = 0;
 
+            comboBoxAggregation.DataSource = Enum.GetValues<Aggregation>();
         }
         private static void SearchAndPrepareGrid(Control.ControlCollection parentControl)
         {
@@ -63,19 +64,11 @@ namespace LPGDataAnalyzer
                 }
             }
         }
-        private static void GridBuilder(DataGridView dgv, IEnumerable<TableRow> table)
+        private static void GridBuilder(DataGridView dgv, double?[,] table)
         {
             PrepareGrid(dgv);
 
-            CreateColumns(dgv, Settings.RpmColumns.Select(x => x.Label));
-
-            FillRows(dgv, table);
-        }
-        private static void GridBuilder(DataGridView dgv, double[,] table)
-        {
-            PrepareGrid(dgv);
-
-            CreateColumns(dgv, Settings.RpmColumns.Select(x => x.Label));
+            CreateColumns(dgv, RpmColumns.Select(x => x.Label));
 
             FillRows(dgv, table);
         }
@@ -103,26 +96,26 @@ namespace LPGDataAnalyzer
                 dgv.Columns.Add($"RPM_{rpm}", rpm.ToString());
             }
         }
-        private static void FillRows(DataGridView dgv, double[,] table)
+        private static void FillRows(DataGridView dgv, double?[,] table)
         {
             dgv.SuspendLayout();
             try
             {
                 dgv.Rows.Clear();
 
-                for (var injIndex =0;injIndex< Settings.InjectionRanges.Length; injIndex++)
+                for (var injIndex = 0; injIndex < InjectionRanges.Length; injIndex++)
                 {
                     var row = new DataGridViewRow();
                     row.CreateCells(dgv);
 
-                    row.Cells[dgv.Columns["InjectionTime"].Index].Value = Settings.InjectionRanges[injIndex].Label;
+                    row.Cells[dgv.Columns["InjectionTime"].Index].Value = InjectionRanges[injIndex].Label;
 
-                    for (var rpmIndex =0; rpmIndex< Settings.RpmColumns.Length; rpmIndex++)
+                    for (var rpmIndex = 0; rpmIndex < RpmColumns.Length; rpmIndex++)
                     {
-                        
-                       
-                            row.Cells[dgv.Columns[$"RPM_{Settings.RpmColumns[rpmIndex].Label}"].Index].Value = table[rpmIndex, injIndex];
-                        
+
+
+                        row.Cells[dgv.Columns[$"RPM_{RpmColumns[rpmIndex].Label}"].Index].Value = table[rpmIndex, injIndex];
+
                     }
 
                     dgv.Rows.Add(row);
@@ -133,33 +126,68 @@ namespace LPGDataAnalyzer
                 dgv.ResumeLayout();
             }
         }
-        private static void FillRows(DataGridView dgv, IEnumerable<TableRow> table)
+        public static AxisSplit<int> HighlightDifferencesHeatmapWithValues(
+    DataGridView dgv1,
+    DataGridView dgv2 = null,
+    double tolerance = 0.01)
         {
-            foreach (var row in table)
-            {
-                int idx = dgv.Rows.Add();
-
-                dgv.Rows[idx].Cells["InjectionTime"].Value = row.Key;
-
-                foreach (var col in row.Columns)
-                {
-                    dgv.Rows[idx].Cells[$"RPM_{col.Key}"].Value =
-                        col.Value.HasValue
-                            ? Math.Round(col.Value.Value, 2)
-                            : null;
-                }
-            }
-        }
-        private static AxisSplit<int> HighlightDifferencesHeatmapWithValues(DataGridView dgv1, DataGridView dgv2, double tolerance = 0.01)
-        {
-            if (dgv1.RowCount != dgv2.RowCount ||
-                dgv1.ColumnCount != dgv2.ColumnCount)
-                throw new ArgumentException("DataGridViews must have same dimensions.");
-
             int rows = dgv1.RowCount;
             int cols = dgv1.ColumnCount;
 
-            double[,] diffs = new double[rows, cols];
+            if (dgv2 != null && (rows != dgv2.RowCount || cols != dgv2.ColumnCount))
+                throw new ArgumentException("DataGridViews must have same dimensions.");
+
+            double[,] values = ExtractValues(dgv1, dgv2);
+
+            return ApplyHeatmap(dgv1, dgv2, values, tolerance);
+        }
+        private static double[,] ExtractValues(DataGridView dgv1, DataGridView dgv2)
+        {
+            int rows = dgv1.RowCount;
+            int cols = dgv1.ColumnCount;
+
+            double[,] result = new double[rows, cols];
+
+            for (int r = 0; r < rows; r++)
+            {
+                for (int c = 1; c < cols; c++) // skip first column
+                {
+                    double v1 = GetCellDouble(dgv1, r, c);
+
+                    if (dgv2 == null)
+                        result[r, c] = v1;
+                    else
+                        result[r, c] = v1 - GetCellDouble(dgv2, r, c);
+                }
+            }
+
+            return result;
+        }
+        private static double GetCellDouble(DataGridView dgv, int r, int c)
+        {
+            var val = dgv.Rows[r].Cells[c].Value;
+
+            if (val == null || val == DBNull.Value)
+                return 0.0;
+
+            return Convert.ToDouble(val);
+        }
+
+        private static void SetCellColor(DataGridView dgv1, DataGridView dgv2, int r, int c, Color color)
+        {
+            dgv1.Rows[r].Cells[c].Style.BackColor = color;
+
+            if (dgv2 != null)
+                dgv2.Rows[r].Cells[c].Style.BackColor = color;
+        }
+        private static AxisSplit<int> ApplyHeatmap(
+            DataGridView dgv1,
+            DataGridView dgv2,
+            double[,] diffs,
+            double tolerance)
+        {
+            int rows = diffs.GetLength(0);
+            int cols = diffs.GetLength(1);
 
             double minSigned = double.MaxValue;
             double maxSigned = double.MinValue;
@@ -167,35 +195,26 @@ namespace LPGDataAnalyzer
             int minIndex = -1;
             int maxIndex = -1;
 
-            // ---- STEP 1: Compute signed differences ----
+            // ---- Find extremes ----
             for (int r = 0; r < rows; r++)
             {
-                for (int c = 0; c < cols; c++)
+                for (int c = 1; c < cols; c++) // skip first column
                 {
-                    double v1 = dgv1.Rows[r].Cells[c].Value != null
-                        ? Convert.ToDouble(dgv1.Rows[r].Cells[c].Value)
-                        : 0.0;
+                    double diff = diffs[r, c];
 
-                    double v2 = dgv2.Rows[r].Cells[c].Value != null
-                        ? Convert.ToDouble(dgv2.Rows[r].Cells[c].Value)
-                        : 0.0;
+                    if (Math.Abs(diff) <= tolerance)
+                        continue;
 
-                    double diff = v1 - v2;
-                    diffs[r, c] = diff;
-
-                    if (Math.Abs(diff) > tolerance)
+                    if (diff < minSigned)
                     {
-                        if (diff < minSigned)
-                        {
-                            minSigned = diff;
-                            minIndex = r * cols + c;
-                        }
+                        minSigned = diff;
+                        minIndex = r * cols + c;
+                    }
 
-                        if (diff > maxSigned)
-                        {
-                            maxSigned = diff;
-                            maxIndex = r * cols + c;
-                        }
+                    if (diff > maxSigned)
+                    {
+                        maxSigned = diff;
+                        maxIndex = r * cols + c;
                     }
                 }
             }
@@ -206,53 +225,46 @@ namespace LPGDataAnalyzer
                 maxSigned = 1e-6;
             }
 
-            double maxAbs = Math.Max(Math.Abs(minSigned),
-                                     Math.Abs(maxSigned));
-
+            double maxAbs = Math.Max(Math.Abs(minSigned), Math.Abs(maxSigned));
             if (maxAbs < 1e-12)
                 maxAbs = 1e-12;
 
-            // ---- STEP 2: Apply smooth diverging heatmap ----
+            // ---- Apply colors ----
             for (int r = 0; r < rows; r++)
             {
-                for (int c = 0; c < cols; c++)
+                for (int c = 1; c < cols; c++) // skip first column
                 {
                     double diff = diffs[r, c];
 
                     if (Math.Abs(diff) <= tolerance)
                     {
-                        dgv1.Rows[r].Cells[c].Style.BackColor = Color.White;
-                        dgv2.Rows[r].Cells[c].Style.BackColor = Color.White;
+                        SetCellColor(dgv1, dgv2, r, c, Color.White);
                         continue;
                     }
 
-                    double normalized = diff / maxAbs;   // -1 → +1
+                    double normalized = diff / maxAbs;
 
                     Color color = InterpolateDiverging(normalized);
 
-                    dgv1.Rows[r].Cells[c].Style.BackColor = color;
-                    dgv2.Rows[r].Cells[c].Style.BackColor = color;
+                    SetCellColor(dgv1, dgv2, r, c, color);
                 }
             }
 
             return new AxisSplit<int>(minIndex, maxIndex, minSigned, maxSigned);
         }
+        
         private static Color InterpolateDiverging(double value)
         {
             value = Math.Max(-1, Math.Min(1, value));
 
-            Color blue = Color.FromArgb(180, 180, 255);     // strong blue
+            Color blue = Color.FromArgb(180, 180, 255);
             Color white = Color.White;
-            Color red = Color.FromArgb(255, 180, 180);       // strong red
+            Color red = Color.FromArgb(255, 180, 180);
 
             if (value < 0)
-            {
-                return Blend(blue, white, (value + 1));
-            }
+                return Blend(blue, white, value + 1);
             else
-            {
                 return Blend(white, red, value);
-            }
         }
 
         private static Color Blend(Color c1, Color c2, double t)
@@ -333,7 +345,7 @@ namespace LPGDataAnalyzer
             if (legendPanel == null || dgv == null)
                 return;
 
-            legendPanel.Tag = (minSigned, maxSigned);          
+            legendPanel.Tag = (minSigned, maxSigned);
 
             int newWidth = dgv.ClientSize.Width;
 
@@ -343,7 +355,7 @@ namespace LPGDataAnalyzer
             legendPanel.Invalidate();
         }
 
-       
+
         private void BtnSelectFile_Click(object sender, EventArgs e)
         {
             using OpenFileDialog ofd = new OpenFileDialog();
@@ -371,10 +383,10 @@ namespace LPGDataAnalyzer
                 buttonAnalyze.Enabled = true;
                 buttonAnalyzeFastTrim.Enabled = true;
 
-                toolStripSummary.Text = $"Total Rows: {Parser.Data.Count} " +
+                toolStripSummary.Text = $"Total Rows: {Parser.Data.Length} " +
                     $"LPG: Min Temp: {Parser.Data.Min(x => x.Temp_GAS)} Max Temp: {Parser.Data.Max(x => x.Temp_GAS)}" +
                     $" Min PRESS: {Parser.Data.Min(x => x.PRESS)} Max PRESS: {Parser.Data.Max(x => x.PRESS)} Avarige PRESS: {(Parser.Data.Average(x => x.PRESS)).Round()}" +
-                    $" % of change Min {Analyzer.PercentageChange(Parser.Data.Average(x => x.PRESS), Parser.Data.Min(x => x.PRESS)).Round()} Max{Analyzer.PercentageChange(Parser.Data.Average(x => x.PRESS), Parser.Data.Max(x => x.PRESS)).Round()}";
+                    $" % of change Min {Filter.PercentageChange(Parser.Data.Average(x => x.PRESS), Parser.Data.Min(x => x.PRESS)).Round()} Max{Filter.PercentageChange(Parser.Data.Average(x => x.PRESS), Parser.Data.Max(x => x.PRESS)).Round()}";
             }
             else MessageBox.Show("Invalid data.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
@@ -385,16 +397,42 @@ namespace LPGDataAnalyzer
             dataGridViewGasData.DataSource = Analyser.GroupByGasTemperature(Parser.Data, BenzTimingFilterCuting, x => x.Ratio_b1, y => y.Ratio_b2);
             dataGridViewRIDData.DataSource = Analyser.GroupByRIDTemperature(Parser.Data, BenzTimingFilterCuting, x => x.Ratio_b1, y => y.Ratio_b2);
 
-            BuildAnalises(Analyser, Parser.Data, x => x.Ratio_b1, x => x.Ratio_b2);
+            BuildAnalises(Analyser, Parser.Data, [item => item.BENZ_b1, item => item.BENZ_b2, item => item.BENZ_b1, item => item.BENZ_b2], [
+                            item => item.Ratio_b1,
+                            item => item.Ratio_b2,
+                            item => item.Ratio_b1,
+                            item => item.Ratio_b2,
+                                    ]);
         }
         private void ButtonShowTrims_Click(object sender, EventArgs e)
         {
             if (Parser?.Data is null) return;
-            dataGridViewGasData.DataSource = Analyser.GroupByGasTemperature(Parser.Data, BenzTimingFilterCuting, x =>x.Trim_b1, y => y.Trim_b2);
+            dataGridViewGasData.DataSource = Analyser.GroupByGasTemperature(Parser.Data, BenzTimingFilterCuting, x => x.Trim_b1, y => y.Trim_b2);
             dataGridViewRIDData.DataSource = Analyser.GroupByRIDTemperature(Parser.Data, BenzTimingFilterCuting, x => x.Trim_b1, y => y.Trim_b2);
 
-            BuildAnalises(Analyser, Parser.Data, x => x.Trim_b1, y => y.Trim_b2);
+            BuildAnalises(Analyser, Parser.Data, [item => item.BENZ_b1, item => item.BENZ_b2, item => item.BENZ_b1, item => item.BENZ_b2], [
+                            item => item.Trim_b1,
+                            item => item.Trim_b2,
+                            item => item.Trim_b1,
+                            item => item.Trim_b2,
+                                    ]);
         }
+        private void buttonShowReducerPress_Click(object sender, EventArgs e)
+        {
+            if (Parser?.Data is null) return;
+            BuildAnalises(Analyser, Parser.Data, [item => item.BENZ, item => item.BENZ, item => item.BENZ, item => item.BENZ], [
+                 item => item.AFR,
+                item => item.GAS,
+                item => item.PRESS,
+                item => item.Trim
+             ]);
+        }
+        private void buttonAFR_Click(object sender, EventArgs e)
+        {
+            BuildAnalises(Analyser, Parser.Data, [item => item.BENZ_b1, item => item.BENZ_b2, item => item.BENZ_b1, item => item.BENZ_b2],
+                [item => item.AFR_b1, item => item.AFR_b2, item => item.AFR_b1, item => item.AFR_b2]);
+        }
+
         double BenzTimingFilterCuting
         {
             get
@@ -407,43 +445,41 @@ namespace LPGDataAnalyzer
                 return benzTimingFilterCuting;
             }
         }
-        void BuildAnalises(Analyzer analyser, IEnumerable<DataItem> lpgdata, Func<DataItem, double?> selector1, Func<DataItem, double?> selector2)
+        void BuildAnalises(Analyzer analyser, DataItem[] lpgdata, Func<DataItem, double>[] injectionBankSelectors, Func<DataItem, double?>[] valueSelectors)
         {
+
+            // Get the selected value
+            var aggregator = (Aggregation)comboBoxAggregation.SelectedItem;
             //temp1
-            IEnumerable<DataItem> filteredLPGDataByTemp1 = analyser.FilterByTemp(lpgdata, comboBoxTemperature1.SelectedValue.ToString(), comboBoxReductorTempGroup1.SelectedValue.ToString());
+            DataItem[] filteredLPGDataByTemp1 = analyser.FilterByTemp(lpgdata, comboBoxGasTemperatureb1.SelectedValue.ToString(), comboBoxReductorTempGroup1.SelectedValue.ToString());
 
-            GridBuilder(dataGridViewAnalyzeDataBank1t1, analyser.BuildTable(filteredLPGDataByTemp1, x => x.BENZ_b1, selector1));
-            GridBuilder(dataGridViewAnalyzeDataBank2t1, analyser.BuildTable(filteredLPGDataByTemp1, x => x.BENZ_b2, selector2));
-            HighlightDifferencesHeatmapWithValues(dataGridViewAnalyzeDataBank1t1, dataGridViewAnalyzeDataBank2t1);
+            GridBuilder(dataGridViewAnalyzeDataBank1t1, analyser.BuildTable(filteredLPGDataByTemp1, injectionBankSelectors[0], valueSelectors[0], aggregator));
+            GridBuilder(dataGridViewAnalyzeDataBank2t1, analyser.BuildTable(filteredLPGDataByTemp1, injectionBankSelectors[1], valueSelectors[1], aggregator));
+            HighlightDifferencesHeatmapWithValues(dataGridViewAnalyzeDataBank1t1);
+            HighlightDifferencesHeatmapWithValues(dataGridViewAnalyzeDataBank2t1);
             //temp2
-            IEnumerable<DataItem> filteredLPGDataByTemp2 = analyser.FilterByTemp(lpgdata, comboBoxTemperature2.SelectedValue.ToString(), comboBoxReductorTempGroup2.SelectedValue.ToString());
+            DataItem[] filteredLPGDataByTemp2 = analyser.FilterByTemp(lpgdata, comboBoxGasTemperatureb2.SelectedValue.ToString(), comboBoxReductorTempGroup2.SelectedValue.ToString());
 
-            GridBuilder(dataGridViewAnalyzeDataBank1t2, analyser.BuildTable(filteredLPGDataByTemp2, x => x.BENZ_b1, selector1));
-            GridBuilder(dataGridViewAnalyzeDataBank2t2, analyser.BuildTable(filteredLPGDataByTemp2, x => x.BENZ_b2, selector2));
-        }
-
-
-        private void buttonAFR_Click(object sender, EventArgs e)
-        {
-            BuildAnalises(Analyser, Parser.Data, s => s.AFR_b1.Round(), s => s.AFR_b2.Round());
+            GridBuilder(dataGridViewAnalyzeDataBank1t2, analyser.BuildTable(filteredLPGDataByTemp2, injectionBankSelectors[2], valueSelectors[2], aggregator));
+            GridBuilder(dataGridViewAnalyzeDataBank2t2, analyser.BuildTable(filteredLPGDataByTemp2, injectionBankSelectors[3], valueSelectors[3], aggregator));
+            HighlightDifferencesHeatmapWithValues(dataGridViewAnalyzeDataBank1t2);
+            HighlightDifferencesHeatmapWithValues(dataGridViewAnalyzeDataBank2t2);
         }
 
         private void dataGridViewAnalyzeDataBank1_CellClick(object sender, DataGridViewCellEventArgs e)
         {
-            if (e.ColumnIndex == 0)
+            if (e.ColumnIndex != 0)
             {
-                return;
+                var range = InjectionRanges[e.RowIndex];
+
+                var rpm = RpmColumns[e.ColumnIndex - 1];
+
+                var data = Parser.Data.Where(x => x.RPM > rpm.Min && x.RPM <= rpm.Max && x.BENZ_b1 > range.Min && x.BENZ_b1 <= range.Max);
+
+                var message = string.Join("\r \n", data.GroupBy(x => $"{x.SLOW_b1.Round()}_{x.FAST_b1.Round()}").Select(x => $"S_F Trim:{x.Key} Count: {x.Count()} PRESS: {data.Where(y => $"{y.SLOW_b1.Round()}_{y.FAST_b1.Round()}" == x.Key).Average(y => y.PRESS).Round()}"));
+
+                MessageBox.Show(message, "Info");
             }
-
-            var range = Settings.InjectionRanges[e.RowIndex];
-
-            var rpm = Settings.RpmColumns[e.ColumnIndex - 1];
-
-            var data = Parser.Data.Where(x => x.RPM > rpm.Min && x.RPM <= rpm.Max && x.BENZ_b1 > range.Min && x.BENZ_b1 <= range.Max);
-
-            var message = string.Join("\r \n", data.GroupBy(x => $"{x.SLOW_b1.Round()}_{x.FAST_b1.Round()}").Select(x => $"S_F Trim:{x.Key} Count: {x.Count()} PRESS: {data.Where(y => $"{y.SLOW_b1.Round()}_{y.FAST_b1.Round()}" == x.Key).Average(y => y.PRESS).Round()}"));
-
-            MessageBox.Show(message, "Info");
         }
 
         private void buttonAnalysisByMap_Click(object sender, EventArgs e)
@@ -473,18 +509,12 @@ namespace LPGDataAnalyzer
 
             var a3 = Analyser.LpgInjectorDeadTimeEstimation(Parser.Data);
             LoadDataSource(dataGridView1, a3.ToList());
-
         }
 
-        private void button2_Click(object sender, EventArgs e)
+        private void buttonReducerThermalLag_Click(object sender, EventArgs e)
         {
             var a3 = Analyser.ReducerThermalLag(Parser.Data);
             LoadDataSource(dataGridView1, a3.ToList());
-
-            var a1 = Analyser.CalculateAFR(Parser.Data);
-
-            LoadDataSource(dataGridViewMapAnalysis, a1.ToList());
-
         }
         private void buttonParceSelectedImage_Click(object sender, EventArgs e)
         {
@@ -496,15 +526,15 @@ namespace LPGDataAnalyzer
             var table = textExtractor.BuildFinalTable(textBoxParsedData.Text);
 
             GridBuilder(dataGridViewOrig, table);
-            var maxTrim = 9;
-            var minTrim = -9;
+            var maxTrim = 90;
+            var minTrim = -90;
             var data = Parser.Data
                 .Where(x =>
-                (minTrim<=x.FAST_b1 && x.FAST_b1 <= maxTrim) &&
-                (minTrim <= x.FAST_b1 && x.FAST_b1 <= maxTrim) && 
-                x.FAST_b1 != 0 && 
-                x.FAST_b2 != 0 && 
-                x.SLOW_b1 != 0 && 
+                (minTrim <= x.FAST_b1 && x.FAST_b1 <= maxTrim) &&
+                (minTrim <= x.FAST_b2 && x.FAST_b2 <= maxTrim) &&
+                x.FAST_b1 != 0 &&
+                x.FAST_b2 != 0 &&
+                x.SLOW_b1 != 0 &&
                 x.SLOW_b2 != 0 && x.PRESS < 3)
                     .ToArray();
             table = Prediction.BuildTable(data, table, cbEnableSmooth.Checked, cbInterpolation.Checked);
@@ -514,7 +544,7 @@ namespace LPGDataAnalyzer
             GridBuilder(dataGridViewPrediction, table);
 
             // Apply heatmap to DataGridViews
-           var vals = HighlightDifferencesHeatmapWithValues(dataGridViewPrediction, dataGridViewOrig, tolerance: 0.1);
+            var vals = HighlightDifferencesHeatmapWithValues(dataGridViewPrediction, dataGridViewOrig, tolerance: 0.1);
 
             // Create horizontal legend aligned with DataGridView
             CreateDynamicHorizontalHeatmapLegend(panelLegend, dataGridViewPrediction, vals.WLow, vals.WHigh);
@@ -546,11 +576,11 @@ namespace LPGDataAnalyzer
 
             var values = textBoxReducerTempValues.Text.Split(',', StringSplitOptions.RemoveEmptyEntries);
 
-            for (int i = 0; i < Settings.ReductorTemperatureRanges.Length; i++)
+            for (int i = 0; i < ReductorTemperatureRanges.Length; i++)
             {
-                currentCorrections.Add(Settings.ReductorTemperatureRanges[i].Label, int.Parse(values[i]));
+                currentCorrections.Add(ReductorTemperatureRanges[i].Label, int.Parse(values[i]));
             }
-          
+
             var result = new ReducerPrediction().PredictNewReducerTempCorrections(Parser.Data, currentCorrections, double.Parse(textBoxReferencePressure.Text.Trim()));
 
             MessageBox.Show(string.Join(",", result.Select(x => x.Value)), "LPG Reducer correction");
@@ -596,7 +626,7 @@ namespace LPGDataAnalyzer
             {
                 Console.WriteLine($"An error occurred: {ex.Message}");
             }
-            (string, double)[] result =new (string, double)[txtFiles.Count()];
+            (string, double)[] result = new (string, double)[txtFiles.Count()];
             int i = 0;
             foreach (var file in txtFiles)
             {

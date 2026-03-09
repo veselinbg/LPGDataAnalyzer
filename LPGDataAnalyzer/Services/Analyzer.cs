@@ -1,31 +1,16 @@
 ﻿using LPGDataAnalyzer.Models;
-using System.Runtime.Intrinsics.Arm;
 
 namespace LPGDataAnalyzer.Services
 {
     internal class Analyzer
     {
-        private static bool GasFilter(DataItem item)
+        public object[] GroupByGasTemperature(
+                                                DataItem[] data,
+                                                double benzTimingFilterCuting,
+                                                Func<DataItem, double> selector1,
+                                                Func<DataItem, double> selector2)
         {
-            return item.GAS_b1 > 0 && item.GAS_b2 > 0;
-        }
-        private static bool BenzFilter(DataItem item, double val = 0)
-        {
-            return item.BENZ_b1 > val && item.BENZ_b2 > val;
-        }
-        public static double PercentageChange(double baseValue, double newValue)
-        {
-            return ((newValue - baseValue) / baseValue) * 100;
-        }
-        public ICollection<object> GroupByGasTemperature(
-    IEnumerable<DataItem> data,
-    double benzTimingFilterCuting,
-    Func<DataItem, double> selector1,
-    Func<DataItem, double> selector2)
-        {
-            if (data == null) throw new ArgumentNullException("The data object is null!");
-
-           return [.. data.Where(x => BenzFilter(x, benzTimingFilterCuting))
+            return [.. data.Where(x => Filter.BenzBanks(x, benzTimingFilterCuting))
                 .GroupBy(x => x.Temp_GAS)
                 .Select(x =>
                 {
@@ -49,15 +34,13 @@ namespace LPGDataAnalyzer.Services
                 })];
         }
 
-        public ICollection<object> GroupByRIDTemperature(
-            IEnumerable<DataItem> data,
+        public object[] GroupByRIDTemperature(
+            DataItem[] data,
             double benzTimingFilterCuting,
             Func<DataItem, double> selector1,
             Func<DataItem, double> selector2)
         {
-            if (data == null) throw new ArgumentNullException("The data object is null!");
-
-            return [.. data.Where(x => BenzFilter(x, benzTimingFilterCuting))
+            return [.. data.Where(x => Filter.BenzBanks(x, benzTimingFilterCuting))
                 .GroupBy(x => x.Temp_RID)
                 .Select(x =>
                 {
@@ -80,7 +63,7 @@ namespace LPGDataAnalyzer.Services
                     };
                 })];
         }
-        public IEnumerable<DataItem> FilterByTemp(IEnumerable<DataItem> data, string sLPGTempGroup, string sReductorTempGroup)
+        public DataItem[] FilterByTemp(DataItem[] data, string sLPGTempGroup, string sReductorTempGroup)
         {
             if (sReductorTempGroup == Settings.ALL)
                 return data;
@@ -96,62 +79,92 @@ namespace LPGDataAnalyzer.Services
             if (reductorRange.Label == null)
                 throw new Exception($"This Reductor Temperature group {sReductorTempGroup} is not supported.");
 
-            return data.Where(d =>
+            return [.. data.Where(d =>
                 d.Temp_GAS >= lpgRange.Min && d.Temp_GAS <= lpgRange.Max &&
-                d.Temp_RID >= reductorRange.Min && d.Temp_RID <= reductorRange.Max);
+                d.Temp_RID >= reductorRange.Min && d.Temp_RID <= reductorRange.Max)];
         }
-        public IEnumerable<TableRow> BuildTable(
-                                             IEnumerable<DataItem> data,
-                                             Func<DataItem, double> injectionBankSelector,
-                                             Func<DataItem, double?> valueBankSelector)
-        {
-            return Settings.InjectionRanges.Select(r => new TableRow
-            {
-                Key = r.Label,
-                Columns = Settings.RpmColumns.ToDictionary(
-                    c => c.Label,
-                    c =>
-                    {
-                        var values = data
-                            .Where(d =>
-                                injectionBankSelector(d) > r.Min &&
-                                injectionBankSelector(d) <= r.Max &&
-                                d.RPM > c.Min &&
-                                d.RPM <= c.Max &&
-                                valueBankSelector(d).HasValue)
-                            .Select(d => valueBankSelector(d)!.Value);
 
-                        return values.Any()
-                            ? values.ToArray().Median().Round()
-                            : (double?)null;
-                    })
-            });
+
+
+        public double?[,] BuildTable(
+    DataItem[] data,
+    Func<DataItem, double> injectionBankSelector,
+    Func<DataItem, double?> valueBankSelector,
+    Settings.Aggregation aggregation)
+        {
+            int rpmCount = Settings.RpmColumns.Length;
+            int injCount = Settings.InjectionRanges.Length;
+
+            var table = new double?[rpmCount, injCount];
+
+            // Generate all RPM x Injection combinations with aggregated values
+            var cellValues =
+                from rpmIndex in Enumerable.Range(0, rpmCount)
+                let rpmCol = Settings.RpmColumns[rpmIndex]
+                from injIndex in Enumerable.Range(0, injCount)
+                let injRange = Settings.InjectionRanges[injIndex]
+                let filteredValues = data
+                    .Where(d =>
+                        injectionBankSelector(d) > injRange.Min &&
+                        injectionBankSelector(d) <= injRange.Max &&
+                        d.RPM > rpmCol.Min &&
+                        d.RPM <= rpmCol.Max &&
+                        valueBankSelector(d).HasValue)
+                    .Select(d => valueBankSelector(d)!.Value)
+                    .DefaultIfEmpty(double.NaN) // sentinel for “no value”
+                let aggregated = double.IsNaN(filteredValues.First())
+                    ? (double?)null
+                    : AggregateValues(filteredValues, aggregation).Round()
+                select new { rpmIndex, injIndex, aggregated };
+
+            // Fill the table
+            foreach (var cell in cellValues)
+                table[cell.rpmIndex, cell.injIndex] = cell.aggregated;
+
+            return table;
         }
-        public IEnumerable<object> BuildTableMap(IEnumerable<DataItem> data)
+        public double AggregateValues(IEnumerable<double> values, Settings.Aggregation aggregation)
+        {
+            return aggregation switch
+            {
+                Settings.Aggregation.Median => values.Median(),
+                Settings.Aggregation.Min => values.Min(),
+                Settings.Aggregation.Max => values.Max(),
+                Settings.Aggregation.Average => values.Average(),
+                _ => 0
+            };
+        }
+        public object[] BuildTableMap(DataItem[] data)
         {
             return [..Settings.MapModes.Select(r =>
-            {
-                var dataByMap = data.Where(d => d.MAP > r.Min && d.MAP <= r.Max);
+                    {
+                        var items = data
+                            .Where(d => d.MAP > r.Min && d.MAP <= r.Max)
+                            .ToArray();
 
-                return new
-                { 
-                    r.Label,
-                    MapValue = dataByMap.Average(x => x.MAP).Round(),
-                    AvgFastTrimBank1 = dataByMap.Average(x => x.FAST_b1).Round(),
-                    AvgFastTrimBank2 = dataByMap.Average(x => x.FAST_b2).Round(),
-                    AvgSlowTrimBank1 = dataByMap.Average(x => x.SLOW_b1).Round(),
-                    AvgSlowTrimBank2 = dataByMap.Average(x => x.SLOW_b2).Round(),
-                };
-             })];
+                        return new
+                        {
+                            r.Label,
+                            MapValue = items.Average(x => x.MAP).Round(),
+                            AvgFastTrimBank1 = items.Average(x => x.FAST_b1).Round(),
+                            AvgFastTrimBank2 = items.Average(x => x.FAST_b2).Round(),
+                            AvgSlowTrimBank1 = items.Average(x => x.SLOW_b1).Round(),
+                            AvgSlowTrimBank2 = items.Average(x => x.SLOW_b2).Round(),
+                            PRESS = items.Average(x => x.PRESS).Round(),
+                            AvgTrim = items.Average(x => x.Trim).Round(),
+                            MedianTrim = items.Select(x => x.Trim).ToArray().Median().Round(),
+                        };
+                    })];
         }
-        public IEnumerable<object> BuildTableDrivingModes(IEnumerable<DataItem> data)
+        public object[] BuildTableDrivingModes(DataItem[] data)
         {
             return [..Settings.DrivingModes.Select(r =>
 
             {
-                var dataByb1 = data.Where(d => d.BENZ_b1 > r.Min && d.BENZ_b1 <= r.Max);
-                var dataByb2 = data.Where(d => d.BENZ_b2 > r.Min && d.BENZ_b2 <= r.Max);
-
+                var dataByb1 = data.Where(d => d.BENZ_b1 > r.Min && d.BENZ_b1 <= r.Max).ToArray();
+                var dataByb2 = data.Where(d => d.BENZ_b2 > r.Min && d.BENZ_b2 <= r.Max).ToArray();
+                var dataByMode = data.Where(d=>(d.BENZ_b1 > r.Min && d.BENZ_b1 <= r.Max) || 
+                                               (d.BENZ_b2 > r.Min && d.BENZ_b2 <= r.Max)).ToArray();
                 return new
                 {
                     r.Label,
@@ -161,7 +174,9 @@ namespace LPGDataAnalyzer.Services
                     AvgFastTrimBank2 = dataByb2.Average(x => x.FAST_b2).Round(),
                     AvgSlowTrimBank1 = dataByb1.Average(x => x.SLOW_b1).Round(),
                     AvgSlowTrimBank2 = dataByb2.Average(x => x.SLOW_b2).Round(),
-
+                    PRESS = dataByMode.Average(x => x.PRESS).Round(),
+                    AvgTrim = dataByMode.Average(x => x.Trim).Round(),
+                    MedianTrim = dataByMode.Select(x => x.Trim).ToArray().Median().Round(),
                 };
              })];
         }
@@ -175,10 +190,10 @@ namespace LPGDataAnalyzer.Services
         /// <returns>
         /// |Delta| > 5% → injector flow mismatch, vacuum leak, manifold imbalance
         /// </returns>
-        public IEnumerable<object> BuildBankToBankfuelBalance(IEnumerable<DataItem> data)
+        public object[] BuildBankToBankfuelBalance(DataItem[] data)
         {
             return [..data
-                                .Where(s =>BenzFilter(s))
+                                .Where(s =>Filter.BenzBanks(s))
                                 .GroupBy(s => new
                                 {
                                     Rpm = (int)Math.Round(s.RPM / 250.0) * 250,
@@ -208,9 +223,9 @@ namespace LPGDataAnalyzer.Services
         /// </summary>
         /// <param name="data"></param>
         /// <returns></returns>
-        public IList<object> ReducerThermalLag(IEnumerable<DataItem> data)
+        public object[] ReducerThermalLag(DataItem[] data)
         {
-            var tempLag = data.Where(s => GasFilter(s))
+            var tempLag = data.Where(s => Filter.GasBanks(s))
                 .Zip(data.Skip(1), (a, b) => new
                 {
                     ReducerDelta = Math.Abs((b.Temp_RID - a.Temp_RID).Round()),
@@ -218,8 +233,10 @@ namespace LPGDataAnalyzer.Services
                 })
                 .Where(x=>x.ReducerDelta > 0 || x.PressureDelta > 0)
                 .OrderByDescending(x=>x.ReducerDelta)
-                .ThenByDescending(y=>y.PressureDelta);
-            return [.. tempLag];
+                .ThenByDescending(y=>y.PressureDelta)
+                .Distinct().ToArray();
+
+            return tempLag;
         }
         /// <summary>
         /// LPG temp vs injector time (normalized)
@@ -227,10 +244,10 @@ namespace LPGDataAnalyzer.Services
         /// </summary>
         /// <param name="data"></param>
         /// <returns></returns>
-        public IEnumerable<object> LpgTemperatureVsInjectionTime(IEnumerable<DataItem> data)
+        public object[] LpgTemperatureVsInjectionTime(DataItem[] data)
         {
-            var lpgTempEffect = data
-                                .Where(s => GasFilter(s))
+            return [.. data
+                                .Where(s => Filter.GasBanks(s))
                                 .GroupBy(s => Math.Round(s.Temp_GAS / 5) * 5)
                                 .Select(g => new
                                 {
@@ -240,8 +257,7 @@ namespace LPGDataAnalyzer.Services
                                     AvgLpg2Ms = g.Average(x => x.GAS_b2).Round(),
                                     StdDev2 = (g.Select(x => x.GAS_b2)).StdDev().Round()
                                 })
-                                .OrderBy(x => x.Temp);
-            return lpgTempEffect;
+                                .OrderBy(x => x.Temp)];
         }
         /// <summary>
         /// 7. Safe economy zones (pre-lambda)
@@ -256,34 +272,38 @@ namespace LPGDataAnalyzer.Services
         /// </summary>
         /// <param name="data"></param>
         /// <returns></returns>
-        public IEnumerable<object> BuildABankAwareLPGBaseMap(IEnumerable<DataItem> data)
+        public object[] BuildABankAwareLPGBaseMap(DataItem[] data)
         {
-            var lpgBaseMap = data.GroupBy(s => new
+            return [.. data.GroupBy(s => new
             {
                 Rpm = (int)Math.Round(s.RPM / 500.0) * 500,
                 Map = s.MAP.Round()
-            }).Select(g => new
-               {
-                   g.Key.Rpm,
-                   g.Key.Map,
-                   Lpg1 = g.Average(x => x.GAS_b1).Round(),
-                   Lpg2 = g.Average(x => x.GAS_b2).Round(),
-                   Diff = (g.Average(x => x.GAS_b1) - g.Average(x => x.GAS_b2)).Round().ToString("P")
-            }).OrderBy(x=>x.Diff);
-            return lpgBaseMap;
+            }).Select(g =>
+                {
+                    var GAS_b1 = g.Average(x => x.GAS_b1).Round();
+                    var GAS_b2 = g.Average(x => x.GAS_b2).Round();
+
+                return new
+                   {
+                       g.Key.Rpm,
+                       g.Key.Map,
+                       Lpg1 = GAS_b1,
+                       Lpg2 = GAS_b2,
+                       Diff = (Math.Abs(GAS_b1 - GAS_b2)/((GAS_b1 + GAS_b2)/2.0)).ToString("P")
+                    }; 
+                }).OrderBy(x=>x.Diff)];
         }
         /// <summary>
         /// LPG injector dead-time estimation
         /// </summary>
         /// <param name="data"></param>
         /// <returns></returns>
-        public IEnumerable<object> LpgInjectorDeadTimeEstimation(IEnumerable<DataItem> data)
+        public object[] LpgInjectorDeadTimeEstimation(DataItem[] data)
         {
-            var deadTimeData = data
-                                    .Where(s => GasFilter(s) )//&& s.MAP < 0.45 && s.RPM < 1500)
-                                    .GroupBy(g => g.MAP)
-                                    .Select(s =>
-                                    {
+            return [.. data.Where(s => Filter.GasBanks(s) )//&& s.MAP < 0.45 && s.RPM < 1500)
+                                   .GroupBy(g => g.MAP)
+                                   .Select(s =>
+                                   {
                                         var BENZ_b1 = s.Average(x => x.BENZ_b1).Round();
                                         var BENZ_b2 = s.Average(x => x.BENZ_b2).Round();
                                         return new
@@ -293,33 +313,7 @@ namespace LPGDataAnalyzer.Services
                                             Average_BENZ_b2 = BENZ_b2,
                                             Diff = (Math.Abs(BENZ_b1 - BENZ_b2)/((BENZ_b1 + BENZ_b2)/2.0)).ToString("P")
                                         };
-                                    }).OrderBy(x=>x.Map);
-            return deadTimeData;
-        }
-
-        public IEnumerable<object> CalculateAFR(IEnumerable<DataItem> data, double stoichAfr = 15.6)
-        {
-            var afr = data.Select(s =>
-            {
-                var totalTrimB1 = (s.FAST_b1 + s.SLOW_b1).Round();
-                var totalTrimB2 = (s.FAST_b2 + s.SLOW_b2).Round();
-
-                var factorB1 = (1.0 + (totalTrimB1 / 100.0)).Round();
-                var factorB2 = (1.0 + (totalTrimB2 / 100.0)).Round();
-
-                return new
-                {
-                    TotalTrimB1 = totalTrimB1,
-                    TotalTrimB2 = totalTrimB2,
-                    fuelFactorB1 = factorB1,
-                    fuelFactorB2 = factorB2,
-                    AfrB1 = (stoichAfr / factorB1).Round(),
-                    AfrB2 = (stoichAfr / factorB2).Round()
-                };
-            })
-        .Distinct();
-
-            return afr;
+                                   }).OrderBy(x=>x.Map)];
         }
     }
 }

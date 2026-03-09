@@ -21,15 +21,21 @@ namespace LPGDataAnalyzer
                 ? result
                 : 0.0;
         }
-        public static double Median(this double[] numbers)
+        public static double Median(this IEnumerable<double> numbers)
         {
-            if (numbers == null || numbers.Length == 0)
-                throw new ArgumentException("Median of empty array is not defined.", nameof(numbers));
+            if (numbers == null)
+                throw new ArgumentNullException(nameof(numbers));
 
-            var sorted = (double[])numbers.Clone();
+            var sorted = numbers.ToArray();
+            if (sorted.Length == 0)
+                throw new ArgumentException("Median of empty sequence is not defined.", nameof(numbers));
+
             Array.Sort(sorted);
+
             int mid = sorted.Length / 2;
-            return (sorted.Length % 2 != 0) ? sorted[mid] : (sorted[mid] + sorted[mid - 1]) / 2;
+            return (sorted.Length % 2 != 0)
+                ? sorted[mid]
+                : (sorted[mid - 1] + sorted[mid]) / 2.0;
         }
         public static double StdDev(this IEnumerable<double> list)
         {
@@ -41,22 +47,7 @@ namespace LPGDataAnalyzer
 
             return Math.Sqrt(sumSq / list.Count());
         }
-        public static string ToText(this IEnumerable<TableRow> list)
-        {
-            return list == null
-                ? string.Empty
-                : string.Concat(
-                    list.OrderBy(r => r.Key)
-                        .Select(row =>
-                            string.Concat(
-                                row.Columns
-                                   .OrderBy(c => c.Key)
-                                   .Select(c => c.Value)
-                            ) + Environment.NewLine
-                        )
-                  );
-        }
-        public static string ToText(this double[,] table)
+        public static string ToText(this double?[,] table)
         {
             if(table != null)
             {
@@ -74,6 +65,11 @@ namespace LPGDataAnalyzer
                 return text.ToString();
             }
             return string.Empty;
+        }
+        // Helper to safely multiply nullable double
+        public static double? SafeMultiply(this double? value, double factor)
+        {
+            return value.HasValue ? value.Value * factor : null;
         }
     }
 }

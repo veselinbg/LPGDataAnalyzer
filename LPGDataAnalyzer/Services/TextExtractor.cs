@@ -1,7 +1,5 @@
 ﻿using LPGDataAnalyzer.Models;
-using LPGDataAnalyzer.Models.Common;
 using Tesseract;
-using static LPGDataAnalyzer.Services.Prediction;
 
 namespace LPGDataAnalyzer.Services
 {
@@ -33,7 +31,7 @@ namespace LPGDataAnalyzer.Services
                 SplitToThreeDigitInts(item);
             }
         }
-        public double[,] BuildFinalTable(string text)
+        public double?[,] BuildFinalTable(string text)
         {
             var data = text.Split(Environment.NewLine, StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
 
@@ -48,81 +46,42 @@ namespace LPGDataAnalyzer.Services
 
             return fuelCellTable;
         }
-        internal static double[,] BuildTable(IList<int> values)
+        internal static double?[,] BuildTable(IList<int> values)
         {
             int rpmLength = Settings.RpmColumns.Length;
             int injLength = Settings.InjectionRanges.Length;
 
-            double[,] table = new double[rpmLength, injLength];
+            var table = new double?[rpmLength, injLength];
 
             int index = 0;
             for (int inj = 0; inj < injLength; inj++)
             {
                 for (int rpm = 0; rpm < rpmLength; rpm++)
                 {
-                    table[rpm, inj] = index < values.Count ? values[index++] : 0;
+                    table[rpm, inj] = index < values.Count ? values[index++] : (double?)null;
                 }
             }
 
             return table;
         }
-        private static List<int> SplitToThreeDigitInts(string input)
+        private static int[] SplitToThreeDigitInts(string input)
         {
             if (string.IsNullOrEmpty(input))
                 throw new ArgumentException("Input cannot be null or empty");
 
             if (input.Length % 3 != 0)
-            {
-                throw new ArgumentException($"Input {input} length must be divisible by 3");
-            }
+                throw new ArgumentException($"Input '{input}' length must be divisible by 3");
 
-            var result = new List<int>();
+            int count = input.Length / 3;
+            var result = new int[count];
 
-            for (int i = 0; i < input.Length; i += 3)
+            for (int i = 0; i < count; i++)
             {
-                string chunk = input.Substring(i, 3);
-                result.Add(int.Parse(chunk));
+                string chunk = input.Substring(i * 3, 3);
+                result[i] = int.Parse(chunk);
             }
 
             return result;
-        }
-        public static IEnumerable<TableRow> ParseFuelTable(string raw, (double Min, double Max, double Label)[] injRanges,
-(int Min, int Max, int Label)[] rpmCols)
-        {
-            var rows = raw
-                .Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.RemoveEmptyEntries)
-                .ToList();
-
-            if (rows.Count != injRanges.Length)
-                throw new InvalidOperationException(
-                    $"Row count {rows.Count} does not match InjectionRanges {injRanges.Length}");
-
-            for (int r = 0; r < rows.Count; r++)
-            {
-                string line = rows[r].Trim();
-
-                if (line.Length % 3 != 0)
-                    throw new InvalidOperationException(
-                        $"Row {r} length {line.Length} is not divisible by 3");
-
-                int cellCount = line.Length / 3;
-                if (cellCount != rpmCols.Length)
-                    throw new InvalidOperationException(
-                        $"Row {r} has {cellCount} cells but RPM columns are {rpmCols.Length}");
-
-                var row = new TableRow
-                {
-                    Key = injRanges[r].Label
-                };
-
-                for (int c = 0; c < cellCount; c++)
-                {
-                    string token = line.Substring(c * 3, 3);
-                    row.Columns[rpmCols[c].Label] = double.Parse(token);
-                }
-
-                yield return row;
-            }
         }
     }
 }

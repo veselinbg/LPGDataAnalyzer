@@ -51,6 +51,7 @@
             dataGridViewInjectionTimeAnalisys = new DataGridView();
             dataGridViewMapAnalysis = new DataGridView();
             tabPagePredictions = new TabPage();
+            cbInterpolation = new CheckBox();
             cbEnableSmooth = new CheckBox();
             textBoxLastPredictedFuelTable = new TextBox();
             panelLegend = new Panel();
@@ -71,14 +72,15 @@
             buttonAnalyze = new Button();
             comboBoxReductorTempGroup2 = new ComboBox();
             comboBoxReductorTempGroup1 = new ComboBox();
-            comboBoxTemperature2 = new ComboBox();
-            comboBoxTemperature1 = new ComboBox();
+            comboBoxGasTemperatureb2 = new ComboBox();
+            comboBoxGasTemperatureb1 = new ComboBox();
             buttonAnalysisByMap = new Button();
             button1 = new Button();
-            button2 = new Button();
+            buttonReducerThermalLag = new Button();
             buttonAFR = new Button();
             buttonExtraInjectionCalculator = new Button();
-            cbInterpolation = new CheckBox();
+            buttonShowReducerPress = new Button();
+            comboBoxAggregation = new ComboBox();
             statusBar.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)dataGridViewMainData).BeginInit();
             ((System.ComponentModel.ISupportInitialize)dataGridViewAnalyzeDataBank1t2).BeginInit();
@@ -123,7 +125,7 @@
             // label1
             // 
             label1.AutoSize = true;
-            label1.Location = new Point(717, 46);
+            label1.Location = new Point(831, 36);
             label1.Name = "label1";
             label1.Size = new Size(133, 15);
             label1.TabIndex = 9;
@@ -132,7 +134,7 @@
             // tbBenzTimingFilterCuting
             // 
             tbBenzTimingFilterCuting.AccessibleDescription = "Benz Timing Cutting Filter ";
-            tbBenzTimingFilterCuting.Location = new Point(847, 44);
+            tbBenzTimingFilterCuting.Location = new Point(891, 52);
             tbBenzTimingFilterCuting.Name = "tbBenzTimingFilterCuting";
             tbBenzTimingFilterCuting.Size = new Size(34, 23);
             tbBenzTimingFilterCuting.TabIndex = 7;
@@ -304,9 +306,9 @@
             // 
             dataGridView1.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Right;
             dataGridView1.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dataGridView1.Location = new Point(975, 3);
+            dataGridView1.Location = new Point(789, 3);
             dataGridView1.Name = "dataGridView1";
-            dataGridView1.Size = new Size(430, 728);
+            dataGridView1.Size = new Size(616, 728);
             dataGridView1.TabIndex = 3;
             // 
             // dataGridViewInjectionTimeAnalisys
@@ -348,6 +350,16 @@
             tabPagePredictions.TabIndex = 4;
             tabPagePredictions.Text = "Prediction";
             tabPagePredictions.UseVisualStyleBackColor = true;
+            // 
+            // cbInterpolation
+            // 
+            cbInterpolation.AutoSize = true;
+            cbInterpolation.Location = new Point(1239, 324);
+            cbInterpolation.Name = "cbInterpolation";
+            cbInterpolation.Size = new Size(94, 19);
+            cbInterpolation.TabIndex = 27;
+            cbInterpolation.Text = "Interpolation";
+            cbInterpolation.UseVisualStyleBackColor = true;
             // 
             // cbEnableSmooth
             // 
@@ -506,7 +518,7 @@
             // 
             // buttonAnalyzeFastTrim
             // 
-            buttonAnalyzeFastTrim.Location = new Point(631, 40);
+            buttonAnalyzeFastTrim.Location = new Point(707, 42);
             buttonAnalyzeFastTrim.Name = "buttonAnalyzeFastTrim";
             buttonAnalyzeFastTrim.Size = new Size(58, 23);
             buttonAnalyzeFastTrim.TabIndex = 15;
@@ -516,7 +528,7 @@
             // 
             // buttonAnalyze
             // 
-            buttonAnalyze.Location = new Point(520, 39);
+            buttonAnalyze.Location = new Point(596, 42);
             buttonAnalyze.Name = "buttonAnalyze";
             buttonAnalyze.Size = new Size(53, 23);
             buttonAnalyze.TabIndex = 14;
@@ -540,25 +552,25 @@
             comboBoxReductorTempGroup1.Size = new Size(121, 23);
             comboBoxReductorTempGroup1.TabIndex = 12;
             // 
-            // comboBoxTemperature2
+            // comboBoxGasTemperatureb2
             // 
-            comboBoxTemperature2.FormattingEnabled = true;
-            comboBoxTemperature2.Location = new Point(266, 39);
-            comboBoxTemperature2.Name = "comboBoxTemperature2";
-            comboBoxTemperature2.Size = new Size(121, 23);
-            comboBoxTemperature2.TabIndex = 11;
+            comboBoxGasTemperatureb2.FormattingEnabled = true;
+            comboBoxGasTemperatureb2.Location = new Point(266, 39);
+            comboBoxGasTemperatureb2.Name = "comboBoxGasTemperatureb2";
+            comboBoxGasTemperatureb2.Size = new Size(121, 23);
+            comboBoxGasTemperatureb2.TabIndex = 11;
             // 
-            // comboBoxTemperature1
+            // comboBoxGasTemperatureb1
             // 
-            comboBoxTemperature1.FormattingEnabled = true;
-            comboBoxTemperature1.Location = new Point(7, 39);
-            comboBoxTemperature1.Name = "comboBoxTemperature1";
-            comboBoxTemperature1.Size = new Size(121, 23);
-            comboBoxTemperature1.TabIndex = 10;
+            comboBoxGasTemperatureb1.FormattingEnabled = true;
+            comboBoxGasTemperatureb1.Location = new Point(7, 39);
+            comboBoxGasTemperatureb1.Name = "comboBoxGasTemperatureb1";
+            comboBoxGasTemperatureb1.Size = new Size(121, 23);
+            comboBoxGasTemperatureb1.TabIndex = 10;
             // 
             // buttonAnalysisByMap
             // 
-            buttonAnalysisByMap.Location = new Point(887, 46);
+            buttonAnalysisByMap.Location = new Point(931, 52);
             buttonAnalysisByMap.Name = "buttonAnalysisByMap";
             buttonAnalysisByMap.Size = new Size(68, 23);
             buttonAnalysisByMap.TabIndex = 16;
@@ -576,19 +588,19 @@
             button1.UseVisualStyleBackColor = true;
             button1.Click += button1_Click;
             // 
-            // button2
+            // buttonReducerThermalLag
             // 
-            button2.Location = new Point(1014, 42);
-            button2.Name = "button2";
-            button2.Size = new Size(75, 23);
-            button2.TabIndex = 18;
-            button2.Text = "button2";
-            button2.UseVisualStyleBackColor = true;
-            button2.Click += button2_Click;
+            buttonReducerThermalLag.Location = new Point(1014, 42);
+            buttonReducerThermalLag.Name = "buttonReducerThermalLag";
+            buttonReducerThermalLag.Size = new Size(130, 23);
+            buttonReducerThermalLag.TabIndex = 18;
+            buttonReducerThermalLag.Text = "Reducer Thermal Lag";
+            buttonReducerThermalLag.UseVisualStyleBackColor = true;
+            buttonReducerThermalLag.Click += buttonReducerThermalLag_Click;
             // 
             // buttonAFR
             // 
-            buttonAFR.Location = new Point(579, 40);
+            buttonAFR.Location = new Point(655, 42);
             buttonAFR.Name = "buttonAFR";
             buttonAFR.Size = new Size(46, 23);
             buttonAFR.TabIndex = 20;
@@ -606,24 +618,34 @@
             buttonExtraInjectionCalculator.UseVisualStyleBackColor = true;
             buttonExtraInjectionCalculator.Click += buttonExtraInjectionCalculator_Click;
             // 
-            // cbInterpolation
+            // buttonShowReducerPress
             // 
-            cbInterpolation.AutoSize = true;
-            cbInterpolation.Location = new Point(1239, 324);
-            cbInterpolation.Name = "cbInterpolation";
-            cbInterpolation.Size = new Size(94, 19);
-            cbInterpolation.TabIndex = 27;
-            cbInterpolation.Text = "Interpolation";
-            cbInterpolation.UseVisualStyleBackColor = true;
+            buttonShowReducerPress.Location = new Point(771, 42);
+            buttonShowReducerPress.Name = "buttonShowReducerPress";
+            buttonShowReducerPress.Size = new Size(54, 23);
+            buttonShowReducerPress.TabIndex = 22;
+            buttonShowReducerPress.Text = "Press";
+            buttonShowReducerPress.UseVisualStyleBackColor = true;
+            buttonShowReducerPress.Click += buttonShowReducerPress_Click;
+            // 
+            // comboBoxAggregation
+            // 
+            comboBoxAggregation.FormattingEnabled = true;
+            comboBoxAggregation.Location = new Point(519, 40);
+            comboBoxAggregation.Name = "comboBoxAggregation";
+            comboBoxAggregation.Size = new Size(71, 23);
+            comboBoxAggregation.TabIndex = 23;
             // 
             // MainForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(1416, 868);
+            Controls.Add(comboBoxAggregation);
+            Controls.Add(buttonShowReducerPress);
             Controls.Add(buttonExtraInjectionCalculator);
             Controls.Add(buttonAFR);
-            Controls.Add(button2);
+            Controls.Add(buttonReducerThermalLag);
             Controls.Add(button1);
             Controls.Add(buttonAnalysisByMap);
             Controls.Add(buttonAnalyzeFastTrim);
@@ -636,8 +658,8 @@
             Controls.Add(buttonSelectFile);
             Controls.Add(comboBoxReductorTempGroup1);
             Controls.Add(statusBar);
-            Controls.Add(comboBoxTemperature2);
-            Controls.Add(comboBoxTemperature1);
+            Controls.Add(comboBoxGasTemperatureb2);
+            Controls.Add(comboBoxGasTemperatureb1);
             Name = "MainForm";
             Text = "LPG Analyser";
             WindowState = FormWindowState.Maximized;
@@ -684,8 +706,8 @@
         private TabControl tabControlMain;
         private TabPage tabPageMainData;
         private TabPage tabPageAnalyses;
-        private ComboBox comboBoxTemperature2;
-        private ComboBox comboBoxTemperature1;
+        private ComboBox comboBoxGasTemperatureb2;
+        private ComboBox comboBoxGasTemperatureb1;
         private ComboBox comboBoxReductorTempGroup2;
         private ComboBox comboBoxReductorTempGroup1;
         private Button buttonAnalyze;
@@ -698,7 +720,7 @@
         private DataGridView dataGridViewInjectionTimeAnalisys;
         private DataGridView dataGridView1;
         private Button button1;
-        private Button button2;
+        private Button buttonReducerThermalLag;
         private TabPage tabPagePredictions;
         private DataGridView dataGridViewPrediction;
         private DataGridView dataGridViewOrig;
@@ -720,5 +742,7 @@
         private Label labelRefPressure;
         private CheckBox cbEnableSmooth;
         private CheckBox cbInterpolation;
+        private Button buttonShowReducerPress;
+        private ComboBox comboBoxAggregation;
     }
 }
