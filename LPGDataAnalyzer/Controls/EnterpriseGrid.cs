@@ -64,6 +64,16 @@ namespace LPGDataAnalyzer.Controls
 
     public class EnterpriseGrid<T> : UserControl
     {
+        class ValueItem
+        {
+            public object Value { get; set; }
+            public int Count { get; set; }
+
+            public override string ToString()
+            {
+                return $"{Value} ({Count})";
+            }
+        }
         private bool readOnly = false;
         private string sortColumn;
         private bool sortAsc = true;
@@ -96,7 +106,21 @@ namespace LPGDataAnalyzer.Controls
             BuildGetterCache();
             BuildFilterPanel();
         }
+        private IEnumerable<T> GetDataFilteredExcept(string excludeColumn)
+        {
+            IEnumerable<T> data = source;
 
+            foreach (var kv in filters)
+            {
+                if (kv.Key == excludeColumn)
+                    continue;
+
+                foreach (var f in kv.Value)
+                    data = f.Apply(data);
+            }
+
+            return data;
+        }
         private void BuildLayout()
         {
             titleLabel.Dock = DockStyle.Top;
@@ -324,9 +348,12 @@ namespace LPGDataAnalyzer.Controls
             {
                 IEnumerable<T> data = source;
 
-                foreach (var colFilters in filters.Values)
-                    foreach (var f in colFilters)
-                        data = f.Apply(data);
+                if (filters.Count > 0)
+                {
+                    foreach (var kv in filters)
+                        foreach (var f in kv.Value)
+                            data = f.Apply(data);
+                }
 
                 if (!string.IsNullOrWhiteSpace(search))
                     data = data.Where(item => getters.Values.Any(g =>
@@ -479,32 +506,49 @@ namespace LPGDataAnalyzer.Controls
 
         private void PopulateValueList(ColumnFilterSelection sel)
         {
-            // apply all filters except the current column
-            IEnumerable<T> data = source;
+            if (currentColumn == null) return;
 
-            foreach (var kv in filters)
-            {
-                if (kv.Key == currentColumn) continue;
+            var data = GetDataFilteredExcept(currentColumn);
 
-                foreach (var f in kv.Value)
-                    data = f.Apply(data);
-            }
-
-            var allValues = data
+            var counts = data
                 .Select(getters[currentColumn])
-                .Distinct()
-                .OrderBy(v => v?.ToString())
+                .Where(v => v != null)
+                .GroupBy(v => v)
+                .ToDictionary(g => g.Key, g => g.Count());
+
+            var values = counts.Keys
+                .OrderByDescending(v => counts[v])   // Excel-style sorting
                 .ToList();
 
             valueList.ItemCheck -= ValueList_ItemCheck;
             valueList.Items.Clear();
-            valueList.Items.Add("Select All", sel.SelectedValues.Count == 0 || sel.SelectedValues.Count == allValues.Count);
-            foreach (var v in allValues)
-                valueList.Items.Add(v, sel.SelectedValues.Count == 0 || sel.SelectedValues.Contains(v));
+
+            bool selectAllChecked =
+                sel.SelectedValues.Count == 0 ||
+                sel.SelectedValues.Count == values.Count;
+
+            valueList.Items.Add("Select All", selectAllChecked);
+
+            foreach (var v in values)
+            {
+                var item = new ValueItem
+                {
+                    Value = v,
+                    Count = counts[v]
+                };
+
+                bool isChecked =
+                    sel.SelectedValues.Count == 0 ||
+                    sel.SelectedValues.Contains(v);
+
+                valueList.Items.Add(item, isChecked);
+            }
+
             valueList.ItemCheck += ValueList_ItemCheck;
 
             minBox.Text = sel.Min?.ToString() ?? "";
             maxBox.Text = sel.Max?.ToString() ?? "";
+
             andButton.Checked = !sel.UseOrLogic;
             orButton.Checked = sel.UseOrLogic;
         }
@@ -513,24 +557,34 @@ namespace LPGDataAnalyzer.Controls
         {
             filterPanel.Visible = false;
 
+            var selectedValues = valueList.CheckedItems
+                .Cast<object>()
+                .Where(x => x is ValueItem)
+                .Cast<ValueItem>()
+                .Select(x => x.Value)
+                .ToHashSet();
+
             var sel = new ColumnFilterSelection
             {
-                SelectedValues = valueList.CheckedItems.Cast<object>().Where(x => x.ToString() != "Select All").ToHashSet(),
+                SelectedValues = selectedValues,
                 Min = decimal.TryParse(minBox.Text, out var min) ? min : (decimal?)null,
                 Max = decimal.TryParse(maxBox.Text, out var max) ? max : (decimal?)null,
                 UseOrLogic = orButton.Checked
             };
 
             columnSelections[currentColumn] = sel;
+
             ClearFilters(currentColumn);
 
             if (sel.SelectedValues.Count > 0)
                 AddFilter(currentColumn, new ValueFilter<T>(getters[currentColumn], sel.SelectedValues));
+
             if (sel.Min.HasValue || sel.Max.HasValue)
                 AddFilter(currentColumn, new RangeFilter<T>(getters[currentColumn], sel.Min, sel.Max));
 
             UpdateColumnHeaderStyles();
             UpdateTitleStyle();
+
             await ApplyFiltersAsync();
         }
 
