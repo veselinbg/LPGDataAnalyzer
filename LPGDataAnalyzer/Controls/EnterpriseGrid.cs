@@ -445,17 +445,34 @@ namespace LPGDataAnalyzer.Controls
         {
             if (!getters.ContainsKey(column)) return;
 
+            // toggle sort direction if same column
             if (sortColumn == column)
-                sortAsc = !sortAsc; // toggle
+                sortAsc = !sortAsc;
             else
             {
                 sortColumn = column;
                 sortAsc = true;
             }
 
+            // get the getter once for speed
+            var getter = getters[column];
+
+            // fast type-aware sorting
             filtered = sortAsc
-                ? filtered.OrderBy(x => getters[column](x)).ToList()
-                : filtered.OrderByDescending(x => getters[column](x)).ToList();
+                ? filtered.OrderBy(item =>
+                {
+                    var val = getter(item);
+                    if (val == null) return decimal.MinValue; // nulls first
+                    if (val is IComparable) return val;       // numeric/date/string
+                    return val.ToString();                     // fallback to string
+                }).ToList()
+                : filtered.OrderByDescending(item =>
+                {
+                    var val = getter(item);
+                    if (val == null) return decimal.MinValue;
+                    if (val is IComparable) return val;
+                    return val.ToString();
+                }).ToList();
 
             grid.DataSource = new BindingList<T>(filtered);
 

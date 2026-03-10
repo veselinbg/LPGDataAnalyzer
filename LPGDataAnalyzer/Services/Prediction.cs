@@ -467,7 +467,7 @@ namespace LPGDataAnalyzer.Services
                         result[rpmIndex, injIndex] = cellMap[rpmIndex, injIndex].SafeMultiply(trim);
                         continue;
                     }
-                    if (enableInterpolation && rpm.Label > 3500 && inj.Label >= 5.5)
+                    if (enableInterpolation && rpm.Label > 3400 && inj.Label > 5.8)
                     {
                         double t = 1.0;
                         int rpmSave = rpmIndex;
@@ -480,26 +480,27 @@ namespace LPGDataAnalyzer.Services
                                 .Select(d => d.Trim)
                                 .ToArray();
 
-                            if (!lowerLogs.Any()) continue;
-
-                            double tNew = 1 + lowerLogs.Median() / 100;
-
-                            if (tNew > t)
+                            if (lowerLogs.Length != 0)
                             {
-                                t = tNew;
-                                rpmSave = lowerRpm;
-                            }
-                            else
-                            {
-                                rpmSave = rpmIndex;
-                                break;
+                                double tNew = 1 + lowerLogs.Median() / 100;
+
+                                if (tNew > t)
+                                {
+                                    t = tNew;
+                                    rpmSave = lowerRpm;
+                                }
+                                else
+                                {
+                                    rpmSave = rpmIndex;
+                                    break;
+                                }
                             }
                         }
                         if (!showOnlyChanges || trim != 1)
                         {
                             var newValue = cellMap[rpmIndex, injIndex].SafeMultiply(t);
 
-                            if (inj.Label > 4.5) 
+                            if (inj.Label > 4.8) //increate table for more rpms 
                                 newValue += rpmIndex - rpmSave;
 
                             result[rpmIndex, injIndex] = newValue;

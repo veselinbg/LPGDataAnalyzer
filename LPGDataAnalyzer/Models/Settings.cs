@@ -4,38 +4,37 @@
     {
         public const string ALL = "All";
 
-        public static readonly (double Min, double Max, double Label)[] InjectionRanges =
-                                                                {
-                                                                            (0.0, 1.5, 1.5),
-                                                                            (1.5, 2.5, 2.5),
-                                                                            (2.5, 3.0, 3.0),
-                                                                            (3.0, 3.5, 3.5),
-                                                                            (3.5, 4.5, 4.5),
-                                                                            (4.5, 5.5, 5.5),
-                                                                            (5.5, 6.5, 6.5),
-                                                                            (6.5, 7.5, 7.5),
-                                                                            (7.5, 8.5, 8.5),
-                                                                            (8.5, 9.5, 9.5),
-                                                                            (9.5, 10.5, 10.5),
-                                                                            (10.5, 15.0, 15.0)
-                                                                        };
-
         public static readonly (int Min, int Max, int Label)[] RpmColumns =
-                                                                {
-                                                                            (0, 500, 500),
-                                                                            (500, 1000, 1000),
-                                                                            (1000, 1500, 1500),
-                                                                            (1500, 2000, 2000),
-                                                                            (2000, 2500, 2500),
-                                                                            (2500, 3000, 3000),
-                                                                            (3000, 3500, 3500),
-                                                                            (3500, 4000, 4000),
-                                                                            (4000, 4500, 4500),
-                                                                            (4500, 5000, 5000),
-                                                                            (5000, 5500, 5500),
-                                                                            (5500, 6200, 6200)
-                                                                        };
+                                                                                    [
+                                                                                        (0, 700, 700),
+                                                                                        (700, 1000, 1000),
+                                                                                        (1000, 1400, 1400),
+                                                                                        (1400, 1800, 1800),
+                                                                                        (1800, 2200, 2200),
+                                                                                        (2200, 2600, 2600),
+                                                                                        (2600, 3000, 3000),
+                                                                                        (3000, 3400, 3400),
+                                                                                        (3400, 4000, 4000),
+                                                                                        (4000, 4700, 4700),
+                                                                                        (4700, 5400, 5400),
+                                                                                        (5400, 6200, 6200)
+                                                                                    ];
 
+        public static readonly (double Min, double Max, double Label)[] InjectionRanges =
+                                                                                        [
+                                                                                            (0.0, 1.8, 1.8),
+                                                                                            (1.8, 2.4, 2.4),
+                                                                                            (2.4, 2.9, 2.9),
+                                                                                            (2.9, 3.4, 3.4),
+                                                                                            (3.4, 4.0, 4.0),
+                                                                                            (4.0, 4.8, 4.8),
+                                                                                            (4.8, 5.8, 5.8),
+                                                                                            (5.8, 7.0, 7.0),
+                                                                                            (7.0, 8.5, 8.5),
+                                                                                            (8.5, 10.0, 10.0),
+                                                                                            (10.0, 11.5, 11.5),
+                                                                                            (11.5, 13.5, 13.5)
+                                                                                        ];
         public static readonly (int Min, int Max, string Label)[] GasTemperatureRanges =
         {
             (int.MinValue, 0,  "Temp_to_0"),
@@ -46,9 +45,9 @@
             (41, 50, "Temp_41_50"),
             (51, 60, "Temp_51_60"),
             (61, 70, "Temp_61_70"),
-            (71, int.MaxValue, "Temp_71_Over")            
+            (71, int.MaxValue, "Temp_71_Over")
         };
-        public static readonly string[] LPGTempGroups = [ALL,.. GasTemperatureRanges.Select(t => t.Label)];
+        public static readonly string[] LPGTempGroups = [ALL, .. GasTemperatureRanges.Select(t => t.Label)];
 
         public static string[] GetExistGasTemperatureRanges(DataItem[] data)
         {
@@ -59,7 +58,7 @@
             var usedRanges = GasTemperatureRanges
                 .Where(range => data.Any(item => item.Temp_GAS >= range.Min && item.Temp_GAS <= range.Max)).Select(t => t.Label);
 
-            return [ALL,.. usedRanges];
+            return [ALL, .. usedRanges];
         }
 
         public static readonly (int Min, int Max, string Label)[] ReductorTemperatureRanges =
@@ -72,9 +71,9 @@
             (41, 50, "Temp_41_50"),
             (51, 60, "Temp_51_60"),
             (61, 70, "Temp_61_70"),
-            (71, int.MaxValue, "Temp_71_over"),           
+            (71, int.MaxValue, "Temp_71_over"),
         };
-        public static readonly string[] ReductorTempGroups = [ALL, ..ReductorTemperatureRanges.Select(t => t.Label)];
+        public static readonly string[] ReductorTempGroups = [ALL, .. ReductorTemperatureRanges.Select(t => t.Label)];
         public static string[] GetExistReductorTempGroups(DataItem[] data)
         {
             // Guard against null or empty
@@ -106,7 +105,7 @@
             (0.8, int.MaxValue,  "High load"),
         };
 
-        public static readonly (double Min, double Max, string Label)[] MapModes = [(int.MinValue, int.MaxValue, ALL),.. MapRanges];
+        public static readonly (double Min, double Max, string Label)[] MapModes = [(int.MinValue, int.MaxValue, ALL), .. MapRanges];
         public enum Aggregation
         {
             Median,
