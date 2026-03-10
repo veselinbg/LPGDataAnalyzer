@@ -33,7 +33,6 @@
             toolStripSummary = new ToolStripStatusLabel();
             label1 = new Label();
             tbBenzTimingFilterCuting = new TextBox();
-            dataGridViewMainData = new DataGridView();
             txtFilePath = new TextBox();
             buttonSelectFile = new Button();
             dataGridViewAnalyzeDataBank1t2 = new DataGridView();
@@ -42,6 +41,7 @@
             dataGridViewAnalyzeDataBank1t1 = new DataGridView();
             tabControlMain = new TabControl();
             tabPageMainData = new TabPage();
+            dataGridViewMainData = new LPGDataAnalyzer.Controls.DataItemGrid();
             tabPageAnalyses = new TabPage();
             tabPageGroupByTemp = new TabPage();
             dataGridViewRIDData = new DataGridView();
@@ -51,6 +51,7 @@
             dataGridViewInjectionTimeAnalisys = new DataGridView();
             dataGridViewMapAnalysis = new DataGridView();
             tabPagePredictions = new TabPage();
+            checkBoxOnlyChanges = new CheckBox();
             cbInterpolation = new CheckBox();
             cbEnableSmooth = new CheckBox();
             textBoxLastPredictedFuelTable = new TextBox();
@@ -82,7 +83,6 @@
             buttonShowReducerPress = new Button();
             comboBoxAggregation = new ComboBox();
             statusBar.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)dataGridViewMainData).BeginInit();
             ((System.ComponentModel.ISupportInitialize)dataGridViewAnalyzeDataBank1t2).BeginInit();
             ((System.ComponentModel.ISupportInitialize)dataGridViewAnalyzeDataBank2t2).BeginInit();
             ((System.ComponentModel.ISupportInitialize)dataGridViewAnalyzeDataBank2t1).BeginInit();
@@ -140,16 +140,6 @@
             tbBenzTimingFilterCuting.TabIndex = 7;
             tbBenzTimingFilterCuting.Text = "2.4";
             tbBenzTimingFilterCuting.TextAlign = HorizontalAlignment.Right;
-            // 
-            // dataGridViewMainData
-            // 
-            dataGridViewMainData.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            dataGridViewMainData.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dataGridViewMainData.Location = new Point(3, 3);
-            dataGridViewMainData.Name = "dataGridViewMainData";
-            dataGridViewMainData.SelectionMode = DataGridViewSelectionMode.CellSelect;
-            dataGridViewMainData.Size = new Size(1402, 725);
-            dataGridViewMainData.TabIndex = 0;
             // 
             // txtFilePath
             // 
@@ -247,6 +237,15 @@
             tabPageMainData.Text = "Main Data";
             tabPageMainData.UseVisualStyleBackColor = true;
             // 
+            // dataGridViewMainData
+            // 
+            dataGridViewMainData.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            dataGridViewMainData.Location = new Point(-4, 0);
+            dataGridViewMainData.Name = "dataGridViewMainData";
+            dataGridViewMainData.Size = new Size(1412, 734);
+            dataGridViewMainData.TabIndex = 0;
+            dataGridViewMainData.Title = "All logged data";
+            // 
             // tabPageAnalyses
             // 
             tabPageAnalyses.Controls.Add(dataGridViewAnalyzeDataBank2t2);
@@ -333,6 +332,7 @@
             // 
             // tabPagePredictions
             // 
+            tabPagePredictions.Controls.Add(checkBoxOnlyChanges);
             tabPagePredictions.Controls.Add(cbInterpolation);
             tabPagePredictions.Controls.Add(cbEnableSmooth);
             tabPagePredictions.Controls.Add(textBoxLastPredictedFuelTable);
@@ -350,6 +350,16 @@
             tabPagePredictions.TabIndex = 4;
             tabPagePredictions.Text = "Prediction";
             tabPagePredictions.UseVisualStyleBackColor = true;
+            // 
+            // checkBoxOnlyChanges
+            // 
+            checkBoxOnlyChanges.AutoSize = true;
+            checkBoxOnlyChanges.Location = new Point(1335, 323);
+            checkBoxOnlyChanges.Name = "checkBoxOnlyChanges";
+            checkBoxOnlyChanges.Size = new Size(98, 19);
+            checkBoxOnlyChanges.TabIndex = 28;
+            checkBoxOnlyChanges.Text = "Only changes";
+            checkBoxOnlyChanges.UseVisualStyleBackColor = true;
             // 
             // cbInterpolation
             // 
@@ -665,7 +675,6 @@
             WindowState = FormWindowState.Maximized;
             statusBar.ResumeLayout(false);
             statusBar.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)dataGridViewMainData).EndInit();
             ((System.ComponentModel.ISupportInitialize)dataGridViewAnalyzeDataBank1t2).EndInit();
             ((System.ComponentModel.ISupportInitialize)dataGridViewAnalyzeDataBank2t2).EndInit();
             ((System.ComponentModel.ISupportInitialize)dataGridViewAnalyzeDataBank2t1).EndInit();
@@ -695,7 +704,6 @@
         private StatusStrip statusBar;
         private TextBox txtFilePath;
         private Button buttonSelectFile;
-        private DataGridView dataGridViewMainData;
         private DataGridView dataGridViewAnalyzeDataBank1t1;
         private DataGridView dataGridViewAnalyzeDataBank2t1;
         private DataGridView dataGridViewAnalyzeDataBank1t2;
@@ -744,5 +752,7 @@
         private CheckBox cbInterpolation;
         private Button buttonShowReducerPress;
         private ComboBox comboBoxAggregation;
+        private CheckBox checkBoxOnlyChanges;
+        private Controls.DataItemGrid dataGridViewMainData;
     }
 }

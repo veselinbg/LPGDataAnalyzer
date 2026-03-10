@@ -137,42 +137,59 @@ namespace LPGDataAnalyzer
             if (dgv2 != null && (rows != dgv2.RowCount || cols != dgv2.ColumnCount))
                 throw new ArgumentException("DataGridViews must have same dimensions.");
 
-            double[,] values = ExtractValues(dgv1, dgv2);
+            double?[,] values = ExtractValues(dgv1, dgv2);
 
             return ApplyHeatmap(dgv1, dgv2, values, tolerance);
         }
-        private static double[,] ExtractValues(DataGridView dgv1, DataGridView dgv2)
+        private static double?[,] ExtractValues(DataGridView dgv1, DataGridView dgv2)
         {
             int rows = dgv1.RowCount;
             int cols = dgv1.ColumnCount;
 
-            double[,] result = new double[rows, cols];
+            double?[,] result = new double?[rows, cols];
 
             for (int r = 0; r < rows; r++)
             {
-                for (int c = 1; c < cols; c++) // skip first column
+                for (int c = 1; c < cols; c++)
                 {
-                    double v1 = GetCellDouble(dgv1, r, c);
+                    double? v1 = GetCellDoubleNullable(dgv1, r, c);
+
+                    if (v1 == null)
+                    {
+                        result[r, c] = null;
+                        continue;
+                    }
 
                     if (dgv2 == null)
+                    {
                         result[r, c] = v1;
+                    }
                     else
-                        result[r, c] = v1 - GetCellDouble(dgv2, r, c);
+                    {
+                        double? v2 = GetCellDoubleNullable(dgv2, r, c);
+
+                        if (v2 == null)
+                            result[r, c] = null;
+                        else
+                            result[r, c] = v1 - v2;
+                    }
                 }
             }
 
             return result;
         }
-        private static double GetCellDouble(DataGridView dgv, int r, int c)
+        private static double? GetCellDoubleNullable(DataGridView dgv, int r, int c)
         {
             var val = dgv.Rows[r].Cells[c].Value;
 
             if (val == null || val == DBNull.Value)
-                return 0.0;
+                return null;
 
-            return Convert.ToDouble(val);
+            if (double.TryParse(val.ToString(), out double result))
+                return result;
+
+            return null;
         }
-
         private static void SetCellColor(DataGridView dgv1, DataGridView dgv2, int r, int c, Color color)
         {
             dgv1.Rows[r].Cells[c].Style.BackColor = color;
@@ -183,7 +200,7 @@ namespace LPGDataAnalyzer
         private static AxisSplit<int> ApplyHeatmap(
             DataGridView dgv1,
             DataGridView dgv2,
-            double[,] diffs,
+            double?[,] diffs,
             double tolerance)
         {
             int rows = diffs.GetLength(0);
@@ -200,10 +217,12 @@ namespace LPGDataAnalyzer
             {
                 for (int c = 1; c < cols; c++) // skip first column
                 {
-                    double diff = diffs[r, c];
+                    double? diffNullable = diffs[r, c];
 
-                    if (Math.Abs(diff) <= tolerance)
+                    if (!diffNullable.HasValue)
                         continue;
+
+                    double diff = diffNullable.Value;
 
                     if (diff < minSigned)
                     {
@@ -230,19 +249,31 @@ namespace LPGDataAnalyzer
                 maxAbs = 1e-12;
 
             // ---- Apply colors ----
+            double maxPositive = Math.Max(maxSigned, 1e-12);
+            double maxNegative = Math.Max(Math.Abs(minSigned), 1e-12);
+
             for (int r = 0; r < rows; r++)
             {
                 for (int c = 1; c < cols; c++) // skip first column
                 {
-                    double diff = diffs[r, c];
+                    double? diffNullable = diffs[r, c];
 
-                    if (Math.Abs(diff) <= tolerance)
+                    if (!diffNullable.HasValue)
                     {
-                        SetCellColor(dgv1, dgv2, r, c, Color.White);
+                        SetCellColor(dgv1, dgv2, r, c, Color.LightGray);
                         continue;
                     }
 
-                    double normalized = diff / maxAbs;
+                    double diff = diffNullable.Value;
+
+                    double normalized;
+
+                    if (diff > 0)
+                        normalized = diff / maxPositive;     // 0 → 1
+                    else
+                        normalized = diff / maxNegative;     // -1 → 0
+
+                    normalized = Math.Max(-1, Math.Min(1, normalized));
 
                     Color color = InterpolateDiverging(normalized);
 
@@ -379,7 +410,7 @@ namespace LPGDataAnalyzer
 
             if (Parser.Data.Any())
             {
-                dataGridViewMainData.DataSource = Parser.Data;
+                dataGridViewMainData.SetData(Parser.Data);
                 buttonAnalyze.Enabled = true;
                 buttonAnalyzeFastTrim.Enabled = true;
 
@@ -526,18 +557,7 @@ namespace LPGDataAnalyzer
             var table = textExtractor.BuildFinalTable(textBoxParsedData.Text);
 
             GridBuilder(dataGridViewOrig, table);
-            var maxTrim = 90;
-            var minTrim = -90;
-            var data = Parser.Data
-                .Where(x =>
-                (minTrim <= x.FAST_b1 && x.FAST_b1 <= maxTrim) &&
-                (minTrim <= x.FAST_b2 && x.FAST_b2 <= maxTrim) &&
-                x.FAST_b1 != 0 &&
-                x.FAST_b2 != 0 &&
-                x.SLOW_b1 != 0 &&
-                x.SLOW_b2 != 0 && x.PRESS < 3)
-                    .ToArray();
-            table = Prediction.BuildTable(data, table, cbEnableSmooth.Checked, cbInterpolation.Checked);
+            table = Prediction.BuildTable(Parser.Data, table, cbEnableSmooth.Checked, cbInterpolation.Checked, checkBoxOnlyChanges.Checked);
             //Auto-correction algorithm
             //new Prediction().AutoCorrectFuelTable(data, table, cbEnableSmooth.Checked);
 

@@ -163,8 +163,7 @@ namespace LPGDataAnalyzer.Services
             {
                 var dataByb1 = data.Where(d => d.BENZ_b1 > r.Min && d.BENZ_b1 <= r.Max).ToArray();
                 var dataByb2 = data.Where(d => d.BENZ_b2 > r.Min && d.BENZ_b2 <= r.Max).ToArray();
-                var dataByMode = data.Where(d=>(d.BENZ_b1 > r.Min && d.BENZ_b1 <= r.Max) || 
-                                               (d.BENZ_b2 > r.Min && d.BENZ_b2 <= r.Max)).ToArray();
+                var dataByMode = data.Where(d=>d.BENZ > r.Min && d.BENZ <= r.Max).ToArray();
                 return new
                 {
                     r.Label,

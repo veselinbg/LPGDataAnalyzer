@@ -429,7 +429,7 @@ namespace LPGDataAnalyzer.Services
 
             RoundFuelMap(cellMap);
         }
-        public static double?[,] BuildTable(DataItem[] logs, double?[,] cellMap, bool enableSmooth, bool enableInterpolation)
+        public static double?[,] BuildTable(DataItem[] logs, double?[,] cellMap, bool enableSmooth, bool enableInterpolation, bool showOnlyChanges = false)
         {
             int rpmLength = cellMap.GetLength(0);
             int injLength = cellMap.GetLength(1);
@@ -441,8 +441,8 @@ namespace LPGDataAnalyzer.Services
             {
                 var inj = Settings.InjectionRanges[injIndex];
                 logsByInjection[injIndex] = logs
-                    .Where(d => d.BENZ_b1 > inj.Min && d.BENZ_b2 > inj.Min &&
-                                d.BENZ_b1 <= inj.Max && d.BENZ_b2 <= inj.Max)
+                    .Where(d => (d.BENZ_b1 > inj.Min  && d.BENZ_b1 <= inj.Max) ||
+                                (d.BENZ_b2 > inj.Min && d.BENZ_b2 <= inj.Max))
                     .ToList();
             }
 
@@ -467,7 +467,6 @@ namespace LPGDataAnalyzer.Services
                         result[rpmIndex, injIndex] = cellMap[rpmIndex, injIndex].SafeMultiply(trim);
                         continue;
                     }
-
                     if (enableInterpolation && rpm.Label > 3500 && inj.Label >= 5.5)
                     {
                         double t = 1.0;
@@ -496,14 +495,20 @@ namespace LPGDataAnalyzer.Services
                                 break;
                             }
                         }
+                        if (!showOnlyChanges || trim != 1)
+                        {
+                            var newValue = cellMap[rpmIndex, injIndex].SafeMultiply(t);
 
-                        var newValue = cellMap[rpmIndex, injIndex].SafeMultiply(t);
-                        if (inj.Label > 4.5) newValue += rpmIndex - rpmSave;
-                        result[rpmIndex, injIndex] = newValue;
+                            if (inj.Label > 4.5) 
+                                newValue += rpmIndex - rpmSave;
+
+                            result[rpmIndex, injIndex] = newValue;
+                        }
                     }
                     else
                     {
-                        result[rpmIndex, injIndex] = cellMap[rpmIndex, injIndex].SafeMultiply(trim);
+                        if(!showOnlyChanges || trim != 1)
+                            result[rpmIndex, injIndex] = cellMap[rpmIndex, injIndex].SafeMultiply(trim);
                     }
                 }
             }
