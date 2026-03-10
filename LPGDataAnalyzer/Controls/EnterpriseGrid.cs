@@ -87,7 +87,7 @@ namespace LPGDataAnalyzer.Controls
         private Dictionary<string, List<IColumnFilter<T>>> filters = new();
         private Dictionary<string, ColumnFilterSelection> columnSelections = new();
         private Dictionary<string, Func<T, object>> getters = new();
-
+        private Dictionary<string, List<object>> columnValueCache = new();
         // Floating filter panel
         private Panel filterPanel = new() { Visible = false, BorderStyle = BorderStyle.FixedSingle };
         private CheckedListBox valueList = new();
@@ -280,9 +280,22 @@ namespace LPGDataAnalyzer.Controls
         {
             source = data.ToList();
             filtered = source;
+
+            BuildColumnCache();
+
             grid.DataSource = new BindingList<T>(filtered);
         }
+        private void BuildColumnCache()
+        {
+            columnValueCache.Clear();
 
+            foreach (var column in getters.Keys)
+            {
+                columnValueCache[column] = source
+                    .Select(x => getters[column](x))
+                    .ToList();
+            }
+        }
         private void AddFilter(string column, IColumnFilter<T> filter)
         {
             if (!filters.ContainsKey(column)) filters[column] = new List<IColumnFilter<T>>();
@@ -344,6 +357,7 @@ namespace LPGDataAnalyzer.Controls
         private async Task ApplyFiltersAsync()
         {
             string search = searchBox.Text.ToLower();
+
             var result = await Task.Run(() =>
             {
                 IEnumerable<T> data = source;
@@ -351,22 +365,36 @@ namespace LPGDataAnalyzer.Controls
                 if (filters.Count > 0)
                 {
                     foreach (var kv in filters)
+                    {
                         foreach (var f in kv.Value)
                             data = f.Apply(data);
+                    }
                 }
 
                 if (!string.IsNullOrWhiteSpace(search))
-                    data = data.Where(item => getters.Values.Any(g =>
+                {
+                    data = data.Where(item =>
                     {
-                        var v = g(item)?.ToString()?.ToLower();
-                        return v != null && v.Contains(search);
-                    }));
+                        foreach (var g in getters.Values)
+                        {
+                            var v = g(item)?.ToString()?.ToLower();
+                            if (v != null && v.Contains(search))
+                                return true;
+                        }
+
+                        return false;
+                    });
+                }
 
                 return data.ToList();
             });
 
             filtered = result;
-            grid.Invoke(() => grid.DataSource = new BindingList<T>(filtered));
+
+            grid.Invoke(() =>
+            {
+                grid.DataSource = new BindingList<T>(filtered);
+            });
         }
 
         private void Grid_CellMouseDown(object sender, DataGridViewCellMouseEventArgs e)
@@ -510,14 +538,24 @@ namespace LPGDataAnalyzer.Controls
 
             var data = GetDataFilteredExcept(currentColumn);
 
-            var counts = data
-                .Select(getters[currentColumn])
-                .Where(v => v != null)
-                .GroupBy(v => v)
-                .ToDictionary(g => g.Key, g => g.Count());
+            var counts = new Dictionary<object, int>();
+
+            foreach (var item in data)
+            {
+                var v = getters[currentColumn](item);
+
+                if (v == null)
+                    continue;
+
+                if (counts.ContainsKey(v))
+                    counts[v]++;
+                else
+                    counts[v] = 1;
+            }
 
             var values = counts.Keys
-                .OrderByDescending(v => counts[v])   // Excel-style sorting
+                .OrderBy(v => v is IComparable ? 0 : 1)
+                .ThenBy(v => v)
                 .ToList();
 
             valueList.ItemCheck -= ValueList_ItemCheck;
