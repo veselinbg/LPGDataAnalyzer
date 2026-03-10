@@ -65,7 +65,8 @@ namespace LPGDataAnalyzer.Controls
     public class EnterpriseGrid<T> : UserControl
     {
         private bool readOnly = false;
-
+        private string sortColumn;
+        private bool sortAsc = true;
         private Label titleLabel = new();
         private TextBox searchBox = new();
         private DataGridView grid = new();
@@ -88,7 +89,7 @@ namespace LPGDataAnalyzer.Controls
         private Button resetButton = new() { Text = "Reset" };
         private Button closeButton = new() { Text = "X" };
         private string currentColumn;
-
+        private Dictionary<string, Rectangle> headerButtonRectangles = new();
         public EnterpriseGrid()
         {
             BuildLayout();
@@ -110,13 +111,45 @@ namespace LPGDataAnalyzer.Controls
             grid.AutoGenerateColumns = true;
             grid.ColumnHeaderMouseClick += Grid_ColumnHeaderMouseClick;
             grid.CellMouseDown += Grid_CellMouseDown;
-
+            grid.Scroll += (_, __) => UpdateFilterButtonsPosition();
+            grid.CellPainting += Grid_CellPainting;
             Controls.Add(filterPanel);
             Controls.Add(grid);
             Controls.Add(searchBox);
             Controls.Add(titleLabel);
         }
+        private void Grid_CellPainting(object sender, DataGridViewCellPaintingEventArgs e)
+        {
+            if (e.RowIndex != -1 || e.ColumnIndex < 0 || e.ColumnIndex >= grid.Columns.Count)
+                return;
 
+            e.PaintBackground(e.CellBounds, true);
+
+            var col = grid.Columns[e.ColumnIndex];
+            var rect = e.CellBounds;
+
+            // draw filter button
+            var buttonRect = new Rectangle(rect.Left + 4, rect.Top + 4, 14, rect.Height - 8);
+            ControlPaint.DrawComboButton(e.Graphics, buttonRect, ButtonState.Normal);
+
+            // use header font (bold if filtered)
+            var font = col.HeaderCell.Style.Font ?? grid.Font;
+
+            var textRect = new Rectangle(rect.Left + 22, rect.Top, rect.Width - 22, rect.Height);
+
+            TextRenderer.DrawText(
+                e.Graphics,
+                col.HeaderText,
+                font,
+                textRect,
+                grid.ForeColor,
+                TextFormatFlags.VerticalCenter | TextFormatFlags.Left
+            );
+
+            headerButtonRectangles[col.DataPropertyName] = buttonRect;
+
+            e.Handled = true;
+        }
         private void BuildGetterCache()
         {
             foreach (var prop in typeof(T).GetProperties())
@@ -126,7 +159,30 @@ namespace LPGDataAnalyzer.Controls
                 getters[prop.Name] = Expression.Lambda<Func<T, object>>(body, param).Compile();
             }
         }
+        private void Grid_ColumnHeaderMouseClick(object sender, DataGridViewCellMouseEventArgs e)
+        {
+            if (e.ColumnIndex < 0 || e.ColumnIndex >= grid.Columns.Count)
+                return;
 
+            var col = grid.Columns[e.ColumnIndex];
+
+            // Click relative to header cell
+            var cellRect = grid.GetCellDisplayRectangle(e.ColumnIndex, -1, true);
+            var clickPoint = new Point(e.X + cellRect.Left, e.Y + cellRect.Top);
+
+            if (headerButtonRectangles.TryGetValue(col.DataPropertyName, out var buttonRect))
+            {
+                if (buttonRect.Contains(clickPoint))
+                {
+                    // Show filter panel under header
+                    ShowFilterPanel(col.DataPropertyName,new Point(cellRect.Left, cellRect.Bottom));
+                    return;
+                }
+            }
+
+            // If not clicked on button, sort column
+            SortColumn(col.DataPropertyName);
+        }
         private void BuildFilterPanel()
         {
             filterPanel.Controls.Clear();
@@ -172,6 +228,7 @@ namespace LPGDataAnalyzer.Controls
         }
 
         [Browsable(true)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         [Category("Behavior")]
         [Description("If true, prevents editing cells but still allows filtering and searching.")]
         public bool ReadOnly
@@ -208,6 +265,27 @@ namespace LPGDataAnalyzer.Controls
             filters[column].Add(filter);
         }
 
+        private void ShowFilterPanel(string column, Point headerLocation)
+        {
+            currentColumn = column;
+
+            if (!columnSelections.ContainsKey(column))
+                columnSelections[column] = new ColumnFilterSelection();
+
+            PopulateValueList(columnSelections[column]);
+
+            // Convert grid coordinates → EnterpriseGrid coordinates
+            var localPoint = this.PointToClient(grid.PointToScreen(headerLocation));
+
+            filterPanel.Location = new Point(localPoint.X, localPoint.Y + 5);
+
+            // Prevent panel from going outside the right edge
+            if (filterPanel.Right > this.Width)
+                filterPanel.Left = this.Width - filterPanel.Width - 5;
+
+            filterPanel.BringToFront();
+            filterPanel.Visible = true;
+        }
         private void ClearFilters(string column = null)
         {
             if (column == null)
@@ -264,23 +342,6 @@ namespace LPGDataAnalyzer.Controls
             grid.Invoke(() => grid.DataSource = new BindingList<T>(filtered));
         }
 
-        private void Grid_ColumnHeaderMouseClick(object sender, DataGridViewCellMouseEventArgs e)
-        {
-            if (e.Button != MouseButtons.Left) return;
-
-            var column = grid.Columns[e.ColumnIndex];
-            currentColumn = column.DataPropertyName;
-            if (!getters.ContainsKey(currentColumn)) return;
-
-            ColumnFilterSelection sel = columnSelections.ContainsKey(currentColumn) ? columnSelections[currentColumn] : new ColumnFilterSelection();
-            PopulateValueList(sel);
-
-            var rect = grid.GetCellDisplayRectangle(e.ColumnIndex, -1, true);
-            filterPanel.Location = new System.Drawing.Point(rect.Left, rect.Bottom);
-            filterPanel.BringToFront();
-            filterPanel.Visible = true;
-        }
-
         private void Grid_CellMouseDown(object sender, DataGridViewCellMouseEventArgs e)
         {
             if (e.RowIndex != -1 || e.Button != MouseButtons.Right) return;
@@ -310,8 +371,70 @@ namespace LPGDataAnalyzer.Controls
                         valueList.SetItemChecked(i, newState);
                 }));
             }
+            else
+            {
+                this.BeginInvoke(new Action(() =>
+                {
+                    bool allChecked = true;
+                    for (int i = 1; i < valueList.Items.Count; i++)
+                    {
+                        if (!valueList.GetItemChecked(i)) { allChecked = false; break; }
+                    }
+                    valueList.ItemCheck -= ValueList_ItemCheck;
+                    valueList.SetItemChecked(0, allChecked);
+                    valueList.ItemCheck += ValueList_ItemCheck;
+                }));
+            }
+        }
+        private void SortColumn(string column)
+        {
+            if (!getters.ContainsKey(column)) return;
+
+            if (sortColumn == column)
+                sortAsc = !sortAsc; // toggle
+            else
+            {
+                sortColumn = column;
+                sortAsc = true;
+            }
+
+            filtered = sortAsc
+                ? filtered.OrderBy(x => getters[column](x)).ToList()
+                : filtered.OrderByDescending(x => getters[column](x)).ToList();
+
+            grid.DataSource = new BindingList<T>(filtered);
+
+            UpdateHeaderSortArrows();
+        }
+        private void UpdateHeaderSortArrows()
+        {
+            foreach (DataGridViewColumn col in grid.Columns)
+            {
+                col.HeaderText = col.DataPropertyName;
+                if (col.DataPropertyName == sortColumn)
+                    col.HeaderText += sortAsc ? " ↑" : " ↓";
+            }
+        }
+        protected override void OnLayout(LayoutEventArgs e)
+        {
+            base.OnLayout(e);
+            UpdateFilterButtonsPosition();
         }
 
+        private void UpdateFilterButtonsPosition()
+        {
+            if (grid.Columns == null) return;
+
+            foreach (DataGridViewColumn col in grid.Columns)
+            {
+                if (col.HeaderCell.Tag is Button btn)
+                {
+                    var rect = grid.GetCellDisplayRectangle(col.Index, -1, true);
+                    btn.Location = new System.Drawing.Point(rect.Left + 2, rect.Top + 2);
+                    btn.BringToFront();
+                }
+            }
+        }
         private void FilterCheckboxList()
         {
             if (currentColumn == null) return;
@@ -319,7 +442,22 @@ namespace LPGDataAnalyzer.Controls
             decimal? min = decimal.TryParse(minBox.Text, out var minVal) ? minVal : (decimal?)null;
             decimal? max = decimal.TryParse(maxBox.Text, out var maxVal) ? maxVal : (decimal?)null;
 
-            var allValues = source.Select(getters[currentColumn]).Distinct().OrderBy(v => v?.ToString()).ToList();
+            IEnumerable<T> data = source;
+
+            foreach (var kv in filters)
+            {
+                if (kv.Key == currentColumn) continue;
+
+                foreach (var f in kv.Value)
+                    data = f.Apply(data);
+            }
+
+            var allValues = data
+                .Select(getters[currentColumn])
+                .Distinct()
+                .OrderBy(v => v?.ToString())
+                .ToList();
+
             var filteredValues = allValues.Where(v =>
             {
                 if (v == null) return false;
@@ -341,7 +479,23 @@ namespace LPGDataAnalyzer.Controls
 
         private void PopulateValueList(ColumnFilterSelection sel)
         {
-            var allValues = source.Select(getters[currentColumn]).Distinct().OrderBy(v => v?.ToString()).ToList();
+            // apply all filters except the current column
+            IEnumerable<T> data = source;
+
+            foreach (var kv in filters)
+            {
+                if (kv.Key == currentColumn) continue;
+
+                foreach (var f in kv.Value)
+                    data = f.Apply(data);
+            }
+
+            var allValues = data
+                .Select(getters[currentColumn])
+                .Distinct()
+                .OrderBy(v => v?.ToString())
+                .ToList();
+
             valueList.ItemCheck -= ValueList_ItemCheck;
             valueList.Items.Clear();
             valueList.Items.Add("Select All", sel.SelectedValues.Count == 0 || sel.SelectedValues.Count == allValues.Count);
