@@ -419,112 +419,98 @@ namespace LPGDataAnalyzer.Controls
                     col.HeaderCell.Style.Font = new System.Drawing.Font(col.HeaderCell.Style.Font ?? grid.Font, System.Drawing.FontStyle.Regular);
             }
         }
+        private bool EvaluateColumn(object val, ColumnFilterSelection sel)
+        {
+            bool hasValueFilter = sel.SelectedValues.Count > 0;
+            bool hasRangeFilter = sel.Min.HasValue || sel.Max.HasValue;
 
+            bool valueMatch = true;
+            bool rangeMatch = true;
+
+            if (hasValueFilter)
+                valueMatch = val != null && sel.SelectedValues.Contains(val);
+
+            if (hasRangeFilter)
+            {
+                if (val == null || !double.TryParse(val.ToString(), out var d))
+                    rangeMatch = false;
+                else
+                {
+                    if (sel.Min.HasValue && d < sel.Min.Value)
+                        rangeMatch = false;
+
+                    if (sel.Max.HasValue && d > sel.Max.Value)
+                        rangeMatch = false;
+                }
+            }
+
+            if (hasValueFilter && hasRangeFilter)
+                return sel.UseOrLogic ? (valueMatch || rangeMatch) : (valueMatch && rangeMatch);
+
+            if (hasValueFilter)
+                return valueMatch;
+
+            if (hasRangeFilter)
+                return rangeMatch;
+
+            return true;
+        }
         private async Task ApplyFiltersAsync()
         {
             string search = searchBox.Text.ToLower();
 
             var result = await Task.Run(() =>
             {
-                IEnumerable<T> data = source;
+                var andColumns = columnSelections
+                    .Where(x => !x.Value.UseOrLogic)
+                    .ToList();
 
-                if (columnSelections.Count > 0)
+                var orColumns = columnSelections
+                    .Where(x => x.Value.UseOrLogic)
+                    .ToList();
+
+                var andRows = source.Where(row =>
                 {
-                    data = source.Where(row =>
+                    foreach (var kv in andColumns)
                     {
-                        bool andMatch = true;
-                        bool orMatch = false;
-                        bool hasOrFilters = false;
+                        var val = getters[kv.Key](row);
 
-                        foreach (var kv in columnSelections)
+                        if (!EvaluateColumn(val, kv.Value))
+                            return false;
+                    }
+
+                    return true;
+                });
+
+                IEnumerable<T> finalRows = andRows;
+
+                if (orColumns.Count > 0)
+                {
+                    var orRows = source.Where(row =>
+                    {
+                        foreach (var kv in orColumns)
                         {
-                            var column = kv.Key;
-                            var sel = kv.Value;
-                            var val = getters[column](row);
+                            var val = getters[kv.Key](row);
 
-                            bool valueMatch = true;
-                            bool rangeMatch = true;
-
-                            // VALUE FILTER
-                            if (sel.SelectedValues.Count > 0)
-                                valueMatch = val != null && sel.SelectedValues.Contains(val);
-
-                            // RANGE FILTER
-                            if (sel.Min.HasValue || sel.Max.HasValue)
-                            {
-                                if (val == null || !double.TryParse(val.ToString(), out var d))
-                                {
-                                    rangeMatch = false;
-                                }
-                                else
-                                {
-                                    if (sel.Min.HasValue && d < sel.Min.Value)
-                                        rangeMatch = false;
-
-                                    if (sel.Max.HasValue && d > sel.Max.Value)
-                                        rangeMatch = false;
-                                }
-                            }
-
-                            bool hasValueFilter = sel.SelectedValues.Count > 0;
-                            bool hasRangeFilter = sel.Min.HasValue || sel.Max.HasValue;
-
-                            bool columnMatch;
-
-                            if (sel.UseOrLogic)
-                            {
-                                // OR logic
-                                if (hasValueFilter && hasRangeFilter)
-                                    columnMatch = valueMatch || rangeMatch;
-                                else if (hasValueFilter)
-                                    columnMatch = valueMatch;
-                                else if (hasRangeFilter)
-                                    columnMatch = rangeMatch;
-                                else
-                                    columnMatch = true;
-                            }
-                            else
-                            {
-                                // AND logic
-                                if (hasValueFilter && hasRangeFilter)
-                                    columnMatch = valueMatch && rangeMatch;
-                                else if (hasValueFilter)
-                                    columnMatch = valueMatch;
-                                else if (hasRangeFilter)
-                                    columnMatch = rangeMatch;
-                                else
-                                    columnMatch = true;
-                            }
-
-                            if (sel.UseOrLogic)
-                            {
-                                hasOrFilters = true;
-
-                                if (columnMatch)
-                                    orMatch = true;
-                            }
-                            else
-                            {
-                                if (!columnMatch)
-                                    andMatch = false;
-                            }
+                            if (EvaluateColumn(val, kv.Value))
+                                return true;
                         }
 
-                        if (hasOrFilters)
-                            return andMatch || orMatch;
-
-                        return andMatch;
+                        return false;
                     });
+
+                    finalRows = andRows.Concat(orRows).Distinct();
                 }
 
                 // GLOBAL SEARCH
                 if (!string.IsNullOrWhiteSpace(search))
                 {
-                    data = data.Where(item =>
+                    finalRows = finalRows.Where(item =>
                     {
                         foreach (var g in getters.Values)
                         {
                             var v = g(item)?.ToString()?.ToLower();
+
                             if (v != null && v.Contains(search))
                                 return true;
                         }
@@ -533,7 +519,7 @@ namespace LPGDataAnalyzer.Controls
                     });
                 }
 
-                return data.ToList();
+                return finalRows.ToList();
             });
 
             filtered = result;
