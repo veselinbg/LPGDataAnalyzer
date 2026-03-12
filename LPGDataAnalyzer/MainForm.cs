@@ -1,3 +1,4 @@
+using LPGDataAnalyzer.Controls;
 using LPGDataAnalyzer.Models;
 using LPGDataAnalyzer.Models.Common;
 using LPGDataAnalyzer.Services;
@@ -126,265 +127,7 @@ namespace LPGDataAnalyzer
                 dgv.ResumeLayout();
             }
         }
-        public static AxisSplit<int> HighlightDifferencesHeatmapWithValues(
-    DataGridView dgv1,
-    DataGridView dgv2 = null,
-    double tolerance = 0.01)
-        {
-            int rows = dgv1.RowCount;
-            int cols = dgv1.ColumnCount;
 
-            if (dgv2 != null && (rows != dgv2.RowCount || cols != dgv2.ColumnCount))
-                throw new ArgumentException("DataGridViews must have same dimensions.");
-
-            double?[,] values = ExtractValues(dgv1, dgv2);
-
-            return ApplyHeatmap(dgv1, dgv2, values, tolerance);
-        }
-        private static double?[,] ExtractValues(DataGridView dgv1, DataGridView dgv2)
-        {
-            int rows = dgv1.RowCount;
-            int cols = dgv1.ColumnCount;
-
-            double?[,] result = new double?[rows, cols];
-
-            for (int r = 0; r < rows; r++)
-            {
-                for (int c = 1; c < cols; c++)
-                {
-                    double? v1 = GetCellDoubleNullable(dgv1, r, c);
-
-                    if (v1 == null)
-                    {
-                        result[r, c] = null;
-                        continue;
-                    }
-
-                    if (dgv2 == null)
-                    {
-                        result[r, c] = v1;
-                    }
-                    else
-                    {
-                        double? v2 = GetCellDoubleNullable(dgv2, r, c);
-
-                        if (v2 == null)
-                            result[r, c] = null;
-                        else
-                            result[r, c] = v1 - v2;
-                    }
-                }
-            }
-
-            return result;
-        }
-        private static double? GetCellDoubleNullable(DataGridView dgv, int r, int c)
-        {
-            var val = dgv.Rows[r].Cells[c].Value;
-
-            if (val == null || val == DBNull.Value)
-                return null;
-
-            if (double.TryParse(val.ToString(), out double result))
-                return result;
-
-            return null;
-        }
-        private static void SetCellColor(DataGridView dgv1, DataGridView dgv2, int r, int c, Color color)
-        {
-            dgv1.Rows[r].Cells[c].Style.BackColor = color;
-
-            if (dgv2 != null)
-                dgv2.Rows[r].Cells[c].Style.BackColor = color;
-        }
-        private static AxisSplit<int> ApplyHeatmap(
-            DataGridView dgv1,
-            DataGridView dgv2,
-            double?[,] diffs,
-            double tolerance)
-        {
-            int rows = diffs.GetLength(0);
-            int cols = diffs.GetLength(1);
-
-            double minSigned = double.MaxValue;
-            double maxSigned = double.MinValue;
-
-            int minIndex = -1;
-            int maxIndex = -1;
-
-            // ---- Find extremes ----
-            for (int r = 0; r < rows; r++)
-            {
-                for (int c = 1; c < cols; c++) // skip first column
-                {
-                    double? diffNullable = diffs[r, c];
-
-                    if (!diffNullable.HasValue)
-                        continue;
-
-                    double diff = diffNullable.Value;
-
-                    if (diff < minSigned)
-                    {
-                        minSigned = diff;
-                        minIndex = r * cols + c;
-                    }
-
-                    if (diff > maxSigned)
-                    {
-                        maxSigned = diff;
-                        maxIndex = r * cols + c;
-                    }
-                }
-            }
-
-            if (minSigned == double.MaxValue)
-            {
-                minSigned = -1e-6;
-                maxSigned = 1e-6;
-            }
-
-            double maxAbs = Math.Max(Math.Abs(minSigned), Math.Abs(maxSigned));
-            if (maxAbs < 1e-12)
-                maxAbs = 1e-12;
-
-            // ---- Apply colors ----
-            double maxPositive = Math.Max(maxSigned, 1e-12);
-            double maxNegative = Math.Max(Math.Abs(minSigned), 1e-12);
-
-            for (int r = 0; r < rows; r++)
-            {
-                for (int c = 1; c < cols; c++) // skip first column
-                {
-                    double? diffNullable = diffs[r, c];
-
-                    if (!diffNullable.HasValue)
-                    {
-                        SetCellColor(dgv1, dgv2, r, c, Color.LightGray);
-                        continue;
-                    }
-
-                    double diff = diffNullable.Value;
-
-                    double normalized;
-
-                    if (diff > 0)
-                        normalized = diff / maxPositive;     // 0 → 1
-                    else
-                        normalized = diff / maxNegative;     // -1 → 0
-
-                    normalized = Math.Max(-1, Math.Min(1, normalized));
-
-                    Color color = InterpolateDiverging(normalized);
-
-                    SetCellColor(dgv1, dgv2, r, c, color);
-                }
-            }
-
-            return new AxisSplit<int>(minIndex, maxIndex, minSigned, maxSigned);
-        }
-        
-        private static Color InterpolateDiverging(double value)
-        {
-            value = Math.Max(-1, Math.Min(1, value));
-
-            Color blue = Color.FromArgb(180, 180, 255);
-            Color white = Color.White;
-            Color red = Color.FromArgb(255, 180, 180);
-
-            if (value < 0)
-                return Blend(blue, white, value + 1);
-            else
-                return Blend(white, red, value);
-        }
-
-        private static Color Blend(Color c1, Color c2, double t)
-        {
-            t = Math.Max(0, Math.Min(1, t));
-
-            int r = (int)(c1.R + (c2.R - c1.R) * t);
-            int g = (int)(c1.G + (c2.G - c1.G) * t);
-            int b = (int)(c1.B + (c2.B - c1.B) * t);
-
-            return Color.FromArgb(r, g, b);
-        }
-        private void LegendPanel_Paint(object sender, PaintEventArgs e)
-        {
-            if (sender is not Panel panel)
-                return;
-
-            if (panel.Tag is not ValueTuple<double, double> data)
-                return;
-
-            double minSigned = data.Item1;
-            double maxSigned = data.Item2;
-
-            int width = panel.Width;
-            int height = panel.Height;
-
-            if (width <= 1 || height <= 1)
-                return;
-
-            double maxAbs = Math.Max(Math.Abs(minSigned), Math.Abs(maxSigned));
-            if (maxAbs < 1e-12)
-                maxAbs = 1e-12;
-
-            e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.None;
-
-            // ===== Gradient =====
-            using (Pen gradientPen = new Pen(Color.Black))
-            {
-                for (int x = 0; x < width; x++)
-                {
-                    double normalized = (x / (double)(width - 1)) * 2.0 - 1.0;
-                    gradientPen.Color = InterpolateDiverging(normalized);
-                    e.Graphics.DrawLine(gradientPen, x, 0, x, height);
-                }
-            }
-
-            // ===== Ticks & Labels =====
-            using Font font = new Font("Segoe UI", 8f);
-            using Brush textBrush = new SolidBrush(Color.Black);
-            using Pen tickPen = new Pen(Color.Black, 1f);
-
-            double[] ticks = { -maxAbs, 0.0, maxAbs };
-
-            foreach (double val in ticks)
-            {
-                double normalized = (val / maxAbs + 1.0) / 2.0;
-                int x = (int)Math.Round(normalized * (width - 1));
-
-                e.Graphics.DrawLine(tickPen, x, 0, x, 6);
-
-                string text = val.ToString("F2");
-                SizeF size = e.Graphics.MeasureString(text, font);
-
-                e.Graphics.DrawString(
-                    text,
-                    font,
-                    textBrush,
-                    x - size.Width / 2,
-                    8);
-            }
-        }
-        void CreateDynamicHorizontalHeatmapLegend(
-                                                Panel legendPanel,
-                                                DataGridView dgv,
-                                                double minSigned,
-                                                double maxSigned)
-        {
-            if (legendPanel == null || dgv == null)
-                return;
-
-            legendPanel.Tag = (minSigned, maxSigned);
-
-            int newWidth = dgv.ClientSize.Width;
-
-            if (legendPanel.Width != newWidth)
-                legendPanel.Width = newWidth;
-
-            legendPanel.Invalidate();
-        }
 
 
         private void BtnSelectFile_Click(object sender, EventArgs e)
@@ -425,8 +168,6 @@ namespace LPGDataAnalyzer
         {
             if (Parser?.Data is null) return;
 
-            dataGridViewGasData.DataSource = Analyser.GroupByGasTemperature(Parser.Data, BenzTimingFilterCuting, x => x.Ratio_b1, y => y.Ratio_b2);
-            dataGridViewRIDData.DataSource = Analyser.GroupByRIDTemperature(Parser.Data, BenzTimingFilterCuting, x => x.Ratio_b1, y => y.Ratio_b2);
 
             BuildAnalises(Analyser, Parser.Data, [item => item.BENZ_b1, item => item.BENZ_b2, item => item.BENZ_b1, item => item.BENZ_b2], [
                             item => item.Ratio_b1,
@@ -438,8 +179,6 @@ namespace LPGDataAnalyzer
         private void ButtonShowTrims_Click(object sender, EventArgs e)
         {
             if (Parser?.Data is null) return;
-            dataGridViewGasData.DataSource = Analyser.GroupByGasTemperature(Parser.Data, BenzTimingFilterCuting, x => x.Trim_b1, y => y.Trim_b2);
-            dataGridViewRIDData.DataSource = Analyser.GroupByRIDTemperature(Parser.Data, BenzTimingFilterCuting, x => x.Trim_b1, y => y.Trim_b2);
 
             BuildAnalises(Analyser, Parser.Data, [item => item.BENZ_b1, item => item.BENZ_b2, item => item.BENZ_b1, item => item.BENZ_b2], [
                             item => item.Trim_b1,
@@ -478,7 +217,6 @@ namespace LPGDataAnalyzer
         }
         void BuildAnalises(Analyzer analyser, DataItem[] lpgdata, Func<DataItem, double>[] injectionBankSelectors, Func<DataItem, double?>[] valueSelectors)
         {
-
             // Get the selected value
             var aggregator = (Aggregation)comboBoxAggregation.SelectedItem;
             //temp1
@@ -486,17 +224,21 @@ namespace LPGDataAnalyzer
 
             GridBuilder(dataGridViewAnalyzeDataBank1t1, analyser.BuildTable(filteredLPGDataByTemp1, injectionBankSelectors[0], valueSelectors[0], aggregator));
             GridBuilder(dataGridViewAnalyzeDataBank2t1, analyser.BuildTable(filteredLPGDataByTemp1, injectionBankSelectors[1], valueSelectors[1], aggregator));
-            HighlightDifferencesHeatmapWithValues(dataGridViewAnalyzeDataBank1t1);
-            HighlightDifferencesHeatmapWithValues(dataGridViewAnalyzeDataBank2t1);
+            DataGridViewColorization.HighlightDifferencesHeatmapWithValues(dataGridViewAnalyzeDataBank1t1);
+            DataGridViewColorization.HighlightDifferencesHeatmapWithValues(dataGridViewAnalyzeDataBank2t1);
             //temp2
             DataItem[] filteredLPGDataByTemp2 = analyser.FilterByTemp(lpgdata, comboBoxGasTemperatureb2.SelectedValue.ToString(), comboBoxReductorTempGroup2.SelectedValue.ToString());
 
             GridBuilder(dataGridViewAnalyzeDataBank1t2, analyser.BuildTable(filteredLPGDataByTemp2, injectionBankSelectors[2], valueSelectors[2], aggregator));
             GridBuilder(dataGridViewAnalyzeDataBank2t2, analyser.BuildTable(filteredLPGDataByTemp2, injectionBankSelectors[3], valueSelectors[3], aggregator));
-            HighlightDifferencesHeatmapWithValues(dataGridViewAnalyzeDataBank1t2);
-            HighlightDifferencesHeatmapWithValues(dataGridViewAnalyzeDataBank2t2);
+            DataGridViewColorization.HighlightDifferencesHeatmapWithValues(dataGridViewAnalyzeDataBank1t2);
+            DataGridViewColorization.HighlightDifferencesHeatmapWithValues(dataGridViewAnalyzeDataBank2t2);
         }
-
+        private void buttonGroupByTemp_Click(object sender, EventArgs e)
+        {
+            dataGridViewGasData.DataSource = Analyser.GroupByGasTemperature(Parser.Data, BenzTimingFilterCuting, x => x.Trim_b1, y => y.Trim_b2);
+            dataGridViewRIDData.DataSource = Analyser.GroupByRIDTemperature(Parser.Data, BenzTimingFilterCuting, x => x.BENZ_b1, y => y.BENZ_b2);
+        }
         private void dataGridViewAnalyzeDataBank1_CellClick(object sender, DataGridViewCellEventArgs e)
         {
             if (e.ColumnIndex != 0)
@@ -515,16 +257,16 @@ namespace LPGDataAnalyzer
 
         private void buttonAnalysisByMap_Click(object sender, EventArgs e)
         {
-            var mapAnalysis = Analyser.BuildTableMap(Parser.Data);
+            var mapAnalysis = Analyser.BuildTableByMap(Parser.Data);
 
-            LoadDataSource(dataGridViewMapAnalysis, mapAnalysis.ToList());
+            LoadDataSource(dataGridViewMapAnalysis, mapAnalysis);
 
-            var drivingModeAnalysis = Analyser.BuildTableDrivingModes(Parser.Data);
+            //var drivingModeAnalysis = Analyser.BuildTableByDrivingRange(Parser.Data);
 
-            LoadDataSource(dataGridViewInjectionTimeAnalisys, drivingModeAnalysis.ToList());
+            //LoadDataSource(dataGridViewInjectionTimeAnalisys, drivingModeAnalysis.ToList());
 
             var bankTobank = Analyser.BuildBankToBankfuelBalance(Parser.Data);
-            LoadDataSource(dataGridView1, bankTobank.ToList());
+            LoadDataSource(dataGridView1, bankTobank);
 
         }
 
@@ -532,20 +274,20 @@ namespace LPGDataAnalyzer
         {
             var a1 = Analyser.LpgTemperatureVsInjectionTime(Parser.Data);
 
-            LoadDataSource(dataGridViewMapAnalysis, a1.ToList());
+            LoadDataSource(dataGridViewMapAnalysis, a1);
 
             var a2 = Analyser.BuildABankAwareLPGBaseMap(Parser.Data);
 
-            LoadDataSource(dataGridViewInjectionTimeAnalisys, a2.ToList());
+            LoadDataSource(dataGridViewInjectionTimeAnalisys, a2);
 
             var a3 = Analyser.LpgInjectorDeadTimeEstimation(Parser.Data);
-            LoadDataSource(dataGridView1, a3.ToList());
+            LoadDataSource(dataGridView1, a3);
         }
 
         private void buttonReducerThermalLag_Click(object sender, EventArgs e)
         {
             var a3 = Analyser.ReducerThermalLag(Parser.Data);
-            LoadDataSource(dataGridView1, a3.ToList());
+            LoadDataSource(dataGridView1, a3);
         }
         private void buttonParceSelectedImage_Click(object sender, EventArgs e)
         {
@@ -557,17 +299,18 @@ namespace LPGDataAnalyzer
             var table = textExtractor.BuildFinalTable(textBoxParsedData.Text);
 
             GridBuilder(dataGridViewOrig, table);
-            table = Prediction.BuildTable(Parser.Data, table, cbEnableSmooth.Checked, cbInterpolation.Checked, checkBoxOnlyChanges.Checked);
+            table = MyPrediction.BuildTable(Parser.Data, table,
+                cbEnableSmooth.Checked, cbInterpolation.Checked, checkBoxOnlyChanges.Checked, checkBoxRound.Checked);
             //Auto-correction algorithm
             //new Prediction().AutoCorrectFuelTable(data, table, cbEnableSmooth.Checked);
 
             GridBuilder(dataGridViewPrediction, table);
 
             // Apply heatmap to DataGridViews
-            var vals = HighlightDifferencesHeatmapWithValues(dataGridViewPrediction, dataGridViewOrig, tolerance: 0.1);
+            var vals = DataGridViewColorization.HighlightDifferencesHeatmapWithValues(dataGridViewPrediction, dataGridViewOrig, tolerance: 0.01);
 
             // Create horizontal legend aligned with DataGridView
-            CreateDynamicHorizontalHeatmapLegend(panelLegend, dataGridViewPrediction, vals.WLow, vals.WHigh);
+            LegendPanelBuilder.CreateDynamicHorizontalHeatmapLegend(panelLegend, dataGridViewPrediction, vals.WLow, vals.WHigh);
 
             textBoxLastPredictedFuelTable.Text = table.ToText();
             AppSettings.LastPredictedFuelTable = textBoxLastPredictedFuelTable.Text;

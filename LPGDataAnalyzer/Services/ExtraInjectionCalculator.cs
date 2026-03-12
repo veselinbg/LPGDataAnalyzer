@@ -9,10 +9,10 @@ namespace LPGDataAnalyzer.Services
         {
             // 1️⃣ Filter steady-state data
             var benzValues = data
-                .Where(d => d.RPM > 500 && d.RPM < 3500)
-                .Where(d => d.MAP > 0.2 && d.MAP < 0.7)
-                .Select(d => d.BENZ_b1)
-                .Where(v => v > 0.3 && v < 6.0)
+                .Where(d => d.RPM > 0 && d.RPM < 3500)
+                .Where(d => d.MAP > 0 && d.MAP < 0.7)
+                .Where(d => d.BENZ_b1< 6.0 || d.BENZ_b2 < 6.0)
+                .Select(d=>d.BENZ)
                 .ToList();
 
             if (benzValues.Count < 100)
@@ -25,9 +25,9 @@ namespace LPGDataAnalyzer.Services
                 .OrderBy(g => g.Key)
                 .ToDictionary(g => g.Key, g => g.Count());
 
-            // 3️⃣ Detect micro-injection peak (<1.2 ms)
+            // 3️⃣ Detect micro-injection peak (<2 ms)
             var microPeak = histogram
-                .Where(h => h.Key < 1.2)
+                .Where(h => h.Key < 2)
                 .OrderByDescending(h => h.Value)
                 .First().Key;
 

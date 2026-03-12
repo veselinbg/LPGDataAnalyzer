@@ -22,8 +22,8 @@
 
         public static readonly (double Min, double Max, double Label)[] InjectionRanges =
                                                                                         [
-                                                                                            (0.0, 1.8, 1.8),
-                                                                                            (1.8, 2.4, 2.4),
+                                                                                            (0.0, 1.9, 1.9),
+                                                                                            (1.9, 2.4, 2.4),
                                                                                             (2.4, 2.9, 2.9),
                                                                                             (2.9, 3.4, 3.4),
                                                                                             (3.4, 4.0, 4.0),
@@ -98,8 +98,8 @@
 
         public static readonly (double Min, double Max, string Label)[] MapRanges =
        {
-            (0, 0.3,  "Slow Down"),
-            (0.3, 0.4,  "Idle"),
+            (0, 0.28,  "Slow Down"),
+            (0.28, 0.4,  "Idle"),
             (0.4, 0.6,  "Cruise"),
             (0.6, 0.8,  "Acceleration"),
             (0.8, int.MaxValue,  "High load"),

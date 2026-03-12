@@ -1,4 +1,6 @@
-﻿namespace LPGDataAnalyzer
+﻿using LPGDataAnalyzer.Controls;
+
+namespace LPGDataAnalyzer
 {
     partial class MainForm
     {
@@ -41,7 +43,7 @@
             dataGridViewAnalyzeDataBank1t1 = new DataGridView();
             tabControlMain = new TabControl();
             tabPageMainData = new TabPage();
-            dataGridViewMainData = new LPGDataAnalyzer.Controls.DataItemGrid();
+            dataGridViewMainData = new DataItemGrid();
             tabPageAnalyses = new TabPage();
             tabPageGroupByTemp = new TabPage();
             dataGridViewRIDData = new DataGridView();
@@ -51,6 +53,7 @@
             dataGridViewInjectionTimeAnalisys = new DataGridView();
             dataGridViewMapAnalysis = new DataGridView();
             tabPagePredictions = new TabPage();
+            checkBoxRound = new CheckBox();
             checkBoxOnlyChanges = new CheckBox();
             cbInterpolation = new CheckBox();
             cbEnableSmooth = new CheckBox();
@@ -82,6 +85,7 @@
             buttonExtraInjectionCalculator = new Button();
             buttonShowReducerPress = new Button();
             comboBoxAggregation = new ComboBox();
+            buttonGroupByTemp = new Button();
             statusBar.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)dataGridViewAnalyzeDataBank1t2).BeginInit();
             ((System.ComponentModel.ISupportInitialize)dataGridViewAnalyzeDataBank2t2).BeginInit();
@@ -242,6 +246,7 @@
             dataGridViewMainData.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             dataGridViewMainData.Location = new Point(-4, 0);
             dataGridViewMainData.Name = "dataGridViewMainData";
+            dataGridViewMainData.ReadOnly = true;
             dataGridViewMainData.Size = new Size(1412, 734);
             dataGridViewMainData.TabIndex = 0;
             dataGridViewMainData.Title = "All logged data";
@@ -332,6 +337,7 @@
             // 
             // tabPagePredictions
             // 
+            tabPagePredictions.Controls.Add(checkBoxRound);
             tabPagePredictions.Controls.Add(checkBoxOnlyChanges);
             tabPagePredictions.Controls.Add(cbInterpolation);
             tabPagePredictions.Controls.Add(cbEnableSmooth);
@@ -350,6 +356,18 @@
             tabPagePredictions.TabIndex = 4;
             tabPagePredictions.Text = "Prediction";
             tabPagePredictions.UseVisualStyleBackColor = true;
+            // 
+            // checkBoxRound
+            // 
+            checkBoxRound.AutoSize = true;
+            checkBoxRound.Checked = true;
+            checkBoxRound.CheckState = CheckState.Checked;
+            checkBoxRound.Location = new Point(1167, 354);
+            checkBoxRound.Name = "checkBoxRound";
+            checkBoxRound.Size = new Size(61, 19);
+            checkBoxRound.TabIndex = 29;
+            checkBoxRound.Text = "Round";
+            checkBoxRound.UseVisualStyleBackColor = true;
             // 
             // checkBoxOnlyChanges
             // 
@@ -396,7 +414,6 @@
             panelLegend.Name = "panelLegend";
             panelLegend.Size = new Size(818, 45);
             panelLegend.TabIndex = 24;
-            panelLegend.Paint += LegendPanel_Paint;
             // 
             // textBoxImagePath
             // 
@@ -646,11 +663,22 @@
             comboBoxAggregation.Size = new Size(71, 23);
             comboBoxAggregation.TabIndex = 23;
             // 
+            // buttonGroupByTemp
+            // 
+            buttonGroupByTemp.Location = new Point(1105, 12);
+            buttonGroupByTemp.Name = "buttonGroupByTemp";
+            buttonGroupByTemp.Size = new Size(105, 23);
+            buttonGroupByTemp.TabIndex = 24;
+            buttonGroupByTemp.Text = "Goup By Temp";
+            buttonGroupByTemp.UseVisualStyleBackColor = true;
+            buttonGroupByTemp.Click += buttonGroupByTemp_Click;
+            // 
             // MainForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(1416, 868);
+            Controls.Add(buttonGroupByTemp);
             Controls.Add(comboBoxAggregation);
             Controls.Add(buttonShowReducerPress);
             Controls.Add(buttonExtraInjectionCalculator);
@@ -754,5 +782,7 @@
         private ComboBox comboBoxAggregation;
         private CheckBox checkBoxOnlyChanges;
         private Controls.DataItemGrid dataGridViewMainData;
+        private CheckBox checkBoxRound;
+        private Button buttonGroupByTemp;
     }
 }
