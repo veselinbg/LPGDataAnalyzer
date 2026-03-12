@@ -106,6 +106,7 @@ namespace LPGDataAnalyzer.Controls
         private Button closeButton = new() { Text = "X" };
         private string currentColumn;
         private Dictionary<string, Rectangle> headerButtonRectangles = new();
+        private CheckBox selectAllCheckBox = new CheckBox();
         public EnterpriseGrid()
         {
             BuildLayout();
@@ -246,7 +247,7 @@ namespace LPGDataAnalyzer.Controls
             filterPanel.Width = 250;
             filterPanel.Height = 280;
 
-            // Close X in top-right corner
+            // Close button
             closeButton.Width = 25;
             closeButton.Height = 25;
             closeButton.Top = 0;
@@ -255,28 +256,36 @@ namespace LPGDataAnalyzer.Controls
             closeButton.Click += (_, __) => filterPanel.Visible = false;
             filterPanel.Controls.Add(closeButton);
 
+            // Select All checkbox
+            selectAllCheckBox.Text = "Select All";
+            selectAllCheckBox.Dock = DockStyle.Top;
+            selectAllCheckBox.CheckedChanged += SelectAllCheckBox_CheckedChanged;
+            filterPanel.Controls.Add(selectAllCheckBox);
+
+            // Value list
             valueList.Dock = DockStyle.Top;
-            valueList.Height = 150;
+            valueList.Height = 130;
             valueList.ItemCheck += ValueList_ItemCheck;
             filterPanel.Controls.Add(valueList);
 
+            // Min/Max boxes
             minBox.PlaceholderText = "Min";
             minBox.Dock = DockStyle.Top;
             minBox.TextChanged += MinMaxBox_TextChanged;
-
             filterPanel.Controls.Add(minBox);
 
             maxBox.PlaceholderText = "Max";
             maxBox.Dock = DockStyle.Top;
             maxBox.TextChanged += MinMaxBox_TextChanged;
-
             filterPanel.Controls.Add(maxBox);
 
+            // AND/OR toggle
             var togglePanel = new FlowLayoutPanel { Dock = DockStyle.Top, Height = 30, FlowDirection = FlowDirection.LeftToRight };
             togglePanel.Controls.Add(andButton);
             togglePanel.Controls.Add(orButton);
             filterPanel.Controls.Add(togglePanel);
 
+            // Apply / Reset buttons
             applyButton.Dock = DockStyle.Bottom;
             applyButton.Click += async (_, __) => await ApplyFilterForColumn();
             filterPanel.Controls.Add(applyButton);
@@ -284,20 +293,7 @@ namespace LPGDataAnalyzer.Controls
             resetButton.Dock = DockStyle.Bottom;
             resetButton.Click += async (_, __) => await ResetFilterPanel();
             filterPanel.Controls.Add(resetButton);
-
-            andButton.CheckedChanged += (_, __) =>
-            {
-                if (andButton.Checked)
-                    PopulateValueList(columnSelections[currentColumn]);
-            };
-
-            orButton.CheckedChanged += (_, __) =>
-            {
-                if (orButton.Checked)
-                    PopulateValueList(columnSelections[currentColumn]);
-            };
         }
-
         [Browsable(true)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         [Category("Behavior")]
@@ -528,31 +524,21 @@ namespace LPGDataAnalyzer.Controls
         {
             BeginInvoke(new Action(() =>
             {
-                // --- Handle Select All ---
-                if (e.Index == 0)
-                {
-                    bool newState = valueList.GetItemChecked(0);
+                // --- Sync Select All ---
+                bool allChecked = true;
 
-                    for (int i = 1; i < valueList.Items.Count; i++)
-                        valueList.SetItemChecked(i, newState);
-                }
-                else
+                for (int i = 0; i < valueList.Items.Count; i++)
                 {
-                    bool allChecked = true;
-
-                    for (int i = 1; i < valueList.Items.Count; i++)
+                    if (!valueList.GetItemChecked(i))
                     {
-                        if (!valueList.GetItemChecked(i))
-                        {
-                            allChecked = false;
-                            break;
-                        }
+                        allChecked = false;
+                        break;
                     }
-
-                    valueList.ItemCheck -= ValueList_ItemCheck;
-                    valueList.SetItemChecked(0, allChecked);
-                    valueList.ItemCheck += ValueList_ItemCheck;
                 }
+
+                selectAllCheckBox.CheckedChanged -= SelectAllCheckBox_CheckedChanged;
+                selectAllCheckBox.Checked = allChecked;
+                selectAllCheckBox.CheckedChanged += SelectAllCheckBox_CheckedChanged;
 
                 // --- Sync selection state with columnSelections ---
                 if (!columnSelections.ContainsKey(currentColumn))
@@ -566,8 +552,31 @@ namespace LPGDataAnalyzer.Controls
                     .Cast<ValueItem>()
                     .Select(x => x.Value)
                     .ToHashSet();
-
             }));
+        }
+        private void SelectAllCheckBox_CheckedChanged(object sender, EventArgs e)
+        {
+            bool check = selectAllCheckBox.Checked;
+
+            valueList.ItemCheck -= ValueList_ItemCheck;
+
+            for (int i = 0; i < valueList.Items.Count; i++)
+                valueList.SetItemChecked(i, check);
+
+            valueList.ItemCheck += ValueList_ItemCheck;
+
+            // Update columnSelections
+            if (!columnSelections.ContainsKey(currentColumn))
+                columnSelections[currentColumn] = new ColumnFilterSelection();
+
+            var sel = columnSelections[currentColumn];
+            if (check)
+                sel.SelectedValues.Clear(); // all selected
+            else
+                sel.SelectedValues = valueList.Items
+                    .Cast<ValueItem>()
+                    .Select(x => x.Value)
+                    .ToHashSet();
         }
         private void SortColumn(string column)
         {
@@ -622,23 +631,28 @@ namespace LPGDataAnalyzer.Controls
             decimal? min = decimal.TryParse(minBox.Text, out var minVal) ? minVal : (decimal?)null;
             decimal? max = decimal.TryParse(maxBox.Text, out var maxVal) ? maxVal : (decimal?)null;
 
+            ColumnFilterSelection sel;
+            if (!columnSelections.TryGetValue(currentColumn, out sel))
+                sel = new ColumnFilterSelection();
+
+            sel.Min = (double?)min;
+            sel.Max = (double?)max;
+
             IEnumerable<T> data = source;
 
+            // Apply all other column filters
             foreach (var kv in filters)
             {
                 if (kv.Key == currentColumn) continue;
-
                 foreach (var f in kv.Value)
                     data = f.Apply(data);
             }
 
-            // calculate counts
+            // Compute counts for each value that passes Min/Max
             var counts = new Dictionary<object, int>();
-
             foreach (var item in data)
             {
                 var v = getters[currentColumn](item);
-
                 if (v == null) continue;
 
                 if (decimal.TryParse(v.ToString(), out var d))
@@ -658,25 +672,22 @@ namespace LPGDataAnalyzer.Controls
             valueList.ItemCheck -= ValueList_ItemCheck;
             valueList.Items.Clear();
 
-            bool selectAllChecked =
-                !columnSelections.ContainsKey(currentColumn) ||
-                columnSelections[currentColumn].SelectedValues.Count == 0 ||
-                columnSelections[currentColumn].SelectedValues.Count == values.Count;
+            // Update "Select All" checkbox
+            selectAllCheckBox.CheckedChanged -= SelectAllCheckBox_CheckedChanged;
+            selectAllCheckBox.Checked = sel.SelectedValues.Count == 0 || sel.SelectedValues.Count == values.Count;
+            selectAllCheckBox.CheckedChanged += SelectAllCheckBox_CheckedChanged;
 
-            valueList.Items.Add("Select All", selectAllChecked);
-
+            // Populate value list
             foreach (var v in values)
             {
                 var item = new ValueItem
                 {
                     Value = v,
-                    Count = counts[v]   // ✅ correct count
+                    Count = counts[v]
                 };
 
                 bool isChecked =
-                    !columnSelections.ContainsKey(currentColumn) ||
-                    columnSelections[currentColumn].SelectedValues.Count == 0 ||
-                    columnSelections[currentColumn].SelectedValues.Contains(v);
+                    sel.SelectedValues.Count == 0 || sel.SelectedValues.Contains(v);
 
                 valueList.Items.Add(item, isChecked);
             }
@@ -687,18 +698,23 @@ namespace LPGDataAnalyzer.Controls
         {
             if (currentColumn == null) return;
 
+            // Determine which data to use
             IEnumerable<T> data = andButton.Checked
-                                ? GetDataFilteredExcept(currentColumn) // AND mode
-                                : source;                              // OR mode
+                                    ? GetDataFilteredExcept(currentColumn) // AND mode
+                                    : source;                              // OR mode
 
+            // Compute counts for each value
             var counts = new Dictionary<object, int>();
-
             foreach (var item in data)
             {
                 var v = getters[currentColumn](item);
+                if (v == null) continue;
 
-                if (v == null)
-                    continue;
+                if (decimal.TryParse(v.ToString(), out var d))
+                {
+                    if (sel.Min.HasValue && d < (decimal)sel.Min.Value) continue;
+                    if (sel.Max.HasValue && d > (decimal)sel.Max.Value) continue;
+                }
 
                 if (counts.ContainsKey(v))
                     counts[v]++;
@@ -707,19 +723,19 @@ namespace LPGDataAnalyzer.Controls
             }
 
             var values = counts.Keys
-                .OrderBy(v => v is IComparable ? 0 : 1)
-                .ThenBy(v => v)
-                .ToList();
+                               .OrderBy(v => v is IComparable ? 0 : 1)
+                               .ThenBy(v => v)
+                               .ToList();
 
             valueList.ItemCheck -= ValueList_ItemCheck;
             valueList.Items.Clear();
 
-            bool selectAllChecked =
-                sel.SelectedValues.Count == 0 ||
-                sel.SelectedValues.Count == values.Count;
+            // Update "Select All" checkbox
+            selectAllCheckBox.CheckedChanged -= SelectAllCheckBox_CheckedChanged;
+            selectAllCheckBox.Checked = sel.SelectedValues.Count == 0 || sel.SelectedValues.Count == values.Count;
+            selectAllCheckBox.CheckedChanged += SelectAllCheckBox_CheckedChanged;
 
-            valueList.Items.Add("Select All", selectAllChecked);
-
+            // Populate the CheckedListBox with ValueItems and counts
             foreach (var v in values)
             {
                 var item = new ValueItem
@@ -729,18 +745,17 @@ namespace LPGDataAnalyzer.Controls
                 };
 
                 bool isChecked =
-                    sel.SelectedValues.Count == 0 ||
-                    sel.SelectedValues.Contains(v);
+                    sel.SelectedValues.Count == 0 || sel.SelectedValues.Contains(v);
 
                 valueList.Items.Add(item, isChecked);
             }
 
             valueList.ItemCheck += ValueList_ItemCheck;
 
+            // Populate Min/Max boxes
             minBox.Text = sel.Min?.ToString() ?? "";
             maxBox.Text = sel.Max?.ToString() ?? "";
         }
-
         private async Task ApplyFilterForColumn()
         {
             filterPanel.Visible = false;
