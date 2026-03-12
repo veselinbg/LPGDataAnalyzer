@@ -283,6 +283,8 @@ namespace LPGDataAnalyzer.Controls
             var togglePanel = new FlowLayoutPanel { Dock = DockStyle.Top, Height = 30, FlowDirection = FlowDirection.LeftToRight };
             togglePanel.Controls.Add(andButton);
             togglePanel.Controls.Add(orButton);
+            andButton.CheckedChanged += LogicModeChanged;
+            orButton.CheckedChanged += LogicModeChanged;
             filterPanel.Controls.Add(togglePanel);
 
             // Apply / Reset buttons
@@ -293,6 +295,19 @@ namespace LPGDataAnalyzer.Controls
             resetButton.Dock = DockStyle.Bottom;
             resetButton.Click += async (_, __) => await ResetFilterPanel();
             filterPanel.Controls.Add(resetButton);
+        }
+        private void LogicModeChanged(object sender, EventArgs e)
+        {
+            if (!((RadioButton)sender).Checked)
+                return;
+
+            if (currentColumn == null)
+                return;
+
+            if (!columnSelections.TryGetValue(currentColumn, out var sel))
+                sel = new ColumnFilterSelection();
+
+            PopulateValueList(sel);
         }
         [Browsable(true)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
@@ -451,9 +466,35 @@ namespace LPGDataAnalyzer.Controls
                                 }
                             }
 
-                            bool columnMatch = sel.UseOrLogic
-                                ? (valueMatch || rangeMatch)
-                                : (valueMatch && rangeMatch);
+                            bool hasValueFilter = sel.SelectedValues.Count > 0;
+                            bool hasRangeFilter = sel.Min.HasValue || sel.Max.HasValue;
+
+                            bool columnMatch;
+
+                            if (sel.UseOrLogic)
+                            {
+                                // OR logic
+                                if (hasValueFilter && hasRangeFilter)
+                                    columnMatch = valueMatch || rangeMatch;
+                                else if (hasValueFilter)
+                                    columnMatch = valueMatch;
+                                else if (hasRangeFilter)
+                                    columnMatch = rangeMatch;
+                                else
+                                    columnMatch = true;
+                            }
+                            else
+                            {
+                                // AND logic
+                                if (hasValueFilter && hasRangeFilter)
+                                    columnMatch = valueMatch && rangeMatch;
+                                else if (hasValueFilter)
+                                    columnMatch = valueMatch;
+                                else if (hasRangeFilter)
+                                    columnMatch = rangeMatch;
+                                else
+                                    columnMatch = true;
+                            }
 
                             if (sel.UseOrLogic)
                             {
@@ -698,13 +739,65 @@ namespace LPGDataAnalyzer.Controls
         {
             if (currentColumn == null) return;
 
-            // Determine which data to use
-            IEnumerable<T> data = andButton.Checked
-                                    ? GetDataFilteredExcept(currentColumn) // AND mode
-                                    : source;                              // OR mode
+            IEnumerable<T> data;
 
-            // Compute counts for each value
+            if (orButton.Checked)
+            {
+                // Data filtered by other columns (AND filters)
+                var andFiltered = GetDataFilteredExcept(currentColumn);
+
+                // Current column OR selection
+                IEnumerable<T> orFiltered = Enumerable.Empty<T>();
+
+                if (columnSelections.TryGetValue(currentColumn, out var currentSel))
+                {
+                    orFiltered = source.Where(row =>
+                    {
+                        var val = getters[currentColumn](row);
+
+                        bool valueMatch = true;
+                        bool rangeMatch = true;
+
+                        if (currentSel.SelectedValues.Count > 0)
+                            valueMatch = val != null && currentSel.SelectedValues.Contains(val);
+
+                        if (currentSel.Min.HasValue || currentSel.Max.HasValue)
+                        {
+                            if (val == null || !double.TryParse(val.ToString(), out var d))
+                                rangeMatch = false;
+                            else
+                            {
+                                if (currentSel.Min.HasValue && d < currentSel.Min.Value) rangeMatch = false;
+                                if (currentSel.Max.HasValue && d > currentSel.Max.Value) rangeMatch = false;
+                            }
+                        }
+
+                        bool hasValueFilter = currentSel.SelectedValues.Count > 0;
+                        bool hasRangeFilter = currentSel.Min.HasValue || currentSel.Max.HasValue;
+
+                        if (hasValueFilter && hasRangeFilter)
+                            return valueMatch || rangeMatch;
+
+                        if (hasValueFilter)
+                            return valueMatch;
+
+                        if (hasRangeFilter)
+                            return rangeMatch;
+
+                        return true;
+                    });
+                }
+
+                data = andFiltered.Concat(orFiltered).Distinct();
+            }
+            else
+            {
+                data = GetDataFilteredExcept(currentColumn);
+            }
+
+            // Count values
             var counts = new Dictionary<object, int>();
+
             foreach (var item in data)
             {
                 var v = getters[currentColumn](item);
@@ -716,26 +809,26 @@ namespace LPGDataAnalyzer.Controls
                     if (sel.Max.HasValue && d > (decimal)sel.Max.Value) continue;
                 }
 
-                if (counts.ContainsKey(v))
-                    counts[v]++;
+                if (counts.TryGetValue(v, out var c))
+                    counts[v] = c + 1;
                 else
                     counts[v] = 1;
             }
 
             var values = counts.Keys
-                               .OrderBy(v => v is IComparable ? 0 : 1)
-                               .ThenBy(v => v)
-                               .ToList();
+                .OrderBy(v => v is IComparable ? 0 : 1)
+                .ThenBy(v => v)
+                .ToList();
 
             valueList.ItemCheck -= ValueList_ItemCheck;
             valueList.Items.Clear();
 
-            // Update "Select All" checkbox
+            // Select All state
             selectAllCheckBox.CheckedChanged -= SelectAllCheckBox_CheckedChanged;
             selectAllCheckBox.Checked = sel.SelectedValues.Count == 0 || sel.SelectedValues.Count == values.Count;
             selectAllCheckBox.CheckedChanged += SelectAllCheckBox_CheckedChanged;
 
-            // Populate the CheckedListBox with ValueItems and counts
+            // Populate list
             foreach (var v in values)
             {
                 var item = new ValueItem
@@ -752,7 +845,7 @@ namespace LPGDataAnalyzer.Controls
 
             valueList.ItemCheck += ValueList_ItemCheck;
 
-            // Populate Min/Max boxes
+            // Restore range
             minBox.Text = sel.Min?.ToString() ?? "";
             maxBox.Text = sel.Max?.ToString() ?? "";
         }
