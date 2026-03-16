@@ -81,6 +81,7 @@ namespace LPGDataAnalyzer.Controls
                 return $"{Value} ({Count})";
             }
         }
+        private string baseTitle = "";
         private string sortColumn;
         private bool sortAsc = true;
         private Label titleLabel = new();
@@ -329,10 +330,23 @@ namespace LPGDataAnalyzer.Controls
         [Description("Title text displayed above the grid.")]
         public string Title
         {
-            get => titleLabel.Text;
-            set => titleLabel.Text = value;
+            get => baseTitle;
+            set
+            {
+                baseTitle = value;
+                UpdateTitleCount();
+            }
         }
+        private void UpdateTitleCount()
+        {
+            int total = source?.Count ?? 0;
+            int visible = filtered?.Count ?? 0;
 
+            if (total == visible)
+                titleLabel.Text = $"{Title} ({total})";
+            else
+                titleLabel.Text = $"{Title} ({visible} / {total})";
+        }
         public void SetData(IEnumerable<T> data)
         {
             source = data.ToList();
@@ -341,6 +355,8 @@ namespace LPGDataAnalyzer.Controls
             BuildColumnCache();
 
             grid.DataSource = new BindingList<T>(filtered);
+
+            UpdateTitleCount();
         }
         private void MinMaxBox_TextChanged(object sender, EventArgs e)
         {
@@ -527,6 +543,7 @@ namespace LPGDataAnalyzer.Controls
             grid.Invoke(() =>
             {
                 grid.DataSource = new BindingList<T>(filtered);
+                UpdateTitleCount();
             });
         }
         private void Grid_CellMouseDown(object sender, DataGridViewCellMouseEventArgs e)

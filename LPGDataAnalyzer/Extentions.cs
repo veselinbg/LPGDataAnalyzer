@@ -71,5 +71,28 @@ namespace LPGDataAnalyzer
         {
             return value.HasValue ? value.Value * factor : null;
         }
+        public static double AggregateValues(this IEnumerable<double> values, Settings.Aggregation aggregation)
+        {
+            return aggregation switch
+            {
+                Settings.Aggregation.Median => values.Median(),
+                Settings.Aggregation.Min => values.Min(),
+                Settings.Aggregation.Max => values.Max(),
+                Settings.Aggregation.Average => values.Average(),
+                _ => 0
+            };
+        }
+        public static double Avg<T>(this IEnumerable<T> arr, Func<T, double> selector)
+    => arr.Select(selector).DefaultIfEmpty(0).Average();
+
+        public static double Min<T>(this IEnumerable<T> arr, Func<T, double> selector)
+            => arr.Select(selector).DefaultIfEmpty(0).Min();
+
+        public static double Max<T>(this IEnumerable<T> arr, Func<T, double> selector)
+            => arr.Select(selector).DefaultIfEmpty(0).Max();
+
+        public static double RelDiff(this double a, double b)
+            => (a == 0 && b == 0) ? 0d : ((Math.Abs(a - b) / ((a + b) / 2.0)) * 100).Round();
+
     }
 }

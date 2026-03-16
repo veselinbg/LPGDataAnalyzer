@@ -21,6 +21,7 @@ namespace LPGDataAnalyzer.Services
                     return new
                     {
                         GasTemp = x.Key,
+                        AverageTrim = x.Average(x=>x.Trim).Round(),
                         AverageB1 = bank1.Average().Round(),
                         AverageB2 = bank2.Average().Round(),
                         MinB1 = bank1.Min().Round(),
@@ -114,7 +115,7 @@ namespace LPGDataAnalyzer.Services
                     .DefaultIfEmpty(double.NaN) // sentinel for “no value”
                 let aggregated = double.IsNaN(filteredValues.First())
                     ? (double?)null
-                    : AggregateValues(filteredValues, aggregation).Round()
+                    : filteredValues.AggregateValues(aggregation).Round()
                 select new { rpmIndex, injIndex, aggregated };
 
             // Fill the table
@@ -123,39 +124,17 @@ namespace LPGDataAnalyzer.Services
 
             return table;
         }
-        public double AggregateValues(IEnumerable<double> values, Settings.Aggregation aggregation)
-        {
-            return aggregation switch
-            {
-                Settings.Aggregation.Median => values.Median(),
-                Settings.Aggregation.Min => values.Min(),
-                Settings.Aggregation.Max => values.Max(),
-                Settings.Aggregation.Average => values.Average(),
-                _ => 0
-            };
-        }
-        static double Avg<T>(IEnumerable<T> arr, Func<T, double> selector)
-    => arr.Select(selector).DefaultIfEmpty(0).Average();
-
-        static double Min<T>(IEnumerable<T> arr, Func<T, double> selector)
-            => arr.Select(selector).DefaultIfEmpty(0).Min();
-
-        static double Max<T>(IEnumerable<T> arr, Func<T, double> selector)
-            => arr.Select(selector).DefaultIfEmpty(0).Max();
-
-        static string RelDiff(double a, double b)
-            => (a == 0 && b == 0) ? "0%" : (Math.Abs(a - b) / ((a + b) / 2.0)).ToString("P");
 
         public object BuildTableByMap(DataItem[] data)
         {
 
-            return Settings.MapRanges.Select(map =>
+            return Settings.MapModes.Select(map =>
             {
                 // Filter by MAP range
                 var mapData = data.Where(d => d.MAP > map.Min && d.MAP <= map.Max);
 
                 // Apply Driving range if available
-                var drivingRangeItem = Settings.DrivingRanges.FirstOrDefault(dr => dr.Label == map.Label);
+                var drivingRangeItem = Settings.DrivingModes.FirstOrDefault(dr => dr.Label == map.Label);
                 if (!drivingRangeItem.Equals(default))
                 {
                     mapData = mapData.Where(x => x.BENZ_b1 > drivingRangeItem.Min && x.BENZ_b1 <= drivingRangeItem.Max);
@@ -163,14 +142,14 @@ namespace LPGDataAnalyzer.Services
                 var mapArray = mapData.ToArray(); // Only enumerate once
 
                 // Compute averages
-                var avgBenzB1 = Avg(mapArray, x => x.BENZ_b1);
-                var avgBenzB2 = Avg(mapArray, x => x.BENZ_b2);
+                var avgBenzB1 = mapArray.Avg(x => x.BENZ_b1);
+                var avgBenzB2 = mapArray.Avg(x => x.BENZ_b2);
 
-                var avgGasB1 = Avg(mapArray, x => x.GAS_b1);
-                var avgGasB2 = Avg(mapArray, x => x.GAS_b2);
+                var avgGasB1 = mapArray.Avg(x => x.GAS_b1);
+                var avgGasB2 = mapArray.Avg(x => x.GAS_b2);
 
-                var avgTrimB1 = Avg(mapArray, x => x.Trim_b1);
-                var avgTrimB2 = Avg(mapArray, x => x.Trim_b2);
+                var avgTrimB1 = mapArray.Avg(x => x.Trim_b1);
+                var avgTrimB2 = mapArray.Avg(x => x.Trim_b2);
 
                 return new
                 {
@@ -179,15 +158,15 @@ namespace LPGDataAnalyzer.Services
                     BENZ_b1 = avgBenzB1.Round(),
                     BENZ_b2 = avgBenzB2.Round(),
 
-                    Diff_Benz = RelDiff(avgBenzB1, avgBenzB2),
-                    Diff_Gas = RelDiff(avgGasB1, avgGasB2),
+                    Diff_Benz = avgBenzB1.RelDiff(avgBenzB2),
+                    Diff_Gas = avgGasB1.RelDiff(avgGasB2),
                     Diff_Trim = Math.Abs(avgTrimB1 - avgTrimB2).ToString("0.##'%'"),
 
-                    PRESS = Avg(mapArray, x => x.PRESS).Round(),
-                    Press_Min = Min(mapArray, x => x.PRESS).Round(),
-                    Press_Max = Max(mapArray, x => x.PRESS).Round(),
+                    PRESS = mapArray.Avg(x => x.PRESS).Round(),
+                    Press_Min = mapArray.Min(x => x.PRESS).Round(),
+                    Press_Max = mapArray.Max(x => x.PRESS).Round(),
 
-                    AvgTrim = Avg(mapArray, x => x.Trim).Round(),
+                    AvgTrim = mapArray.Avg(x => x.Trim).Round(),
                     MedianTrim = mapArray.Select(x => x.Trim).Median().Round()
                 };
             }).ToArray();

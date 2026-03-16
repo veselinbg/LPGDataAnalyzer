@@ -30,26 +30,26 @@ namespace LPGDataAnalyzer.Services
             {
                 TEMPO = span[ranges[0]].ToInt(),
                 RPM = span[ranges[1]].ToInt(),
-                LAMBDA_b1 = span[ranges[2]].ToDouble(),
+                //LAMBDA_b1 = span[ranges[2]].ToDouble(),
                 GAS_b1 = span[ranges[3]].ToDouble(),
                 BENZ_b1 = span[ranges[4]].ToDouble(),
                 PRESS = span[ranges[5]].ToDouble(),
                 MAP = span[ranges[6]].ToDouble(),
                 Temp_RID = span[ranges[7]].ToDouble(),
                 Temp_GAS = span[ranges[8]].ToDouble(),
-                LIV = span[ranges[9]].ToDouble(),
+                //LIV = span[ranges[9]].ToDouble(),
                 SLOW_b1 = span[ranges[10]].ToDouble(),
                 FAST_b1 = span[ranges[11]].ToDouble(),
                 OX_b1 = span[ranges[12]].ToDouble(),
-                LAMBDA_b2 = span[ranges[13]].ToDouble(),
+                //LAMBDA_b2 = span[ranges[13]].ToDouble(),
                 GAS_b2 = span[ranges[14]].ToDouble(),
                 BENZ_b2 = span[ranges[15]].ToDouble(),
                 SLOW_b2 = span[ranges[16]].ToDouble(),
                 FAST_b2 = span[ranges[17]].ToDouble(),
                 OX_b2 = span[ranges[18]].ToDouble(),
-                MARKER = span[ranges[19]].ToInt(),
-                AUTOMARKER = span[ranges[20]].ToInt(),
-                ECUMARKER = span[ranges[21]].ToInt()
+                //MARKER = span[ranges[19]].ToInt(),
+                //AUTOMARKER = span[ranges[20]].ToInt(),
+                //ECUMARKER = span[ranges[21]].ToInt()
             };
 
             item.Ratio_b1 = item.BENZ_b1 != 0 ? (item.GAS_b1 / item.BENZ_b1).Round() : 0;
@@ -70,6 +70,8 @@ namespace LPGDataAnalyzer.Services
 
             item.GAS = (item.GAS_b1 + item.GAS_b2) / 2;
             item.BENZ = (item.BENZ_b1 + item.BENZ_b2) / 2;
+
+            item.BENZ_Diff = item.BENZ_b1.RelDiff(item.BENZ_b2);
 
             return item;
         }

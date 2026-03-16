@@ -8,9 +8,6 @@ namespace LPGDataAnalyzer.Services
     internal class ReducerPrediction
     {
         static bool IsValid(DataItem d) =>
-                                d.RPM > 1200 &&
-                                d.LAMBDA_b1 is > 0.97 and < 1.03 &&
-                                d.LAMBDA_b2 is > 0.97 and < 1.03 &&
                                 d.BENZ_b1 > 0 && d.GAS_b1 > 0 &&
                                 d.BENZ_b2 > 0 && d.GAS_b2 > 0;
 
