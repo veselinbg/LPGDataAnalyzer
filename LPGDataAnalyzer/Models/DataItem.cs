@@ -1,6 +1,6 @@
 ﻿namespace LPGDataAnalyzer.Models
 {
-    internal class DataItem
+    public class DataItem
     {
         public int TEMPO { get; set; }
         public int RPM { get; set; }

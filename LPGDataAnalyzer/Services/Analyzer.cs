@@ -2,7 +2,7 @@
 
 namespace LPGDataAnalyzer.Services
 {
-    internal class Analyzer
+    public class Analyzer
     {
         public object GroupByGasTemperature(
                                                 DataItem[] data,

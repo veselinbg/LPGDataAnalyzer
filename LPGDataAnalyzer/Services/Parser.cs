@@ -2,7 +2,7 @@
 
 namespace LPGDataAnalyzer.Services
 {
-    internal class Parser()
+    public class Parser()
     {
         const int ExpectedColumns = 22;
         public DataItem[] Data { get; protected set; } = [];

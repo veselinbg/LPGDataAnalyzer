@@ -7,36 +7,23 @@ using static LPGDataAnalyzer.Models.Settings;
 
 namespace LPGDataAnalyzer
 {
-    internal partial class MainForm : Form
+    public partial class MainForm : Form
     {
         private readonly Parser Parser = new();
         private readonly Analyzer Analyser = new();
-        private readonly TextExtractor textExtractor = new();
         private readonly AppSettingManager _appSettingManager;
         private AppSettings AppSettings { get; set; }
         public MainForm(AppSettingManager appSettingManager)
         {
-            //this.ControlAdded += (s, e) =>
-            //{
-            //    if (e.Control is DataGridView dg)
-            //        PrepareGrid(dg);
-            //};
-
             InitializeComponent();
 
-            //SearchAndPrepareGrid(this.Controls);
-
             _appSettingManager = appSettingManager;
-
             AppSettings = _appSettingManager.Load();
-
+            
             txtFilePath.Text = AppSettings.LastSavedFilePath;
-            textBoxParsedData.Text = AppSettings.LastLoadedFuelTable;
-            textBoxImagePath.Text = AppSettings.ImagePath;
-            textBoxLastPredictedFuelTable.Text = AppSettings.LastPredictedFuelTable;
 
             LoadParsedData();
-
+            predictionControl1.LoadSettings(_appSettingManager, Parser.Data);
             comboBoxGasTemperatureb1.DataSource = GetExistGasTemperatureRanges(Parser.Data);
             comboBoxGasTemperatureb1.SelectedIndex = 0;
 
@@ -50,99 +37,7 @@ namespace LPGDataAnalyzer
             comboBoxReductorTempGroup2.SelectedIndex = 0;
 
             comboBoxAggregation.DataSource = Enum.GetValues<Aggregation>();
-
-            historyControl1.HistorySelected += HistoryControl1_HistorySelected;
         }
-        private void HistoryControl1_HistorySelected(HistorySnapshot snapshot)
-        {
-            if (snapshot == null)
-                return;
-
-            var cellMap = ArrayConverter.To2D(snapshot.CellMap);
-            var newCellMap = ArrayConverter.To2D(snapshot.NewCellMap);
-            var logs = snapshot.Logs;
-            PreviewPrediction(cellMap, newCellMap);
-            // apply to your system
-        }
-        private static void SearchAndPrepareGrid(Control.ControlCollection parentControl)
-        {
-            foreach (Control control in parentControl)
-            {
-                if (control is DataGridView dg)
-                {
-                    PrepareGrid(dg);
-                }
-                else
-                {
-                    // Recursively search child controls
-                    SearchAndPrepareGrid(control.Controls);
-                }
-            }
-        }
-        private static void GridBuilder(DataGridView dgv, double?[,] table)
-        {
-            PrepareGrid(dgv);
-
-            CreateColumns(dgv, RpmColumns.Select(x => x.Label));
-
-            FillRows(dgv, table);
-        }
-        private static void PrepareGrid(DataGridView dgv)
-        {
-            dgv.DataSource = null;
-            dgv.Columns.Clear();
-            dgv.Rows.Clear();
-            dgv.ReadOnly = true;
-            dgv.AllowUserToAddRows = false;
-            dgv.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.AllCells;
-            dgv.SelectionMode = DataGridViewSelectionMode.CellSelect;
-            dgv.RowHeadersVisible = false;
-        }
-        private static void LoadDataSource(DataGridView dgv, object? dataSource)
-        {
-            dgv.DataSource = dataSource;
-        }
-        private static void CreateColumns(DataGridView dgv, IEnumerable<int> rpmColumns)
-        {
-            dgv.Columns.Add("InjectionTime", "Inj.Time");
-
-            foreach (int rpm in rpmColumns)
-            {
-                dgv.Columns.Add($"RPM_{rpm}", rpm.ToString());
-            }
-        }
-        private static void FillRows(DataGridView dgv, double?[,] table)
-        {
-            dgv.SuspendLayout();
-            try
-            {
-                dgv.Rows.Clear();
-
-                for (var injIndex = 0; injIndex < InjectionRanges.Length; injIndex++)
-                {
-                    var row = new DataGridViewRow();
-                    row.CreateCells(dgv);
-
-                    row.Cells[dgv.Columns["InjectionTime"].Index].Value = InjectionRanges[injIndex].Label;
-
-                    for (var rpmIndex = 0; rpmIndex < RpmColumns.Length; rpmIndex++)
-                    {
-
-
-                        row.Cells[dgv.Columns[$"RPM_{RpmColumns[rpmIndex].Label}"].Index].Value = table[rpmIndex, injIndex];
-
-                    }
-
-                    dgv.Rows.Add(row);
-                }
-            }
-            finally
-            {
-                dgv.ResumeLayout();
-            }
-        }
-
-
 
         private void BtnSelectFile_Click(object sender, EventArgs e)
         {
@@ -188,7 +83,7 @@ namespace LPGDataAnalyzer
                             item => item.Ratio_b2,
                             item => item.Ratio_b1,
                             item => item.Ratio_b2,
-                                    ]);
+                                    ], ["Ratio_b1", "Ratio_b2", "Ratio_b1", "Ratio_b2"]);
         }
         private void ButtonShowTrims_Click(object sender, EventArgs e)
         {
@@ -199,7 +94,7 @@ namespace LPGDataAnalyzer
                             item => item.Trim_b2,
                             item => item.Trim_b1,
                             item => item.Trim_b2,
-                                    ]);
+                                    ], ["Trim_b1", "Trim_b2", "Trim_b1", "Trim_b2"]);
         }
         private void buttonShowReducerPress_Click(object sender, EventArgs e)
         {
@@ -209,12 +104,12 @@ namespace LPGDataAnalyzer
                 item => item.GAS,
                 item => item.PRESS,
                 item => item.Trim
-             ]);
+             ], ["AFR", "GAS", "PRESS", "TRIM"]);
         }
         private void buttonAFR_Click(object sender, EventArgs e)
         {
             BuildAnalises(Analyser, Parser.Data, [item => item.BENZ_b1, item => item.BENZ_b2, item => item.BENZ_b1, item => item.BENZ_b2],
-                [item => item.AFR_b1, item => item.AFR_b2, item => item.AFR_b1, item => item.AFR_b2]);
+                [item => item.AFR_b1, item => item.AFR_b2, item => item.AFR_b1, item => item.AFR_b2], ["BENZ_b1", "BENZ_b2", "BENZ_b1", "BENZ_b2"]);
         }
 
         double BenzTimingFilterCuting
@@ -229,24 +124,24 @@ namespace LPGDataAnalyzer
                 return benzTimingFilterCuting;
             }
         }
-        void BuildAnalises(Analyzer analyser, DataItem[] lpgdata, Func<DataItem, double>[] injectionBankSelectors, Func<DataItem, double?>[] valueSelectors)
+        void BuildAnalises(Analyzer analyser, DataItem[] lpgdata, Func<DataItem, double>[] injectionBankSelectors, Func<DataItem, double?>[] valueSelectors, string[] titles)
         {
             // Get the selected value
             var aggregator = (Aggregation)comboBoxAggregation.SelectedItem;
             //temp1
             DataItem[] filteredLPGDataByTemp1 = analyser.FilterByTemp(lpgdata, comboBoxGasTemperatureb1.SelectedValue.ToString(), comboBoxReductorTempGroup1.SelectedValue.ToString());
 
-            GridBuilder(dataGridViewAnalyzeDataBank1t1, analyser.BuildTable(filteredLPGDataByTemp1, injectionBankSelectors[0], valueSelectors[0], aggregator));
-            GridBuilder(dataGridViewAnalyzeDataBank2t1, analyser.BuildTable(filteredLPGDataByTemp1, injectionBankSelectors[1], valueSelectors[1], aggregator));
-            DataGridViewColorization.HighlightDifferencesHeatmapWithValues(dataGridViewAnalyzeDataBank1t1);
-            DataGridViewColorization.HighlightDifferencesHeatmapWithValues(dataGridViewAnalyzeDataBank2t1);
+            dataGridViewAnalyzeDataBank1t1.SetData(analyser.BuildTable(filteredLPGDataByTemp1, injectionBankSelectors[0], valueSelectors[0], aggregator), titles[0]);
+            dataGridViewAnalyzeDataBank2t1.SetData(analyser.BuildTable(filteredLPGDataByTemp1, injectionBankSelectors[1], valueSelectors[1], aggregator), titles[1]);
+            DataGridViewColorization.HighlightDifferencesHeatmapWithValues(dataGridViewAnalyzeDataBank1t1.Grid);
+            DataGridViewColorization.HighlightDifferencesHeatmapWithValues(dataGridViewAnalyzeDataBank2t1.Grid);
             //temp2
             DataItem[] filteredLPGDataByTemp2 = analyser.FilterByTemp(lpgdata, comboBoxGasTemperatureb2.SelectedValue.ToString(), comboBoxReductorTempGroup2.SelectedValue.ToString());
 
-            GridBuilder(dataGridViewAnalyzeDataBank1t2, analyser.BuildTable(filteredLPGDataByTemp2, injectionBankSelectors[2], valueSelectors[2], aggregator));
-            GridBuilder(dataGridViewAnalyzeDataBank2t2, analyser.BuildTable(filteredLPGDataByTemp2, injectionBankSelectors[3], valueSelectors[3], aggregator));
-            DataGridViewColorization.HighlightDifferencesHeatmapWithValues(dataGridViewAnalyzeDataBank1t2);
-            DataGridViewColorization.HighlightDifferencesHeatmapWithValues(dataGridViewAnalyzeDataBank2t2);
+            dataGridViewAnalyzeDataBank1t2.SetData(analyser.BuildTable(filteredLPGDataByTemp2, injectionBankSelectors[2], valueSelectors[2], aggregator), titles[2]);
+            dataGridViewAnalyzeDataBank2t2.SetData(analyser.BuildTable(filteredLPGDataByTemp2, injectionBankSelectors[3], valueSelectors[3], aggregator), titles[3]);
+            DataGridViewColorization.HighlightDifferencesHeatmapWithValues(dataGridViewAnalyzeDataBank1t2.Grid);
+            DataGridViewColorization.HighlightDifferencesHeatmapWithValues(dataGridViewAnalyzeDataBank2t2.Grid);
         }
         private void buttonGroupByTemp_Click(object sender, EventArgs e)
         {
@@ -257,9 +152,9 @@ namespace LPGDataAnalyzer
         {
             if (e.ColumnIndex != 0)
             {
-                var range = InjectionRanges[e.RowIndex];
+                var range = Settings.InjectionRanges[e.RowIndex];
 
-                var rpm = RpmColumns[e.ColumnIndex - 1];
+                var rpm = Settings.RpmColumns[e.ColumnIndex - 1];
 
                 var data = Parser.Data.Where(x => x.RPM > rpm.Min && x.RPM <= rpm.Max && x.BENZ_b1 > range.Min && x.BENZ_b1 <= range.Max);
 
@@ -268,7 +163,10 @@ namespace LPGDataAnalyzer
                 MessageBox.Show(message, "Info");
             }
         }
-
+        public static void LoadDataSource(DataGridView dataGridView, object? dataSource)
+        {
+            dataGridView.DataSource = dataSource;
+        }
         private void buttonAnalysisByMap_Click(object sender, EventArgs e)
         {
             var mapAnalysis = Analyser.BuildTableByMap(Parser.Data);
@@ -303,58 +201,6 @@ namespace LPGDataAnalyzer
             var a3 = Analyser.ReducerThermalLag(Parser.Data);
             LoadDataSource(dataGridView1, a3);
         }
-        private void buttonParceSelectedImage_Click(object sender, EventArgs e)
-        {
-            textBoxParsedData.Text = textExtractor.Parcer(AppSettings.ImagePath);
-        }
-
-        private void ButtonPredict_Click(object sender, EventArgs e)
-        {
-            var table = textExtractor.BuildFinalTable(textBoxParsedData.Text);
-
-            var tableNew = MyPrediction.BuildTable(Parser.Data, table, int.Parse(textBoxMinCount.Text.Trim()),
-                cbEnableSmooth.Checked, cbInterpolation.Checked, checkBoxOnlyChanges.Checked, checkBoxRound.Checked, checkBoxPreFilter.Checked);
-
-            if (checkBoxSaveSnapshot.Checked)
-            {
-                historyControl1.AddSnapshot(Parser.Data, table, tableNew);
-            }
-
-            textBoxLastPredictedFuelTable.Text = tableNew.ToText();
-            AppSettings.LastPredictedFuelTable = textBoxLastPredictedFuelTable.Text;
-            _appSettingManager.Save(AppSettings);
-
-            PreviewPrediction(table, tableNew);
-        }
-
-        private void PreviewPrediction(double?[,] table, double?[,] tableNew)
-        {
-            GridBuilder(dataGridViewOrig, table);
-            GridBuilder(dataGridViewPrediction, tableNew);
-
-            // Apply heatmap to DataGridViews
-            var vals = DataGridViewColorization.HighlightDifferencesHeatmapWithValues(dataGridViewPrediction, dataGridViewOrig, tolerance: 0.01);
-
-            // Create horizontal legend aligned with DataGridView
-            LegendPanelBuilder.CreateDynamicHorizontalHeatmapLegend(panelLegend, dataGridViewPrediction, vals.WLow, vals.WHigh);
-
-        }
-        private void ButtonValidate_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                textExtractor.Validate(textBoxParsedData.Text);
-                AppSettings.LastLoadedFuelTable = textBoxParsedData.Text;
-                AppSettings.LastPredictedFuelTable = textBoxLastPredictedFuelTable.Text;
-                _appSettingManager.Save(AppSettings);
-                MessageBox.Show("Ok, no errors!", "Info");
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message, "Errors");
-            }
-        }
-
         private void buttonReducerPrediction_Click(object sender, EventArgs e)
         {
             Dictionary<string, int> currentCorrections = [];
@@ -384,7 +230,6 @@ namespace LPGDataAnalyzer
             var res3 = ExtraInjectionCalculator.CalculateExtraInjectionTime(Parser.Data.ToList());
 
             MessageBox.Show(res3.ToString(), "ExtraInjectionTime");           
-
         }
     }
 }

@@ -4,7 +4,7 @@ using System.Text;
 
 namespace LPGDataAnalyzer.Controls
 {
-    internal class LegendPanelBuilder
+    public class LegendPanelBuilder
     {
         public static void LegendPanel_Paint(object sender, PaintEventArgs e)
         {

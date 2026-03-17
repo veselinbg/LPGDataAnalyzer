@@ -1,6 +1,6 @@
 ﻿namespace LPGDataAnalyzer.Models
 {
-    internal class Settings
+    public class Settings
     {
         public const string ALL = "All";
 

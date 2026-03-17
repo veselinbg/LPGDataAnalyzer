@@ -105,7 +105,7 @@ namespace LPGDataAnalyzer.Services
             return kernel;
         }
     }
-    internal sealed partial class Prediction
+    public sealed partial class Prediction
     { // ===================== TUNING =====================
         // Controls how aggressively the algorithm switches from slow → fast trims during transients
         // 0 = always slow (very stable), 1 = normal, >1 = more aggressive toward fast

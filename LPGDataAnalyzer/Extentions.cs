@@ -4,7 +4,7 @@ using System.Text;
 
 namespace LPGDataAnalyzer
 {
-    internal static class Extentions
+    public static class Extentions
     {
         public static double Round(this double value, int digits = 2)
         {

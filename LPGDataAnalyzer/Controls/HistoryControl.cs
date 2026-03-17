@@ -6,7 +6,7 @@ using System.Text.Json;
 
 namespace LPGDataAnalyzer.Controls
 {
-    internal partial class HistoryControl : UserControl
+    public partial class HistoryControl : UserControl
     {
         public HistoryManager Manager { get; } = new();
 

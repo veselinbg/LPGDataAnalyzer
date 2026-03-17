@@ -2,7 +2,7 @@
 
 namespace LPGDataAnalyzer.Controls
 {
-    internal class DataItemGrid : EnterpriseGrid<DataItem>
+    public class DataItemGrid : EnterpriseGrid<DataItem>
     {
         public DataItemGrid()
         {

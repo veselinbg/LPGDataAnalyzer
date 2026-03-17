@@ -4,7 +4,7 @@ using System.Text.Json;
 
 namespace LPGDataAnalyzer.Controls
 {
-    internal class HistorySnapshot
+    public class HistorySnapshot
     {
         public DataItem[] Logs { get; set; }
 
@@ -16,7 +16,7 @@ namespace LPGDataAnalyzer.Controls
 
         public string Name => $"{Created:yyyy-MM-dd HH:mm:ss}  Logs:{Logs?.Length ?? 0}";
     }
-    internal static class ArrayConverter
+    public static class ArrayConverter
     {
         public static double?[][] ToJagged(double?[,] array)
         {
@@ -49,7 +49,7 @@ namespace LPGDataAnalyzer.Controls
             return arr;
         }
     }
-    internal static class HistoryStorage
+    public static class HistoryStorage
     {
         public static void Save(string path, HistorySnapshot snapshot)
         {
@@ -70,7 +70,7 @@ namespace LPGDataAnalyzer.Controls
             return snapshot;
         }
     }
-    internal class HistoryManager
+    public class HistoryManager
     {
         private readonly List<HistorySnapshot> history = new();
 

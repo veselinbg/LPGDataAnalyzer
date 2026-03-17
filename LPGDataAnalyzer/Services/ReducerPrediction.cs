@@ -5,7 +5,7 @@ using System.Text;
 
 namespace LPGDataAnalyzer.Services
 {
-    internal class ReducerPrediction
+    public class ReducerPrediction
     {
         static bool IsValid(DataItem d) =>
                                 d.BENZ_b1 > 0 && d.GAS_b1 > 0 &&

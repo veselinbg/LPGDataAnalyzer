@@ -5,7 +5,7 @@ using System.Text;
 
 namespace LPGDataAnalyzer.Services
 {
-    internal class MyPrediction
+    public class MyPrediction
     {
         private const int KernelSize = 5;
         private const double KernelSigma = 1.2;

@@ -3,33 +3,45 @@ using System.Text.Json;
 
 namespace LPGDataAnalyzer
 {
-    internal class AppSettingManager
+    public class AppSettingManager 
     {
-        private string FILE_PATH = "appSettings.json";
+        private readonly string _filePath;
+        private AppSettings? _settings;
+
+        public AppSettingManager(string filePath = "appSettings.json")
+        {
+            _filePath = filePath;
+        }
+
         public AppSettings Load()
         {
-            if(File.Exists(FILE_PATH))
-            {
-                var text = File.ReadAllText(FILE_PATH);
-
-                if (!string.IsNullOrEmpty(text))
-                {
-                    var result = JsonSerializer.Deserialize<AppSettings>(text);
-                    
-                    return result is null? new() : result;  
-                }
-            }
-            return new();
+            return _settings ??= Loadpublic();
         }
+
         public void Save(AppSettings appSettings)
         {
             if (appSettings is null)
-            {
-                throw new NullReferenceException("appSettings object is null.");
-            }
-            var text = JsonSerializer.Serialize(appSettings);
+                throw new ArgumentNullException(nameof(appSettings));
 
-            File.WriteAllText(FILE_PATH, text);
+            var text = JsonSerializer.Serialize(appSettings);
+            File.WriteAllText(_filePath, text);
+
+            _settings = appSettings;
+        }
+
+        private AppSettings Loadpublic()
+        {
+            if (File.Exists(_filePath))
+            {
+                var text = File.ReadAllText(_filePath);
+
+                if (!string.IsNullOrEmpty(text))
+                {
+                    return JsonSerializer.Deserialize<AppSettings>(text) ?? new AppSettings();
+                }
+            }
+
+            return new AppSettings();
         }
     }
 }

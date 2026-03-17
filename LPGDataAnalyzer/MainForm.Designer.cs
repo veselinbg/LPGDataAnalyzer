@@ -37,14 +37,14 @@ namespace LPGDataAnalyzer
             tbBenzTimingFilterCuting = new TextBox();
             txtFilePath = new TextBox();
             buttonSelectFile = new Button();
-            dataGridViewAnalyzeDataBank1t2 = new DataGridView();
-            dataGridViewAnalyzeDataBank2t2 = new DataGridView();
-            dataGridViewAnalyzeDataBank2t1 = new DataGridView();
-            dataGridViewAnalyzeDataBank1t1 = new DataGridView();
             tabControlMain = new TabControl();
             tabPageMainData = new TabPage();
             dataGridViewMainData = new DataItemGrid();
             tabPageAnalyses = new TabPage();
+            dataGridViewAnalyzeDataBank2t2 = new ReadOnlyDataGridView();
+            dataGridViewAnalyzeDataBank1t2 = new ReadOnlyDataGridView();
+            dataGridViewAnalyzeDataBank2t1 = new ReadOnlyDataGridView();
+            dataGridViewAnalyzeDataBank1t1 = new ReadOnlyDataGridView();
             tabPageGroupByTemp = new TabPage();
             dataGridViewRIDData = new DataGridView();
             dataGridViewGasData = new DataGridView();
@@ -53,24 +53,6 @@ namespace LPGDataAnalyzer
             dataGridViewInjectionTimeAnalisys = new DataGridView();
             dataGridViewMapAnalysis = new DataGridView();
             tabPagePredictions = new TabPage();
-            checkBoxSaveSnapshot = new CheckBox();
-            panel1 = new Panel();
-            historyControl1 = new HistoryControl();
-            textBoxMinCount = new TextBox();
-            checkBoxPreFilter = new CheckBox();
-            checkBoxRound = new CheckBox();
-            checkBoxOnlyChanges = new CheckBox();
-            cbInterpolation = new CheckBox();
-            cbEnableSmooth = new CheckBox();
-            textBoxLastPredictedFuelTable = new TextBox();
-            panelLegend = new Panel();
-            textBoxImagePath = new TextBox();
-            textBoxParsedData = new TextBox();
-            buttonValidate = new Button();
-            buttonContinue = new Button();
-            buttonParceSelectedPhoto = new Button();
-            dataGridViewPrediction = new DataGridView();
-            dataGridViewOrig = new DataGridView();
             tabPageReducerPred = new TabPage();
             labelRefPressure = new Label();
             textBoxReferencePressure = new TextBox();
@@ -91,11 +73,8 @@ namespace LPGDataAnalyzer
             buttonShowReducerPress = new Button();
             comboBoxAggregation = new ComboBox();
             buttonGroupByTemp = new Button();
+            predictionControl1 = new PredictionControl();
             statusBar.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)dataGridViewAnalyzeDataBank1t2).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)dataGridViewAnalyzeDataBank2t2).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)dataGridViewAnalyzeDataBank2t1).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)dataGridViewAnalyzeDataBank1t1).BeginInit();
             tabControlMain.SuspendLayout();
             tabPageMainData.SuspendLayout();
             tabPageAnalyses.SuspendLayout();
@@ -107,9 +86,6 @@ namespace LPGDataAnalyzer
             ((System.ComponentModel.ISupportInitialize)dataGridViewInjectionTimeAnalisys).BeginInit();
             ((System.ComponentModel.ISupportInitialize)dataGridViewMapAnalysis).BeginInit();
             tabPagePredictions.SuspendLayout();
-            panel1.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)dataGridViewPrediction).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)dataGridViewOrig).BeginInit();
             tabPageReducerPred.SuspendLayout();
             SuspendLayout();
             // 
@@ -169,58 +145,6 @@ namespace LPGDataAnalyzer
             buttonSelectFile.UseVisualStyleBackColor = true;
             buttonSelectFile.Click += BtnSelectFile_Click;
             // 
-            // dataGridViewAnalyzeDataBank1t2
-            // 
-            dataGridViewAnalyzeDataBank1t2.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            dataGridViewAnalyzeDataBank1t2.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
-            dataGridViewAnalyzeDataBank1t2.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dataGridViewAnalyzeDataBank1t2.Location = new Point(658, 3);
-            dataGridViewAnalyzeDataBank1t2.Name = "dataGridViewAnalyzeDataBank1t2";
-            dataGridViewAnalyzeDataBank1t2.ReadOnly = true;
-            dataGridViewAnalyzeDataBank1t2.RowHeadersVisible = false;
-            dataGridViewAnalyzeDataBank1t2.SelectionMode = DataGridViewSelectionMode.CellSelect;
-            dataGridViewAnalyzeDataBank1t2.Size = new Size(750, 350);
-            dataGridViewAnalyzeDataBank1t2.TabIndex = 3;
-            // 
-            // dataGridViewAnalyzeDataBank2t2
-            // 
-            dataGridViewAnalyzeDataBank2t2.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
-            dataGridViewAnalyzeDataBank2t2.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
-            dataGridViewAnalyzeDataBank2t2.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dataGridViewAnalyzeDataBank2t2.Location = new Point(652, 378);
-            dataGridViewAnalyzeDataBank2t2.Name = "dataGridViewAnalyzeDataBank2t2";
-            dataGridViewAnalyzeDataBank2t2.ReadOnly = true;
-            dataGridViewAnalyzeDataBank2t2.RowHeadersVisible = false;
-            dataGridViewAnalyzeDataBank2t2.SelectionMode = DataGridViewSelectionMode.CellSelect;
-            dataGridViewAnalyzeDataBank2t2.Size = new Size(750, 350);
-            dataGridViewAnalyzeDataBank2t2.TabIndex = 2;
-            // 
-            // dataGridViewAnalyzeDataBank2t1
-            // 
-            dataGridViewAnalyzeDataBank2t1.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
-            dataGridViewAnalyzeDataBank2t1.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
-            dataGridViewAnalyzeDataBank2t1.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dataGridViewAnalyzeDataBank2t1.Location = new Point(-4, 378);
-            dataGridViewAnalyzeDataBank2t1.Name = "dataGridViewAnalyzeDataBank2t1";
-            dataGridViewAnalyzeDataBank2t1.ReadOnly = true;
-            dataGridViewAnalyzeDataBank2t1.RowHeadersVisible = false;
-            dataGridViewAnalyzeDataBank2t1.SelectionMode = DataGridViewSelectionMode.CellSelect;
-            dataGridViewAnalyzeDataBank2t1.Size = new Size(750, 350);
-            dataGridViewAnalyzeDataBank2t1.TabIndex = 1;
-            // 
-            // dataGridViewAnalyzeDataBank1t1
-            // 
-            dataGridViewAnalyzeDataBank1t1.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
-            dataGridViewAnalyzeDataBank1t1.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dataGridViewAnalyzeDataBank1t1.Location = new Point(0, 6);
-            dataGridViewAnalyzeDataBank1t1.Name = "dataGridViewAnalyzeDataBank1t1";
-            dataGridViewAnalyzeDataBank1t1.ReadOnly = true;
-            dataGridViewAnalyzeDataBank1t1.RowHeadersVisible = false;
-            dataGridViewAnalyzeDataBank1t1.SelectionMode = DataGridViewSelectionMode.CellSelect;
-            dataGridViewAnalyzeDataBank1t1.Size = new Size(751, 350);
-            dataGridViewAnalyzeDataBank1t1.TabIndex = 0;
-            dataGridViewAnalyzeDataBank1t1.CellClick += dataGridViewAnalyzeDataBank1_CellClick;
-            // 
             // tabControlMain
             // 
             tabControlMain.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
@@ -261,8 +185,8 @@ namespace LPGDataAnalyzer
             // 
             tabPageAnalyses.Controls.Add(dataGridViewAnalyzeDataBank2t2);
             tabPageAnalyses.Controls.Add(dataGridViewAnalyzeDataBank1t2);
-            tabPageAnalyses.Controls.Add(dataGridViewAnalyzeDataBank1t1);
             tabPageAnalyses.Controls.Add(dataGridViewAnalyzeDataBank2t1);
+            tabPageAnalyses.Controls.Add(dataGridViewAnalyzeDataBank1t1);
             tabPageAnalyses.Location = new Point(4, 24);
             tabPageAnalyses.Name = "tabPageAnalyses";
             tabPageAnalyses.Padding = new Padding(3);
@@ -270,6 +194,38 @@ namespace LPGDataAnalyzer
             tabPageAnalyses.TabIndex = 1;
             tabPageAnalyses.Text = "Analyses";
             tabPageAnalyses.UseVisualStyleBackColor = true;
+            // 
+            // dataGridViewAnalyzeDataBank2t2
+            // 
+            dataGridViewAnalyzeDataBank2t2.Location = new Point(608, 378);
+            dataGridViewAnalyzeDataBank2t2.Name = "dataGridViewAnalyzeDataBank2t2";
+            dataGridViewAnalyzeDataBank2t2.Size = new Size(797, 350);
+            dataGridViewAnalyzeDataBank2t2.TabIndex = 7;
+            dataGridViewAnalyzeDataBank2t2.Title = "My Read-Only Data Grid";
+            // 
+            // dataGridViewAnalyzeDataBank1t2
+            // 
+            dataGridViewAnalyzeDataBank1t2.Location = new Point(608, 3);
+            dataGridViewAnalyzeDataBank1t2.Name = "dataGridViewAnalyzeDataBank1t2";
+            dataGridViewAnalyzeDataBank1t2.Size = new Size(800, 369);
+            dataGridViewAnalyzeDataBank1t2.TabIndex = 6;
+            dataGridViewAnalyzeDataBank1t2.Title = "My Read-Only Data Grid";
+            // 
+            // dataGridViewAnalyzeDataBank2t1
+            // 
+            dataGridViewAnalyzeDataBank2t1.Location = new Point(0, 349);
+            dataGridViewAnalyzeDataBank2t1.Name = "dataGridViewAnalyzeDataBank2t1";
+            dataGridViewAnalyzeDataBank2t1.Size = new Size(706, 379);
+            dataGridViewAnalyzeDataBank2t1.TabIndex = 5;
+            dataGridViewAnalyzeDataBank2t1.Title = "My Read-Only Data Grid";
+            // 
+            // dataGridViewAnalyzeDataBank1t1
+            // 
+            dataGridViewAnalyzeDataBank1t1.Location = new Point(0, 3);
+            dataGridViewAnalyzeDataBank1t1.Name = "dataGridViewAnalyzeDataBank1t1";
+            dataGridViewAnalyzeDataBank1t1.Size = new Size(706, 350);
+            dataGridViewAnalyzeDataBank1t1.TabIndex = 4;
+            dataGridViewAnalyzeDataBank1t1.Title = "My Read-Only Data Grid";
             // 
             // tabPageGroupByTemp
             // 
@@ -343,204 +299,13 @@ namespace LPGDataAnalyzer
             // 
             // tabPagePredictions
             // 
-            tabPagePredictions.Controls.Add(checkBoxSaveSnapshot);
-            tabPagePredictions.Controls.Add(panel1);
-            tabPagePredictions.Controls.Add(textBoxMinCount);
-            tabPagePredictions.Controls.Add(checkBoxPreFilter);
-            tabPagePredictions.Controls.Add(checkBoxRound);
-            tabPagePredictions.Controls.Add(checkBoxOnlyChanges);
-            tabPagePredictions.Controls.Add(cbInterpolation);
-            tabPagePredictions.Controls.Add(cbEnableSmooth);
-            tabPagePredictions.Controls.Add(textBoxLastPredictedFuelTable);
-            tabPagePredictions.Controls.Add(panelLegend);
-            tabPagePredictions.Controls.Add(textBoxImagePath);
-            tabPagePredictions.Controls.Add(textBoxParsedData);
-            tabPagePredictions.Controls.Add(buttonValidate);
-            tabPagePredictions.Controls.Add(buttonContinue);
-            tabPagePredictions.Controls.Add(buttonParceSelectedPhoto);
-            tabPagePredictions.Controls.Add(dataGridViewPrediction);
-            tabPagePredictions.Controls.Add(dataGridViewOrig);
+            tabPagePredictions.Controls.Add(predictionControl1);
             tabPagePredictions.Location = new Point(4, 24);
             tabPagePredictions.Name = "tabPagePredictions";
             tabPagePredictions.Size = new Size(1408, 734);
             tabPagePredictions.TabIndex = 4;
             tabPagePredictions.Text = "Prediction";
             tabPagePredictions.UseVisualStyleBackColor = true;
-            // 
-            // checkBoxSaveSnapshot
-            // 
-            checkBoxSaveSnapshot.AutoSize = true;
-            checkBoxSaveSnapshot.Location = new Point(895, 388);
-            checkBoxSaveSnapshot.Name = "checkBoxSaveSnapshot";
-            checkBoxSaveSnapshot.Size = new Size(102, 19);
-            checkBoxSaveSnapshot.TabIndex = 33;
-            checkBoxSaveSnapshot.Text = "Save Snapshot";
-            checkBoxSaveSnapshot.UseVisualStyleBackColor = true;
-            // 
-            // panel1
-            // 
-            panel1.Controls.Add(historyControl1);
-            panel1.Location = new Point(888, 434);
-            panel1.Name = "panel1";
-            panel1.Size = new Size(512, 282);
-            panel1.TabIndex = 32;
-            // 
-            // historyControl1
-            // 
-            historyControl1.Dock = DockStyle.Fill;
-            historyControl1.Location = new Point(0, 0);
-            historyControl1.Name = "historyControl1";
-            historyControl1.Size = new Size(512, 282);
-            historyControl1.TabIndex = 0;
-            // 
-            // textBoxMinCount
-            // 
-            textBoxMinCount.AccessibleDescription = "Min recored count";
-            textBoxMinCount.Location = new Point(1239, 383);
-            textBoxMinCount.Name = "textBoxMinCount";
-            textBoxMinCount.RightToLeft = RightToLeft.Yes;
-            textBoxMinCount.Size = new Size(45, 23);
-            textBoxMinCount.TabIndex = 31;
-            textBoxMinCount.Text = "3";
-            // 
-            // checkBoxPreFilter
-            // 
-            checkBoxPreFilter.AutoSize = true;
-            checkBoxPreFilter.Checked = true;
-            checkBoxPreFilter.CheckState = CheckState.Checked;
-            checkBoxPreFilter.Location = new Point(1164, 383);
-            checkBoxPreFilter.Name = "checkBoxPreFilter";
-            checkBoxPreFilter.Size = new Size(72, 19);
-            checkBoxPreFilter.TabIndex = 30;
-            checkBoxPreFilter.Text = "Pre Filter";
-            checkBoxPreFilter.UseVisualStyleBackColor = true;
-            // 
-            // checkBoxRound
-            // 
-            checkBoxRound.AutoSize = true;
-            checkBoxRound.Checked = true;
-            checkBoxRound.CheckState = CheckState.Checked;
-            checkBoxRound.Location = new Point(1167, 354);
-            checkBoxRound.Name = "checkBoxRound";
-            checkBoxRound.Size = new Size(61, 19);
-            checkBoxRound.TabIndex = 29;
-            checkBoxRound.Text = "Round";
-            checkBoxRound.UseVisualStyleBackColor = true;
-            // 
-            // checkBoxOnlyChanges
-            // 
-            checkBoxOnlyChanges.AutoSize = true;
-            checkBoxOnlyChanges.Location = new Point(1335, 323);
-            checkBoxOnlyChanges.Name = "checkBoxOnlyChanges";
-            checkBoxOnlyChanges.Size = new Size(98, 19);
-            checkBoxOnlyChanges.TabIndex = 28;
-            checkBoxOnlyChanges.Text = "Only changes";
-            checkBoxOnlyChanges.UseVisualStyleBackColor = true;
-            // 
-            // cbInterpolation
-            // 
-            cbInterpolation.AutoSize = true;
-            cbInterpolation.Location = new Point(1239, 324);
-            cbInterpolation.Name = "cbInterpolation";
-            cbInterpolation.Size = new Size(94, 19);
-            cbInterpolation.TabIndex = 27;
-            cbInterpolation.Text = "Interpolation";
-            cbInterpolation.UseVisualStyleBackColor = true;
-            // 
-            // cbEnableSmooth
-            // 
-            cbEnableSmooth.AutoSize = true;
-            cbEnableSmooth.Location = new Point(1169, 322);
-            cbEnableSmooth.Name = "cbEnableSmooth";
-            cbEnableSmooth.Size = new Size(68, 19);
-            cbEnableSmooth.TabIndex = 26;
-            cbEnableSmooth.Text = "Smooth";
-            cbEnableSmooth.UseVisualStyleBackColor = true;
-            // 
-            // textBoxLastPredictedFuelTable
-            // 
-            textBoxLastPredictedFuelTable.Location = new Point(1153, 29);
-            textBoxLastPredictedFuelTable.Multiline = true;
-            textBoxLastPredictedFuelTable.Name = "textBoxLastPredictedFuelTable";
-            textBoxLastPredictedFuelTable.Size = new Size(252, 288);
-            textBoxLastPredictedFuelTable.TabIndex = 25;
-            // 
-            // panelLegend
-            // 
-            panelLegend.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
-            panelLegend.Location = new Point(3, 350);
-            panelLegend.Name = "panelLegend";
-            panelLegend.Size = new Size(818, 45);
-            panelLegend.TabIndex = 24;
-            // 
-            // textBoxImagePath
-            // 
-            textBoxImagePath.Location = new Point(883, 3);
-            textBoxImagePath.Name = "textBoxImagePath";
-            textBoxImagePath.ReadOnly = true;
-            textBoxImagePath.Size = new Size(517, 23);
-            textBoxImagePath.TabIndex = 22;
-            // 
-            // textBoxParsedData
-            // 
-            textBoxParsedData.Location = new Point(883, 29);
-            textBoxParsedData.Multiline = true;
-            textBoxParsedData.Name = "textBoxParsedData";
-            textBoxParsedData.Size = new Size(271, 288);
-            textBoxParsedData.TabIndex = 21;
-            // 
-            // buttonValidate
-            // 
-            buttonValidate.Location = new Point(998, 319);
-            buttonValidate.Name = "buttonValidate";
-            buttonValidate.Size = new Size(75, 23);
-            buttonValidate.TabIndex = 20;
-            buttonValidate.Text = "Validate";
-            buttonValidate.UseVisualStyleBackColor = true;
-            buttonValidate.Click += ButtonValidate_Click;
-            // 
-            // buttonContinue
-            // 
-            buttonContinue.Location = new Point(1079, 319);
-            buttonContinue.Name = "buttonContinue";
-            buttonContinue.Size = new Size(75, 23);
-            buttonContinue.TabIndex = 3;
-            buttonContinue.Text = "Predict";
-            buttonContinue.UseVisualStyleBackColor = true;
-            buttonContinue.Click += ButtonPredict_Click;
-            // 
-            // buttonParceSelectedPhoto
-            // 
-            buttonParceSelectedPhoto.Location = new Point(883, 317);
-            buttonParceSelectedPhoto.Name = "buttonParceSelectedPhoto";
-            buttonParceSelectedPhoto.Size = new Size(75, 23);
-            buttonParceSelectedPhoto.TabIndex = 19;
-            buttonParceSelectedPhoto.Text = "Parce";
-            buttonParceSelectedPhoto.UseVisualStyleBackColor = true;
-            buttonParceSelectedPhoto.Click += buttonParceSelectedImage_Click;
-            // 
-            // dataGridViewPrediction
-            // 
-            dataGridViewPrediction.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
-            dataGridViewPrediction.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dataGridViewPrediction.Location = new Point(-4, 399);
-            dataGridViewPrediction.Name = "dataGridViewPrediction";
-            dataGridViewPrediction.ReadOnly = true;
-            dataGridViewPrediction.RowHeadersWidthSizeMode = DataGridViewRowHeadersWidthSizeMode.DisableResizing;
-            dataGridViewPrediction.SelectionMode = DataGridViewSelectionMode.CellSelect;
-            dataGridViewPrediction.Size = new Size(825, 332);
-            dataGridViewPrediction.TabIndex = 1;
-            // 
-            // dataGridViewOrig
-            // 
-            dataGridViewOrig.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dataGridViewOrig.Location = new Point(3, 3);
-            dataGridViewOrig.Name = "dataGridViewOrig";
-            dataGridViewOrig.ReadOnly = true;
-            dataGridViewOrig.RowHeadersWidthSizeMode = DataGridViewRowHeadersWidthSizeMode.DisableResizing;
-            dataGridViewOrig.SelectionMode = DataGridViewSelectionMode.CellSelect;
-            dataGridViewOrig.Size = new Size(818, 339);
-            dataGridViewOrig.TabIndex = 0;
             // 
             // tabPageReducerPred
             // 
@@ -731,6 +496,14 @@ namespace LPGDataAnalyzer
             buttonGroupByTemp.UseVisualStyleBackColor = true;
             buttonGroupByTemp.Click += buttonGroupByTemp_Click;
             // 
+            // predictionControl1
+            // 
+            predictionControl1.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            predictionControl1.Location = new Point(0, 3);
+            predictionControl1.Name = "predictionControl1";
+            predictionControl1.Size = new Size(1408, 734);
+            predictionControl1.TabIndex = 0;
+            // 
             // MainForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
@@ -761,10 +534,6 @@ namespace LPGDataAnalyzer
             WindowState = FormWindowState.Maximized;
             statusBar.ResumeLayout(false);
             statusBar.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)dataGridViewAnalyzeDataBank1t2).EndInit();
-            ((System.ComponentModel.ISupportInitialize)dataGridViewAnalyzeDataBank2t2).EndInit();
-            ((System.ComponentModel.ISupportInitialize)dataGridViewAnalyzeDataBank2t1).EndInit();
-            ((System.ComponentModel.ISupportInitialize)dataGridViewAnalyzeDataBank1t1).EndInit();
             tabControlMain.ResumeLayout(false);
             tabPageMainData.ResumeLayout(false);
             tabPageAnalyses.ResumeLayout(false);
@@ -776,10 +545,6 @@ namespace LPGDataAnalyzer
             ((System.ComponentModel.ISupportInitialize)dataGridViewInjectionTimeAnalisys).EndInit();
             ((System.ComponentModel.ISupportInitialize)dataGridViewMapAnalysis).EndInit();
             tabPagePredictions.ResumeLayout(false);
-            tabPagePredictions.PerformLayout();
-            panel1.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)dataGridViewPrediction).EndInit();
-            ((System.ComponentModel.ISupportInitialize)dataGridViewOrig).EndInit();
             tabPageReducerPred.ResumeLayout(false);
             tabPageReducerPred.PerformLayout();
             ResumeLayout(false);
@@ -791,10 +556,6 @@ namespace LPGDataAnalyzer
         private StatusStrip statusBar;
         private TextBox txtFilePath;
         private Button buttonSelectFile;
-        private DataGridView dataGridViewAnalyzeDataBank1t1;
-        private DataGridView dataGridViewAnalyzeDataBank2t1;
-        private DataGridView dataGridViewAnalyzeDataBank1t2;
-        private DataGridView dataGridViewAnalyzeDataBank2t2;
         private TextBox tbBenzTimingFilterCuting;
         private Label label1;
         private ToolStripStatusLabel toolStripSummary;
@@ -817,16 +578,7 @@ namespace LPGDataAnalyzer
         private Button button1;
         private Button buttonReducerThermalLag;
         private TabPage tabPagePredictions;
-        private DataGridView dataGridViewPrediction;
-        private DataGridView dataGridViewOrig;
-        private Button buttonParceSelectedPhoto;
         private Button buttonAFR;
-        private Button buttonContinue;
-        private Button buttonValidate;
-        private TextBox textBoxParsedData;
-        private TextBox textBoxImagePath;
-        private Panel panelLegend;
-        private TextBox textBoxLastPredictedFuelTable;
         private Button buttonReducerPrediction;
         private TabPage tabPageReducerPred;
         private Button buttonExtraInjectionCalculator;
@@ -835,18 +587,14 @@ namespace LPGDataAnalyzer
         private Label labelCurrent;
         private TextBox textBoxReferencePressure;
         private Label labelRefPressure;
-        private CheckBox cbEnableSmooth;
-        private CheckBox cbInterpolation;
         private Button buttonShowReducerPress;
         private ComboBox comboBoxAggregation;
-        private CheckBox checkBoxOnlyChanges;
         private Controls.DataItemGrid dataGridViewMainData;
-        private CheckBox checkBoxRound;
         private Button buttonGroupByTemp;
-        private CheckBox checkBoxPreFilter;
-        private TextBox textBoxMinCount;
-        private Panel panel1;
-        private HistoryControl historyControl1;
-        private CheckBox checkBoxSaveSnapshot;
+        private ReadOnlyDataGridView dataGridViewAnalyzeDataBank2t2;
+        private ReadOnlyDataGridView dataGridViewAnalyzeDataBank1t2;
+        private ReadOnlyDataGridView dataGridViewAnalyzeDataBank2t1;
+        private ReadOnlyDataGridView dataGridViewAnalyzeDataBank1t1;
+        private PredictionControl predictionControl1;
     }
 }

@@ -4,7 +4,7 @@ using System.Text;
 
 namespace LPGDataAnalyzer.Controls
 {
-    internal class ColorHelper
+    public class ColorHelper
     {
         public static Color InterpolateDiverging(double value)
         {

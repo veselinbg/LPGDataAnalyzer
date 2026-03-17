@@ -2,7 +2,7 @@
 
 namespace LPGDataAnalyzer.Services
 {
-    internal static class Filter
+    public static class Filter
     {
         public static bool GasBanks(DataItem item)
         {

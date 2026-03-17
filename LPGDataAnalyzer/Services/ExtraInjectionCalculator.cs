@@ -3,7 +3,7 @@ using System.Text;
 
 namespace LPGDataAnalyzer.Services
 {
-    internal class ExtraInjectionCalculator
+    public class ExtraInjectionCalculator
     {
         public static double CalculateIdentTime(ICollection<DataItem> data)
         {

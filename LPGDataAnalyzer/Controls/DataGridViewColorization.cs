@@ -5,7 +5,7 @@ using System.Text;
 
 namespace LPGDataAnalyzer.Controls
 {
-    internal class DataGridViewColorization
+    public class DataGridViewColorization
     {
         public static AxisSplit<int> HighlightDifferencesHeatmapWithValues(
                                         DataGridView dgv1,

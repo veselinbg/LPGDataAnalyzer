@@ -3,7 +3,7 @@ using Tesseract;
 
 namespace LPGDataAnalyzer.Services
 {
-    internal class TextExtractor
+    public class TextExtractor
     {
         public string Parcer(string imagePath)
         {
@@ -46,7 +46,7 @@ namespace LPGDataAnalyzer.Services
 
             return fuelCellTable;
         }
-        internal static double?[,] BuildTable(IList<int> values)
+        public static double?[,] BuildTable(IList<int> values)
         {
             int rpmLength = Settings.RpmColumns.Length;
             int injLength = Settings.InjectionRanges.Length;

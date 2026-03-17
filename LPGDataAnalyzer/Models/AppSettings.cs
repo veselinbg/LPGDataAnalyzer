@@ -1,7 +1,7 @@
 ﻿
 namespace LPGDataAnalyzer.Models
 {
-    internal class AppSettings
+    public class AppSettings
     {
         public string LastSavedFilePath { get; set; } = string.Empty;
         public string LastLoadedFuelTable { get; set; } = string.Empty;
