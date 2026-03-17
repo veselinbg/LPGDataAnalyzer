@@ -30,6 +30,7 @@ namespace LPGDataAnalyzer
         /// </summary>
         private void InitializeComponent()
         {
+            tableLayoutPanelAnalyses = new TableLayoutPanel();
             openFileDialog1 = new OpenFileDialog();
             statusBar = new StatusStrip();
             toolStripSummary = new ToolStripStatusLabel();
@@ -183,10 +184,6 @@ namespace LPGDataAnalyzer
             // 
             // tabPageAnalyses
             // 
-            tabPageAnalyses.Controls.Add(dataGridViewAnalyzeDataBank2t2);
-            tabPageAnalyses.Controls.Add(dataGridViewAnalyzeDataBank1t2);
-            tabPageAnalyses.Controls.Add(dataGridViewAnalyzeDataBank2t1);
-            tabPageAnalyses.Controls.Add(dataGridViewAnalyzeDataBank1t1);
             tabPageAnalyses.Location = new Point(4, 24);
             tabPageAnalyses.Name = "tabPageAnalyses";
             tabPageAnalyses.Padding = new Padding(3);
@@ -503,6 +500,26 @@ namespace LPGDataAnalyzer
             predictionControl1.Name = "predictionControl1";
             predictionControl1.Size = new Size(1408, 734);
             predictionControl1.TabIndex = 0;
+
+            tableLayoutPanelAnalyses.Dock = DockStyle.Fill;
+            tableLayoutPanelAnalyses.RowCount = 2;
+            tableLayoutPanelAnalyses.ColumnCount = 2;
+            tableLayoutPanelAnalyses.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
+            tableLayoutPanelAnalyses.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
+            tableLayoutPanelAnalyses.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+            tableLayoutPanelAnalyses.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+
+            tableLayoutPanelAnalyses.Controls.Add(dataGridViewAnalyzeDataBank1t1, 0, 0);
+            tableLayoutPanelAnalyses.Controls.Add(dataGridViewAnalyzeDataBank1t2, 1, 0);
+            tableLayoutPanelAnalyses.Controls.Add(dataGridViewAnalyzeDataBank2t1, 0, 1);
+            tableLayoutPanelAnalyses.Controls.Add(dataGridViewAnalyzeDataBank2t2, 1, 1);
+
+            dataGridViewAnalyzeDataBank1t1.Dock = DockStyle.Fill;
+            dataGridViewAnalyzeDataBank1t2.Dock = DockStyle.Fill;
+            dataGridViewAnalyzeDataBank2t1.Dock = DockStyle.Fill;
+            dataGridViewAnalyzeDataBank2t2.Dock = DockStyle.Fill;
+
+            tabPageAnalyses.Controls.Add(tableLayoutPanelAnalyses);
             // 
             // MainForm
             // 
@@ -552,6 +569,7 @@ namespace LPGDataAnalyzer
         }
 
         #endregion
+        private TableLayoutPanel tableLayoutPanelAnalyses;
         private OpenFileDialog openFileDialog1;
         private StatusStrip statusBar;
         private TextBox txtFilePath;

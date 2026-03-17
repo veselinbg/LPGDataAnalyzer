@@ -1,8 +1,10 @@
-﻿using System;
+﻿using LPGDataAnalyzer.Models;
+using LPGDataAnalyzer.Services;
+using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data;
 using System.Text;
-using System.ComponentModel;
 using static LPGDataAnalyzer.Models.Settings;
 
 namespace LPGDataAnalyzer.Controls
@@ -11,7 +13,7 @@ namespace LPGDataAnalyzer.Controls
     {
         private Label titleLabel;
         private DataGridView dataGridView;
-
+        private DataItem[] data;
         public ReadOnlyDataGridView()
         {
             InitializeComponents();
@@ -29,8 +31,9 @@ namespace LPGDataAnalyzer.Controls
             get { return titleLabel.Visible; }
             set { titleLabel.Visible = value; }
         }
-        public void SetData(double?[,] table, string title = "")
+        public void SetData(double?[,] table, DataItem[] dataItems, string title = "")
         {
+            data = dataItems;
             Title = title;
 
             PrepareGrid();
@@ -72,12 +75,28 @@ namespace LPGDataAnalyzer.Controls
             dataGridView.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
             dataGridView.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
             dataGridView.MultiSelect = false;
-
+            dataGridView.CellClick += DataGridView_CellClick;
             // Add controls to form
             this.Controls.Add(dataGridView);
             this.Controls.Add(titleLabel);
         }
 
+
+        private void DataGridView_CellClick(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.ColumnIndex != 0)
+            {
+                var range = Settings.InjectionRanges[e.RowIndex];
+
+                var rpm = Settings.RpmColumns[e.ColumnIndex - 1];
+
+                var dataItem = data.Where(x => x.RPM > rpm.Min && x.RPM <= rpm.Max && x.BENZ_b1 > range.Min && x.BENZ_b1 <= range.Max);
+
+                var message = string.Join("\r \n", dataItem.GroupBy(x => $"{x.SLOW_b1.Round()}_{x.FAST_b1.Round()}").Select(x => $"S_F Trim:{x.Key} Count: {x.Count()} PRESS: {dataItem.Where(y => $"{y.SLOW_b1.Round()}_{y.FAST_b1.Round()}" == x.Key).Average(y => y.PRESS).Round()}"));
+
+                MessageBox.Show(message, "Info");
+            }
+        }
         private void CreateColumns(IEnumerable<int> rpmColumns)
         {
             dataGridView.Columns.Add("InjectionTime", "Inj.Time");

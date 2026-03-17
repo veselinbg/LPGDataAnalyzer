@@ -82,8 +82,8 @@ namespace LPGDataAnalyzer.Controls
         }
         private void PreviewPrediction(double?[,] table, double?[,] tableNew)
         {
-            dataGridViewOrig.SetData(table);
-            dataGridViewPrediction.SetData(tableNew);
+            dataGridViewOrig.SetData(table, Data);
+            dataGridViewPrediction.SetData(tableNew, Data);
 
             // Apply heatmap to DataGridViews
             var vals = DataGridViewColorization.HighlightDifferencesHeatmapWithValues(dataGridViewPrediction.Grid, dataGridViewOrig.Grid, tolerance: 0.01);

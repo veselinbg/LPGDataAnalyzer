@@ -4,6 +4,7 @@ using LPGDataAnalyzer.Models.Common;
 using LPGDataAnalyzer.Services;
 using Microsoft.VisualBasic.Logging;
 using static LPGDataAnalyzer.Models.Settings;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace LPGDataAnalyzer
 {
@@ -131,15 +132,15 @@ namespace LPGDataAnalyzer
             //temp1
             DataItem[] filteredLPGDataByTemp1 = analyser.FilterByTemp(lpgdata, comboBoxGasTemperatureb1.SelectedValue.ToString(), comboBoxReductorTempGroup1.SelectedValue.ToString());
 
-            dataGridViewAnalyzeDataBank1t1.SetData(analyser.BuildTable(filteredLPGDataByTemp1, injectionBankSelectors[0], valueSelectors[0], aggregator), titles[0]);
-            dataGridViewAnalyzeDataBank2t1.SetData(analyser.BuildTable(filteredLPGDataByTemp1, injectionBankSelectors[1], valueSelectors[1], aggregator), titles[1]);
+            dataGridViewAnalyzeDataBank1t1.SetData(analyser.BuildTable(filteredLPGDataByTemp1, injectionBankSelectors[0], valueSelectors[0], aggregator), Parser.Data, titles[0]);
+            dataGridViewAnalyzeDataBank2t1.SetData(analyser.BuildTable(filteredLPGDataByTemp1, injectionBankSelectors[1], valueSelectors[1], aggregator), Parser.Data, titles[1]);
             DataGridViewColorization.HighlightDifferencesHeatmapWithValues(dataGridViewAnalyzeDataBank1t1.Grid);
             DataGridViewColorization.HighlightDifferencesHeatmapWithValues(dataGridViewAnalyzeDataBank2t1.Grid);
             //temp2
             DataItem[] filteredLPGDataByTemp2 = analyser.FilterByTemp(lpgdata, comboBoxGasTemperatureb2.SelectedValue.ToString(), comboBoxReductorTempGroup2.SelectedValue.ToString());
 
-            dataGridViewAnalyzeDataBank1t2.SetData(analyser.BuildTable(filteredLPGDataByTemp2, injectionBankSelectors[2], valueSelectors[2], aggregator), titles[2]);
-            dataGridViewAnalyzeDataBank2t2.SetData(analyser.BuildTable(filteredLPGDataByTemp2, injectionBankSelectors[3], valueSelectors[3], aggregator), titles[3]);
+            dataGridViewAnalyzeDataBank1t2.SetData(analyser.BuildTable(filteredLPGDataByTemp2, injectionBankSelectors[2], valueSelectors[2], aggregator), Parser.Data, titles[2]);
+            dataGridViewAnalyzeDataBank2t2.SetData(analyser.BuildTable(filteredLPGDataByTemp2, injectionBankSelectors[3], valueSelectors[3], aggregator), Parser.Data, titles[3]);
             DataGridViewColorization.HighlightDifferencesHeatmapWithValues(dataGridViewAnalyzeDataBank1t2.Grid);
             DataGridViewColorization.HighlightDifferencesHeatmapWithValues(dataGridViewAnalyzeDataBank2t2.Grid);
         }
@@ -148,21 +149,7 @@ namespace LPGDataAnalyzer
             dataGridViewGasData.DataSource = Analyser.GroupByGasTemperature(Parser.Data, BenzTimingFilterCuting, x => x.Trim_b1, y => y.Trim_b2);
             dataGridViewRIDData.DataSource = Analyser.GroupByRIDTemperature(Parser.Data, BenzTimingFilterCuting, x => x.BENZ_b1, y => y.BENZ_b2);
         }
-        private void dataGridViewAnalyzeDataBank1_CellClick(object sender, DataGridViewCellEventArgs e)
-        {
-            if (e.ColumnIndex != 0)
-            {
-                var range = Settings.InjectionRanges[e.RowIndex];
-
-                var rpm = Settings.RpmColumns[e.ColumnIndex - 1];
-
-                var data = Parser.Data.Where(x => x.RPM > rpm.Min && x.RPM <= rpm.Max && x.BENZ_b1 > range.Min && x.BENZ_b1 <= range.Max);
-
-                var message = string.Join("\r \n", data.GroupBy(x => $"{x.SLOW_b1.Round()}_{x.FAST_b1.Round()}").Select(x => $"S_F Trim:{x.Key} Count: {x.Count()} PRESS: {data.Where(y => $"{y.SLOW_b1.Round()}_{y.FAST_b1.Round()}" == x.Key).Average(y => y.PRESS).Round()}"));
-
-                MessageBox.Show(message, "Info");
-            }
-        }
+        
         public static void LoadDataSource(DataGridView dataGridView, object? dataSource)
         {
             dataGridView.DataSource = dataSource;
