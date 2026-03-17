@@ -53,6 +53,11 @@ namespace LPGDataAnalyzer
             dataGridViewInjectionTimeAnalisys = new DataGridView();
             dataGridViewMapAnalysis = new DataGridView();
             tabPagePredictions = new TabPage();
+            checkBoxSaveSnapshot = new CheckBox();
+            panel1 = new Panel();
+            historyControl1 = new HistoryControl();
+            textBoxMinCount = new TextBox();
+            checkBoxPreFilter = new CheckBox();
             checkBoxRound = new CheckBox();
             checkBoxOnlyChanges = new CheckBox();
             cbInterpolation = new CheckBox();
@@ -102,6 +107,7 @@ namespace LPGDataAnalyzer
             ((System.ComponentModel.ISupportInitialize)dataGridViewInjectionTimeAnalisys).BeginInit();
             ((System.ComponentModel.ISupportInitialize)dataGridViewMapAnalysis).BeginInit();
             tabPagePredictions.SuspendLayout();
+            panel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)dataGridViewPrediction).BeginInit();
             ((System.ComponentModel.ISupportInitialize)dataGridViewOrig).BeginInit();
             tabPageReducerPred.SuspendLayout();
@@ -337,6 +343,10 @@ namespace LPGDataAnalyzer
             // 
             // tabPagePredictions
             // 
+            tabPagePredictions.Controls.Add(checkBoxSaveSnapshot);
+            tabPagePredictions.Controls.Add(panel1);
+            tabPagePredictions.Controls.Add(textBoxMinCount);
+            tabPagePredictions.Controls.Add(checkBoxPreFilter);
             tabPagePredictions.Controls.Add(checkBoxRound);
             tabPagePredictions.Controls.Add(checkBoxOnlyChanges);
             tabPagePredictions.Controls.Add(cbInterpolation);
@@ -356,6 +366,54 @@ namespace LPGDataAnalyzer
             tabPagePredictions.TabIndex = 4;
             tabPagePredictions.Text = "Prediction";
             tabPagePredictions.UseVisualStyleBackColor = true;
+            // 
+            // checkBoxSaveSnapshot
+            // 
+            checkBoxSaveSnapshot.AutoSize = true;
+            checkBoxSaveSnapshot.Location = new Point(895, 388);
+            checkBoxSaveSnapshot.Name = "checkBoxSaveSnapshot";
+            checkBoxSaveSnapshot.Size = new Size(102, 19);
+            checkBoxSaveSnapshot.TabIndex = 33;
+            checkBoxSaveSnapshot.Text = "Save Snapshot";
+            checkBoxSaveSnapshot.UseVisualStyleBackColor = true;
+            // 
+            // panel1
+            // 
+            panel1.Controls.Add(historyControl1);
+            panel1.Location = new Point(888, 434);
+            panel1.Name = "panel1";
+            panel1.Size = new Size(512, 282);
+            panel1.TabIndex = 32;
+            // 
+            // historyControl1
+            // 
+            historyControl1.Dock = DockStyle.Fill;
+            historyControl1.Location = new Point(0, 0);
+            historyControl1.Name = "historyControl1";
+            historyControl1.Size = new Size(512, 282);
+            historyControl1.TabIndex = 0;
+            // 
+            // textBoxMinCount
+            // 
+            textBoxMinCount.AccessibleDescription = "Min recored count";
+            textBoxMinCount.Location = new Point(1239, 383);
+            textBoxMinCount.Name = "textBoxMinCount";
+            textBoxMinCount.RightToLeft = RightToLeft.Yes;
+            textBoxMinCount.Size = new Size(45, 23);
+            textBoxMinCount.TabIndex = 31;
+            textBoxMinCount.Text = "3";
+            // 
+            // checkBoxPreFilter
+            // 
+            checkBoxPreFilter.AutoSize = true;
+            checkBoxPreFilter.Checked = true;
+            checkBoxPreFilter.CheckState = CheckState.Checked;
+            checkBoxPreFilter.Location = new Point(1164, 383);
+            checkBoxPreFilter.Name = "checkBoxPreFilter";
+            checkBoxPreFilter.Size = new Size(72, 19);
+            checkBoxPreFilter.TabIndex = 30;
+            checkBoxPreFilter.Text = "Pre Filter";
+            checkBoxPreFilter.UseVisualStyleBackColor = true;
             // 
             // checkBoxRound
             // 
@@ -719,6 +777,7 @@ namespace LPGDataAnalyzer
             ((System.ComponentModel.ISupportInitialize)dataGridViewMapAnalysis).EndInit();
             tabPagePredictions.ResumeLayout(false);
             tabPagePredictions.PerformLayout();
+            panel1.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)dataGridViewPrediction).EndInit();
             ((System.ComponentModel.ISupportInitialize)dataGridViewOrig).EndInit();
             tabPageReducerPred.ResumeLayout(false);
@@ -784,5 +843,10 @@ namespace LPGDataAnalyzer
         private Controls.DataItemGrid dataGridViewMainData;
         private CheckBox checkBoxRound;
         private Button buttonGroupByTemp;
+        private CheckBox checkBoxPreFilter;
+        private TextBox textBoxMinCount;
+        private Panel panel1;
+        private HistoryControl historyControl1;
+        private CheckBox checkBoxSaveSnapshot;
     }
 }

@@ -2,6 +2,7 @@ using LPGDataAnalyzer.Controls;
 using LPGDataAnalyzer.Models;
 using LPGDataAnalyzer.Models.Common;
 using LPGDataAnalyzer.Services;
+using Microsoft.VisualBasic.Logging;
 using static LPGDataAnalyzer.Models.Settings;
 
 namespace LPGDataAnalyzer
@@ -49,6 +50,19 @@ namespace LPGDataAnalyzer
             comboBoxReductorTempGroup2.SelectedIndex = 0;
 
             comboBoxAggregation.DataSource = Enum.GetValues<Aggregation>();
+
+            historyControl1.HistorySelected += HistoryControl1_HistorySelected;
+        }
+        private void HistoryControl1_HistorySelected(HistorySnapshot snapshot)
+        {
+            if (snapshot == null)
+                return;
+
+            var cellMap = ArrayConverter.To2D(snapshot.CellMap);
+            var newCellMap = ArrayConverter.To2D(snapshot.NewCellMap);
+            var logs = snapshot.Logs;
+            PreviewPrediction(cellMap, newCellMap);
+            // apply to your system
         }
         private static void SearchAndPrepareGrid(Control.ControlCollection parentControl)
         {
@@ -134,7 +148,7 @@ namespace LPGDataAnalyzer
         {
             using OpenFileDialog ofd = new OpenFileDialog();
             ofd.Filter = "Text files (*.txt)|*.txt|All files (*.*)|*.*";
-
+            ofd.InitialDirectory = "C:\\Users\\veselin.ivanov\\Documents\\MultipointInj\\Acquisition";
             if (ofd.ShowDialog() == DialogResult.OK)
             {
                 txtFilePath.Text = ofd.FileName;
@@ -298,13 +312,25 @@ namespace LPGDataAnalyzer
         {
             var table = textExtractor.BuildFinalTable(textBoxParsedData.Text);
 
-            GridBuilder(dataGridViewOrig, table);
-            table = MyPrediction.BuildTable(Parser.Data, table,
-                cbEnableSmooth.Checked, cbInterpolation.Checked, checkBoxOnlyChanges.Checked, checkBoxRound.Checked);
-            //Auto-correction algorithm
-            //new Prediction().AutoCorrectFuelTable(data, table, cbEnableSmooth.Checked);
+            var tableNew = MyPrediction.BuildTable(Parser.Data, table, int.Parse(textBoxMinCount.Text.Trim()),
+                cbEnableSmooth.Checked, cbInterpolation.Checked, checkBoxOnlyChanges.Checked, checkBoxRound.Checked, checkBoxPreFilter.Checked);
 
-            GridBuilder(dataGridViewPrediction, table);
+            if (checkBoxSaveSnapshot.Checked)
+            {
+                historyControl1.AddSnapshot(Parser.Data, table, tableNew);
+            }
+
+            textBoxLastPredictedFuelTable.Text = tableNew.ToText();
+            AppSettings.LastPredictedFuelTable = textBoxLastPredictedFuelTable.Text;
+            _appSettingManager.Save(AppSettings);
+
+            PreviewPrediction(table, tableNew);
+        }
+
+        private void PreviewPrediction(double?[,] table, double?[,] tableNew)
+        {
+            GridBuilder(dataGridViewOrig, table);
+            GridBuilder(dataGridViewPrediction, tableNew);
 
             // Apply heatmap to DataGridViews
             var vals = DataGridViewColorization.HighlightDifferencesHeatmapWithValues(dataGridViewPrediction, dataGridViewOrig, tolerance: 0.01);
@@ -312,11 +338,7 @@ namespace LPGDataAnalyzer
             // Create horizontal legend aligned with DataGridView
             LegendPanelBuilder.CreateDynamicHorizontalHeatmapLegend(panelLegend, dataGridViewPrediction, vals.WLow, vals.WHigh);
 
-            textBoxLastPredictedFuelTable.Text = table.ToText();
-            AppSettings.LastPredictedFuelTable = textBoxLastPredictedFuelTable.Text;
-            _appSettingManager.Save(AppSettings);
         }
-
         private void ButtonValidate_Click(object sender, EventArgs e)
         {
             try
@@ -361,45 +383,7 @@ namespace LPGDataAnalyzer
 
             var res3 = ExtraInjectionCalculator.CalculateExtraInjectionTime(Parser.Data.ToList());
 
-            MessageBox.Show(res3.ToString(), "ExtraInjectionTime");
-            ///////////////////////////////////////////////////////////////////
-            return;
-            //open all saved files and parse the and use the data. 
-            List<string> txtFiles = new List<string>();
-            var directoryPath = "C:\\Users\\veselin.ivanov\\Documents\\MultipointInj\\Acquisition";
-            try
-            {
-                // Check if the directory exists
-                if (Directory.Exists(directoryPath))
-                {
-                    // Get all .txt files in the directory (including subdirectories)
-                    string[] files = Directory.GetFiles(directoryPath, "*.txt", SearchOption.AllDirectories);
-
-                    foreach (var file in files)
-                    {
-                        txtFiles.Add(file); // Add file path to the list
-                    }
-                }
-                else
-                {
-                    Console.WriteLine("The directory does not exist.");
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"An error occurred: {ex.Message}");
-            }
-            (string, double)[] result = new (string, double)[txtFiles.Count()];
-            int i = 0;
-            foreach (var file in txtFiles)
-            {
-                var p = new Parser();
-                p.Load(file);
-
-                var res1 = ExtraInjectionCalculator.CalculateExtraInjectionTime(p.Data.ToList());
-                result[i].Item1 = file;
-                result[i++].Item2 = res1;
-            }
+            MessageBox.Show(res3.ToString(), "ExtraInjectionTime");           
 
         }
     }

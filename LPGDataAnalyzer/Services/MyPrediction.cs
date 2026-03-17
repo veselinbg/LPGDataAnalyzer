@@ -22,42 +22,53 @@ namespace LPGDataAnalyzer.Services
                 }
             }
         }
-        public static double?[,] BuildTable(DataItem[] logs, double?[,] cellMap,
-            bool enableSmooth, bool enableInterpolation, bool showOnlyChanges = false, bool round = true)
+        public static double?[,] BuildTable(DataItem[] logs, double?[,] cellMap, int minCount = 0,
+            bool enableSmooth = true, bool enableInterpolation = false, bool showOnlyChanges = false, bool round = true, bool preFilter = true)
         {
             int rpmLength = cellMap.GetLength(0);
             int injLength = cellMap.GetLength(1);
             var result = new double?[rpmLength, injLength];
 
             // Precompute logs grouped by injection ranges
-            var logsByInjection = new List<DataItem>[injLength];
+            var logsByInjectionB1 = new List<DataItem>[injLength];
+            var logsByInjectionB2 = new List<DataItem>[injLength];
+
             for (int injIndex = 0; injIndex < injLength; injIndex++)
             {
                 var inj = Settings.InjectionRanges[injIndex];
-                logsByInjection[injIndex] = logs
-                    .Where(d => (d.BENZ_b1 > inj.Min && d.BENZ_b1 <= inj.Max) ||
-                                (d.BENZ_b2 > inj.Min && d.BENZ_b2 <= inj.Max))
-                    .ToList();
+                logsByInjectionB1[injIndex] = logs
+                    .Where(d => (d.BENZ_b1 > inj.Min && d.BENZ_b1 <= inj.Max) && (!preFilter || (d.FAST_b1 >-10 && d.FAST_b1 < 10))).ToList();
+
+                logsByInjectionB2[injIndex] = logs
+                    .Where(d => (d.BENZ_b2 > inj.Min && d.BENZ_b2 <= inj.Max) && (!preFilter || (d.FAST_b2 >-10 && d.FAST_b2 < 10))).ToList();
             }
 
             for (int injIndex = 0; injIndex < injLength; injIndex++)
             {
                 var inj = Settings.InjectionRanges[injIndex];
-                var injLogs = logsByInjection[injIndex];
+
+                var injLogsB1 = logsByInjectionB1[injIndex];
+                var injLogsB2 = logsByInjectionB2[injIndex];
 
                 for (int rpmIndex = 0; rpmIndex < rpmLength; rpmIndex++)
                 {
                     var rpm = Settings.RpmColumns[rpmIndex];
-                    var rpmLogs = injLogs
+                    var rpmLogsB1 = injLogsB1
                         .Where(d => d.RPM > rpm.Min && d.RPM <= rpm.Max)
-                        .Select(d => d.Trim)
+                        .Select(d => d.Trim_b1)
                         .ToArray();
-
+                    var rpmLogsB2 = injLogsB2
+                        .Where(d => d.RPM > rpm.Min && d.RPM <= rpm.Max)
+                        .Select(d => d.Trim_b2)
+                        .ToArray();
+                    var rpmLogs = rpmLogsB1.Merge(rpmLogsB2);
                     double trim = 1.0;
 
-                    if (rpmLogs.Length > 0)
+                    if (rpmLogs.Length > minCount)
                     {
-                        trim = 1 + rpmLogs.Median() / 100;
+                        
+                        trim = 1 + (Math.Abs(rpmLogs.Median())>0.5? (rpmLogs.Median() / 100) :0);
+                        //result[rpmIndex, injIndex] = Math.Abs(rpmLogs.Median()) > 0.5 ? (rpmLogs.Median() / 100) : null;
                         result[rpmIndex, injIndex] = cellMap[rpmIndex, injIndex].SafeMultiply(trim);
                         continue;
                     }
@@ -68,13 +79,21 @@ namespace LPGDataAnalyzer.Services
 
                         for (int lowerRpm = rpmIndex - 1; lowerRpm >= 0; lowerRpm--)
                         {
-                            var lowerLogs = injLogs
-                                .Where(d => d.RPM > Settings.RpmColumns[lowerRpm].Min &&
-                                            d.RPM <= Settings.RpmColumns[lowerRpm].Max)
-                                .Select(d => d.Trim)
+                            var lowerLogsB1 = injLogsB1
+                                 .Where(d => d.RPM > Settings.RpmColumns[lowerRpm].Min &&
+                                                    d.RPM <= Settings.RpmColumns[lowerRpm].Max)
+                                .Select(d => d.Trim_b1)
                                 .ToArray();
 
-                            if (lowerLogs.Length != 0)
+                            var lowerLogsB2 = injLogsB2
+                                 .Where(d => d.RPM > Settings.RpmColumns[lowerRpm].Min &&
+                                            d.RPM <= Settings.RpmColumns[lowerRpm].Max)
+                                .Select(d => d.Trim_b2)
+                                .ToArray();
+
+                            var lowerLogs = lowerLogsB1.Merge(lowerLogsB2);
+                            
+                            if (lowerLogs.Length > 0)
                             {
                                 double tNew = 1 + lowerLogs.Median() / 100;
 
@@ -111,7 +130,7 @@ namespace LPGDataAnalyzer.Services
             if (enableSmooth)
                 FuelMapSmoother.Smooth(result, KernelSize, KernelSigma);
             
-            RoundFuelMap(result, round? 0: 1);
+            RoundFuelMap(result, round? 0: 2);
 
             return result;
         }

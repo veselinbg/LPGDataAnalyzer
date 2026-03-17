@@ -93,6 +93,12 @@ namespace LPGDataAnalyzer
 
         public static double RelDiff(this double a, double b)
             => (a == 0 && b == 0) ? 0d : ((Math.Abs(a - b) / ((a + b) / 2.0)) * 100).Round();
-
+        public static double[] Merge(this double[] a, double[] b)
+        {
+            var result = new double[a.Length + b.Length];
+            Array.Copy(a, result, a.Length);
+            Array.Copy(b, 0, result, a.Length, b.Length);
+            return result;
+        }
     }
 }

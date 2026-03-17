@@ -75,5 +75,44 @@ namespace LPGDataAnalyzer.Services
 
             return item;
         }
+        void openAllSavedFilesAndparsethem()
+        {
+            //open all saved files and parse the and use the data. 
+            List<string> txtFiles = new List<string>();
+            var directoryPath = "C:\\Users\\veselin.ivanov\\Documents\\MultipointInj\\Acquisition";
+            try
+            {
+                // Check if the directory exists
+                if (Directory.Exists(directoryPath))
+                {
+                    // Get all .txt files in the directory (including subdirectories)
+                    string[] files = Directory.GetFiles(directoryPath, "*.txt", SearchOption.AllDirectories);
+
+                    foreach (var file in files)
+                    {
+                        txtFiles.Add(file); // Add file path to the list
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("The directory does not exist.");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"An error occurred: {ex.Message}");
+            }
+            (string, double)[] result = new (string, double)[txtFiles.Count()];
+            int i = 0;
+            foreach (var file in txtFiles)
+            {
+                var p = new Parser();
+                p.Load(file);
+
+                var res1 = ExtraInjectionCalculator.CalculateExtraInjectionTime(p.Data.ToList());
+                result[i].Item1 = file;
+                result[i++].Item2 = res1;
+            }
+        }
     }
 }

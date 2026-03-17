@@ -84,7 +84,14 @@ namespace LPGDataAnalyzer.Controls
         private string baseTitle = "";
         private string sortColumn;
         private bool sortAsc = true;
+
+        private Panel titleBar = new();
         private Label titleLabel = new();
+        private Label rowCountLabel = new();
+        private Label filterIcon = new();
+        private Button refreshButton = new();
+        private Button clearFiltersButton = new();
+
         private TextBox searchBox = new();
         private DataGridView grid = new();
 
@@ -132,9 +139,43 @@ namespace LPGDataAnalyzer.Controls
         }
         private void BuildLayout()
         {
-            titleLabel.Dock = DockStyle.Top;
-            titleLabel.Height = 28;
-            titleLabel.Font = new System.Drawing.Font(titleLabel.Font, System.Drawing.FontStyle.Regular);
+            titleBar.Dock = DockStyle.Top;
+            titleBar.Height = 34;
+            titleBar.Padding = new Padding(6, 4, 6, 4);
+            titleBar.BackColor = Color.FromArgb(245, 245, 245);
+
+            titleLabel.AutoSize = true;
+            titleLabel.Font = new Font(titleLabel.Font, FontStyle.Bold);
+            titleLabel.Location = new Point(6, 8);
+
+            filterIcon.AutoSize = true;
+            filterIcon.Text = "🔎";
+            filterIcon.Visible = false;
+            filterIcon.Location = new Point(120, 8);
+
+            rowCountLabel.AutoSize = true;
+            rowCountLabel.ForeColor = Color.DimGray;
+            rowCountLabel.Location = new Point(140, 8);
+
+            refreshButton.Text = "⟳";
+            refreshButton.Width = 32;
+            refreshButton.Height = 24;
+            refreshButton.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            refreshButton.Location = new Point(Width - 80, 5);
+            refreshButton.Click += async (_, __) => await ApplyFiltersAsync();
+
+            clearFiltersButton.Text = "✖ Clear";
+            clearFiltersButton.Height = 24;
+            clearFiltersButton.Width = 80;
+            clearFiltersButton.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            clearFiltersButton.Location = new Point(Width - 160, 5);
+            clearFiltersButton.Click += async (_, __) => await ClearAllFilters();
+
+            titleBar.Controls.Add(titleLabel);
+            titleBar.Controls.Add(filterIcon);
+            titleBar.Controls.Add(rowCountLabel);
+            titleBar.Controls.Add(refreshButton);
+            titleBar.Controls.Add(clearFiltersButton);
 
             searchBox.Dock = DockStyle.Top;
             searchBox.PlaceholderText = "Search...";
@@ -152,7 +193,7 @@ namespace LPGDataAnalyzer.Controls
             Controls.Add(filterPanel);
             Controls.Add(grid);
             Controls.Add(searchBox);
-            Controls.Add(titleLabel);
+            Controls.Add(titleBar);
         }
         public void SetColumnOrder(IEnumerable<string> order)
         {
@@ -334,18 +375,40 @@ namespace LPGDataAnalyzer.Controls
             set
             {
                 baseTitle = value;
-                UpdateTitleCount();
+                titleLabel.Text = value;
+                UpdateTitleInfo();
             }
         }
-        private void UpdateTitleCount()
+        private void UpdateTitleInfo()
         {
             int total = source?.Count ?? 0;
             int visible = filtered?.Count ?? 0;
 
             if (total == visible)
-                titleLabel.Text = $"{Title} ({total})";
+            {
+                rowCountLabel.Text = $"{total:N0} rows";
+                filterIcon.Visible = false;
+                clearFiltersButton.Visible = false;
+            }
             else
-                titleLabel.Text = $"{Title} ({visible} / {total})";
+            {
+                rowCountLabel.Text = $"{visible:N0} rows (filtered from {total:N0})";
+                filterIcon.Visible = true;
+                clearFiltersButton.Visible = true;
+            }
+
+            UpdateTitleStyle();
+        }
+        private async Task ClearAllFilters()
+        {
+            searchBox.Clear();
+            filters.Clear();
+            columnSelections.Clear();
+
+            UpdateColumnHeaderStyles();
+            UpdateTitleStyle();
+
+            await ApplyFiltersAsync();
         }
         public void SetData(IEnumerable<T> data)
         {
@@ -356,7 +419,7 @@ namespace LPGDataAnalyzer.Controls
 
             grid.DataSource = new BindingList<T>(filtered);
 
-            UpdateTitleCount();
+            UpdateTitleInfo();
         }
         private void MinMaxBox_TextChanged(object sender, EventArgs e)
         {
@@ -416,8 +479,6 @@ namespace LPGDataAnalyzer.Controls
             {
                 filters.Remove(column);
             }
-            UpdateColumnHeaderStyles();
-            UpdateTitleStyle();
         }
 
         private void UpdateTitleStyle()
@@ -543,7 +604,7 @@ namespace LPGDataAnalyzer.Controls
             grid.Invoke(() =>
             {
                 grid.DataSource = new BindingList<T>(filtered);
-                UpdateTitleCount();
+                UpdateTitleInfo();
             });
         }
         private void Grid_CellMouseDown(object sender, DataGridViewCellMouseEventArgs e)
@@ -902,6 +963,7 @@ namespace LPGDataAnalyzer.Controls
             maxBox.Clear();
             andButton.Checked = true;
             orButton.Checked = false;
+            selectAllCheckBox.Checked = true;
 
             columnSelections.Remove(currentColumn);
             ClearFilters(currentColumn);
