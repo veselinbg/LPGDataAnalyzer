@@ -104,7 +104,15 @@
             (0.6, 0.8,  "Acceleration"),
             (0.8, int.MaxValue,  "High load"),
         };
-
+        const double MIN_RPM_IDLE = 650;
+        public static readonly (double Min, double Max, string Label)[] RpmRanges =
+      {
+             (0, MIN_RPM_IDLE,  "Idle"),
+            (MIN_RPM_IDLE, int.MaxValue,  "Slow Down"),
+            (MIN_RPM_IDLE, int.MaxValue,  "Cruise"),
+            (MIN_RPM_IDLE, int.MaxValue,  "Acceleration"),
+            (MIN_RPM_IDLE, int.MaxValue,  "High load"),
+        };
         public static readonly (double Min, double Max, string Label)[] MapModes = [(int.MinValue, int.MaxValue, ALL), .. MapRanges];
         public enum Aggregation
         {

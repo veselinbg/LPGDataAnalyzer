@@ -31,6 +31,10 @@ namespace LPGDataAnalyzer
         private void InitializeComponent()
         {
             tableLayoutPanelAnalyses = new TableLayoutPanel();
+            dataGridViewAnalyzeDataBank1t1 = new ReadOnlyDataGridView();
+            dataGridViewAnalyzeDataBank1t2 = new ReadOnlyDataGridView();
+            dataGridViewAnalyzeDataBank2t1 = new ReadOnlyDataGridView();
+            dataGridViewAnalyzeDataBank2t2 = new ReadOnlyDataGridView();
             openFileDialog1 = new OpenFileDialog();
             statusBar = new StatusStrip();
             toolStripSummary = new ToolStripStatusLabel();
@@ -42,10 +46,6 @@ namespace LPGDataAnalyzer
             tabPageMainData = new TabPage();
             dataGridViewMainData = new DataItemGrid();
             tabPageAnalyses = new TabPage();
-            dataGridViewAnalyzeDataBank2t2 = new ReadOnlyDataGridView();
-            dataGridViewAnalyzeDataBank1t2 = new ReadOnlyDataGridView();
-            dataGridViewAnalyzeDataBank2t1 = new ReadOnlyDataGridView();
-            dataGridViewAnalyzeDataBank1t1 = new ReadOnlyDataGridView();
             tabPageGroupByTemp = new TabPage();
             dataGridViewRIDData = new DataGridView();
             dataGridViewGasData = new DataGridView();
@@ -54,12 +54,9 @@ namespace LPGDataAnalyzer
             dataGridViewInjectionTimeAnalisys = new DataGridView();
             dataGridViewMapAnalysis = new DataGridView();
             tabPagePredictions = new TabPage();
+            predictionControl1 = new PredictionControl();
             tabPageReducerPred = new TabPage();
-            labelRefPressure = new Label();
-            textBoxReferencePressure = new TextBox();
-            labelCurrent = new Label();
-            textBoxReducerTempValues = new TextBox();
-            buttonReducerPrediction = new Button();
+            reducerTempCorrection1 = new ReducerTempCorrection();
             buttonAnalyzeFastTrim = new Button();
             buttonAnalyze = new Button();
             comboBoxReductorTempGroup2 = new ComboBox();
@@ -74,7 +71,7 @@ namespace LPGDataAnalyzer
             buttonShowReducerPress = new Button();
             comboBoxAggregation = new ComboBox();
             buttonGroupByTemp = new Button();
-            predictionControl1 = new PredictionControl();
+            tableLayoutPanelAnalyses.SuspendLayout();
             statusBar.SuspendLayout();
             tabControlMain.SuspendLayout();
             tabPageMainData.SuspendLayout();
@@ -89,6 +86,60 @@ namespace LPGDataAnalyzer
             tabPagePredictions.SuspendLayout();
             tabPageReducerPred.SuspendLayout();
             SuspendLayout();
+            // 
+            // tableLayoutPanelAnalyses
+            // 
+            tableLayoutPanelAnalyses.ColumnCount = 2;
+            tableLayoutPanelAnalyses.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+            tableLayoutPanelAnalyses.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+            tableLayoutPanelAnalyses.Controls.Add(dataGridViewAnalyzeDataBank1t1, 0, 0);
+            tableLayoutPanelAnalyses.Controls.Add(dataGridViewAnalyzeDataBank1t2, 1, 0);
+            tableLayoutPanelAnalyses.Controls.Add(dataGridViewAnalyzeDataBank2t1, 0, 1);
+            tableLayoutPanelAnalyses.Controls.Add(dataGridViewAnalyzeDataBank2t2, 1, 1);
+            tableLayoutPanelAnalyses.Dock = DockStyle.Fill;
+            tableLayoutPanelAnalyses.Location = new Point(3, 3);
+            tableLayoutPanelAnalyses.Name = "tableLayoutPanelAnalyses";
+            tableLayoutPanelAnalyses.RowCount = 2;
+            tableLayoutPanelAnalyses.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
+            tableLayoutPanelAnalyses.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
+            tableLayoutPanelAnalyses.Size = new Size(1402, 728);
+            tableLayoutPanelAnalyses.TabIndex = 0;
+            // 
+            // dataGridViewAnalyzeDataBank1t1
+            // 
+            dataGridViewAnalyzeDataBank1t1.Dock = DockStyle.Fill;
+            dataGridViewAnalyzeDataBank1t1.EnableTitle = true;
+            dataGridViewAnalyzeDataBank1t1.Location = new Point(3, 3);
+            dataGridViewAnalyzeDataBank1t1.Name = "dataGridViewAnalyzeDataBank1t1";
+            dataGridViewAnalyzeDataBank1t1.Size = new Size(695, 358);
+            dataGridViewAnalyzeDataBank1t1.TabIndex = 4;
+            // 
+            // dataGridViewAnalyzeDataBank1t2
+            // 
+            dataGridViewAnalyzeDataBank1t2.Dock = DockStyle.Fill;
+            dataGridViewAnalyzeDataBank1t2.EnableTitle = true;
+            dataGridViewAnalyzeDataBank1t2.Location = new Point(704, 3);
+            dataGridViewAnalyzeDataBank1t2.Name = "dataGridViewAnalyzeDataBank1t2";
+            dataGridViewAnalyzeDataBank1t2.Size = new Size(695, 358);
+            dataGridViewAnalyzeDataBank1t2.TabIndex = 6;
+            // 
+            // dataGridViewAnalyzeDataBank2t1
+            // 
+            dataGridViewAnalyzeDataBank2t1.Dock = DockStyle.Fill;
+            dataGridViewAnalyzeDataBank2t1.EnableTitle = true;
+            dataGridViewAnalyzeDataBank2t1.Location = new Point(3, 367);
+            dataGridViewAnalyzeDataBank2t1.Name = "dataGridViewAnalyzeDataBank2t1";
+            dataGridViewAnalyzeDataBank2t1.Size = new Size(695, 358);
+            dataGridViewAnalyzeDataBank2t1.TabIndex = 5;
+            // 
+            // dataGridViewAnalyzeDataBank2t2
+            // 
+            dataGridViewAnalyzeDataBank2t2.Dock = DockStyle.Fill;
+            dataGridViewAnalyzeDataBank2t2.EnableTitle = true;
+            dataGridViewAnalyzeDataBank2t2.Location = new Point(704, 367);
+            dataGridViewAnalyzeDataBank2t2.Name = "dataGridViewAnalyzeDataBank2t2";
+            dataGridViewAnalyzeDataBank2t2.Size = new Size(695, 358);
+            dataGridViewAnalyzeDataBank2t2.TabIndex = 7;
             // 
             // openFileDialog1
             // 
@@ -184,6 +235,7 @@ namespace LPGDataAnalyzer
             // 
             // tabPageAnalyses
             // 
+            tabPageAnalyses.Controls.Add(tableLayoutPanelAnalyses);
             tabPageAnalyses.Location = new Point(4, 24);
             tabPageAnalyses.Name = "tabPageAnalyses";
             tabPageAnalyses.Padding = new Padding(3);
@@ -191,38 +243,6 @@ namespace LPGDataAnalyzer
             tabPageAnalyses.TabIndex = 1;
             tabPageAnalyses.Text = "Analyses";
             tabPageAnalyses.UseVisualStyleBackColor = true;
-            // 
-            // dataGridViewAnalyzeDataBank2t2
-            // 
-            dataGridViewAnalyzeDataBank2t2.Location = new Point(608, 378);
-            dataGridViewAnalyzeDataBank2t2.Name = "dataGridViewAnalyzeDataBank2t2";
-            dataGridViewAnalyzeDataBank2t2.Size = new Size(797, 350);
-            dataGridViewAnalyzeDataBank2t2.TabIndex = 7;
-            dataGridViewAnalyzeDataBank2t2.Title = "My Read-Only Data Grid";
-            // 
-            // dataGridViewAnalyzeDataBank1t2
-            // 
-            dataGridViewAnalyzeDataBank1t2.Location = new Point(608, 3);
-            dataGridViewAnalyzeDataBank1t2.Name = "dataGridViewAnalyzeDataBank1t2";
-            dataGridViewAnalyzeDataBank1t2.Size = new Size(800, 369);
-            dataGridViewAnalyzeDataBank1t2.TabIndex = 6;
-            dataGridViewAnalyzeDataBank1t2.Title = "My Read-Only Data Grid";
-            // 
-            // dataGridViewAnalyzeDataBank2t1
-            // 
-            dataGridViewAnalyzeDataBank2t1.Location = new Point(0, 349);
-            dataGridViewAnalyzeDataBank2t1.Name = "dataGridViewAnalyzeDataBank2t1";
-            dataGridViewAnalyzeDataBank2t1.Size = new Size(706, 379);
-            dataGridViewAnalyzeDataBank2t1.TabIndex = 5;
-            dataGridViewAnalyzeDataBank2t1.Title = "My Read-Only Data Grid";
-            // 
-            // dataGridViewAnalyzeDataBank1t1
-            // 
-            dataGridViewAnalyzeDataBank1t1.Location = new Point(0, 3);
-            dataGridViewAnalyzeDataBank1t1.Name = "dataGridViewAnalyzeDataBank1t1";
-            dataGridViewAnalyzeDataBank1t1.Size = new Size(706, 350);
-            dataGridViewAnalyzeDataBank1t1.TabIndex = 4;
-            dataGridViewAnalyzeDataBank1t1.Title = "My Read-Only Data Grid";
             // 
             // tabPageGroupByTemp
             // 
@@ -304,13 +324,17 @@ namespace LPGDataAnalyzer
             tabPagePredictions.Text = "Prediction";
             tabPagePredictions.UseVisualStyleBackColor = true;
             // 
+            // predictionControl1
+            // 
+            predictionControl1.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            predictionControl1.Location = new Point(0, 3);
+            predictionControl1.Name = "predictionControl1";
+            predictionControl1.Size = new Size(1408, 734);
+            predictionControl1.TabIndex = 0;
+            // 
             // tabPageReducerPred
             // 
-            tabPageReducerPred.Controls.Add(labelRefPressure);
-            tabPageReducerPred.Controls.Add(textBoxReferencePressure);
-            tabPageReducerPred.Controls.Add(labelCurrent);
-            tabPageReducerPred.Controls.Add(textBoxReducerTempValues);
-            tabPageReducerPred.Controls.Add(buttonReducerPrediction);
+            tabPageReducerPred.Controls.Add(reducerTempCorrection1);
             tabPageReducerPred.Location = new Point(4, 24);
             tabPageReducerPred.Name = "tabPageReducerPred";
             tabPageReducerPred.Size = new Size(1408, 734);
@@ -318,50 +342,14 @@ namespace LPGDataAnalyzer
             tabPageReducerPred.Text = "Reducer prediction";
             tabPageReducerPred.UseVisualStyleBackColor = true;
             // 
-            // labelRefPressure
+            // reducerTempCorrection1
             // 
-            labelRefPressure.AutoSize = true;
-            labelRefPressure.Location = new Point(234, 101);
-            labelRefPressure.Name = "labelRefPressure";
-            labelRefPressure.Size = new Size(106, 15);
-            labelRefPressure.TabIndex = 25;
-            labelRefPressure.Text = "Reference Pressure";
-            // 
-            // textBoxReferencePressure
-            // 
-            textBoxReferencePressure.Location = new Point(372, 98);
-            textBoxReferencePressure.Name = "textBoxReferencePressure";
-            textBoxReferencePressure.RightToLeft = RightToLeft.Yes;
-            textBoxReferencePressure.Size = new Size(62, 23);
-            textBoxReferencePressure.TabIndex = 24;
-            textBoxReferencePressure.Text = "1.5";
-            // 
-            // labelCurrent
-            // 
-            labelCurrent.AutoSize = true;
-            labelCurrent.Location = new Point(231, 22);
-            labelCurrent.Name = "labelCurrent";
-            labelCurrent.Size = new Size(97, 15);
-            labelCurrent.TabIndex = 23;
-            labelCurrent.Text = "Current Values (,)";
-            // 
-            // textBoxReducerTempValues
-            // 
-            textBoxReducerTempValues.Location = new Point(227, 43);
-            textBoxReducerTempValues.Name = "textBoxReducerTempValues";
-            textBoxReducerTempValues.Size = new Size(207, 23);
-            textBoxReducerTempValues.TabIndex = 22;
-            textBoxReducerTempValues.Text = "-2,-2,-1,0,0,0,0,1,2";
-            // 
-            // buttonReducerPrediction
-            // 
-            buttonReducerPrediction.Location = new Point(453, 43);
-            buttonReducerPrediction.Name = "buttonReducerPrediction";
-            buttonReducerPrediction.Size = new Size(133, 23);
-            buttonReducerPrediction.TabIndex = 21;
-            buttonReducerPrediction.Text = "Reducer Prediction";
-            buttonReducerPrediction.UseVisualStyleBackColor = true;
-            buttonReducerPrediction.Click += buttonReducerPrediction_Click;
+            reducerTempCorrection1.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            reducerTempCorrection1.AutoSize = true;
+            reducerTempCorrection1.Location = new Point(191, 145);
+            reducerTempCorrection1.Name = "reducerTempCorrection1";
+            reducerTempCorrection1.Size = new Size(589, 157);
+            reducerTempCorrection1.TabIndex = 0;
             // 
             // buttonAnalyzeFastTrim
             // 
@@ -493,34 +481,6 @@ namespace LPGDataAnalyzer
             buttonGroupByTemp.UseVisualStyleBackColor = true;
             buttonGroupByTemp.Click += buttonGroupByTemp_Click;
             // 
-            // predictionControl1
-            // 
-            predictionControl1.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            predictionControl1.Location = new Point(0, 3);
-            predictionControl1.Name = "predictionControl1";
-            predictionControl1.Size = new Size(1408, 734);
-            predictionControl1.TabIndex = 0;
-
-            tableLayoutPanelAnalyses.Dock = DockStyle.Fill;
-            tableLayoutPanelAnalyses.RowCount = 2;
-            tableLayoutPanelAnalyses.ColumnCount = 2;
-            tableLayoutPanelAnalyses.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
-            tableLayoutPanelAnalyses.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
-            tableLayoutPanelAnalyses.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
-            tableLayoutPanelAnalyses.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
-
-            tableLayoutPanelAnalyses.Controls.Add(dataGridViewAnalyzeDataBank1t1, 0, 0);
-            tableLayoutPanelAnalyses.Controls.Add(dataGridViewAnalyzeDataBank1t2, 1, 0);
-            tableLayoutPanelAnalyses.Controls.Add(dataGridViewAnalyzeDataBank2t1, 0, 1);
-            tableLayoutPanelAnalyses.Controls.Add(dataGridViewAnalyzeDataBank2t2, 1, 1);
-
-            dataGridViewAnalyzeDataBank1t1.Dock = DockStyle.Fill;
-            dataGridViewAnalyzeDataBank1t2.Dock = DockStyle.Fill;
-            dataGridViewAnalyzeDataBank2t1.Dock = DockStyle.Fill;
-            dataGridViewAnalyzeDataBank2t2.Dock = DockStyle.Fill;
-
-            tabPageAnalyses.Controls.Add(tableLayoutPanelAnalyses);
-            // 
             // MainForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
@@ -549,6 +509,7 @@ namespace LPGDataAnalyzer
             Name = "MainForm";
             Text = "LPG Analyser";
             WindowState = FormWindowState.Maximized;
+            tableLayoutPanelAnalyses.ResumeLayout(false);
             statusBar.ResumeLayout(false);
             statusBar.PerformLayout();
             tabControlMain.ResumeLayout(false);
@@ -597,16 +558,11 @@ namespace LPGDataAnalyzer
         private Button buttonReducerThermalLag;
         private TabPage tabPagePredictions;
         private Button buttonAFR;
-        private Button buttonReducerPrediction;
         private TabPage tabPageReducerPred;
         private Button buttonExtraInjectionCalculator;
         private DataGridView dataGridViewRIDData;
-        private TextBox textBoxReducerTempValues;
-        private Label labelCurrent;
-        private TextBox textBoxReferencePressure;
-        private Label labelRefPressure;
-        private Button buttonShowReducerPress;
         private ComboBox comboBoxAggregation;
+        private Button buttonShowReducerPress;
         private Controls.DataItemGrid dataGridViewMainData;
         private Button buttonGroupByTemp;
         private ReadOnlyDataGridView dataGridViewAnalyzeDataBank2t2;
@@ -614,5 +570,6 @@ namespace LPGDataAnalyzer
         private ReadOnlyDataGridView dataGridViewAnalyzeDataBank2t1;
         private ReadOnlyDataGridView dataGridViewAnalyzeDataBank1t1;
         private PredictionControl predictionControl1;
+        private ReducerTempCorrection reducerTempCorrection1;
     }
 }

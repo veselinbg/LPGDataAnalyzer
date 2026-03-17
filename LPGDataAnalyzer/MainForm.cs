@@ -1,10 +1,7 @@
 using LPGDataAnalyzer.Controls;
 using LPGDataAnalyzer.Models;
-using LPGDataAnalyzer.Models.Common;
 using LPGDataAnalyzer.Services;
-using Microsoft.VisualBasic.Logging;
 using static LPGDataAnalyzer.Models.Settings;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace LPGDataAnalyzer
 {
@@ -25,6 +22,7 @@ namespace LPGDataAnalyzer
 
             LoadParsedData();
             predictionControl1.LoadSettings(_appSettingManager, Parser.Data);
+            reducerTempCorrection1.Data = Parser.Data;
             comboBoxGasTemperatureb1.DataSource = GetExistGasTemperatureRanges(Parser.Data);
             comboBoxGasTemperatureb1.SelectedIndex = 0;
 
@@ -38,6 +36,7 @@ namespace LPGDataAnalyzer
             comboBoxReductorTempGroup2.SelectedIndex = 0;
 
             comboBoxAggregation.DataSource = Enum.GetValues<Aggregation>();
+
         }
 
         private void BtnSelectFile_Click(object sender, EventArgs e)
@@ -188,21 +187,7 @@ namespace LPGDataAnalyzer
             var a3 = Analyser.ReducerThermalLag(Parser.Data);
             LoadDataSource(dataGridView1, a3);
         }
-        private void buttonReducerPrediction_Click(object sender, EventArgs e)
-        {
-            Dictionary<string, int> currentCorrections = [];
-
-            var values = textBoxReducerTempValues.Text.Split(',', StringSplitOptions.RemoveEmptyEntries);
-
-            for (int i = 0; i < ReductorTemperatureRanges.Length; i++)
-            {
-                currentCorrections.Add(ReductorTemperatureRanges[i].Label, int.Parse(values[i]));
-            }
-
-            var result = new ReducerPrediction().PredictNewReducerTempCorrections(Parser.Data, currentCorrections, double.Parse(textBoxReferencePressure.Text.Trim()));
-
-            MessageBox.Show(string.Join(",", result.Select(x => x.Value)), "LPG Reducer correction");
-        }
+        
 
         private void buttonExtraInjectionCalculator_Click(object sender, EventArgs e)
         {

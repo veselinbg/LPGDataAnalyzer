@@ -1,73 +1,48 @@
 ﻿using LPGDataAnalyzer.Models;
 using System;
 using System.Collections.Generic;
-using System.Text;
+using System.Linq;
 
 namespace LPGDataAnalyzer.Services
 {
     public class ReducerPrediction
     {
-        static bool IsValid(DataItem d) =>
-                                d.BENZ_b1 > 0 && d.GAS_b1 > 0 &&
-                                d.BENZ_b2 > 0 && d.GAS_b2 > 0;
-
-        static string GetTempRange(double tempRid)
-        {
-            return Settings.ReductorTemperatureRanges
-                .First(r => tempRid >= r.Min && tempRid <= r.Max)
-                .Label;
-        }
-
-        int ComputeStep(double error)
-        {
-            if (Math.Abs(error) < 1.0)
-                return 0;           // dead zone
-
-            if (Math.Abs(error) < 3.0)
-                return Math.Sign(error) * 1;
-
-            if (Math.Abs(error) < 6.0)
-                return Math.Sign(error) * 2;
-
-            return Math.Sign(error) * 3; // hard limit per update
-        }
-
-        public Dictionary<string, int> PredictNewReducerTempCorrections(
+        public static Dictionary<string, int> PredictNewReducerTempCorrections(
             ICollection<DataItem> liveData,
             Dictionary<string, int> currentCorrections,
-            double referencePressure
+            double referencePressure,
+            bool enableSmooth = true,
+            double referenceMAP = 1.0,
+            double maxRPM = 6200
         )
         {
-            var errorsByRange =
-                liveData
-                    .Where(IsValid)
-                    .Select(d =>
+            // Order and filter valid data
+            var ordered = liveData
+                .Where(IsValid)
+                .OrderBy(d => d.TEMPO)
+                .ToList();
+
+            // Pair each item with previous
+            var errorsByRange = ordered
+                .Select((d, i) =>
+                {
+                    DataItem previous = i > 0 ? ordered[i - 1] : null;
+
+                    double totalError = CalculateError(d, previous, referencePressure, referenceMAP, maxRPM);
+
+                    return new
                     {
-                        double fuelError =
-                        (
-                            (d.SLOW_b1 + d.FAST_b1) / 2.0 +
-                            (d.SLOW_b2 + d.FAST_b2) / 2.0
-                        ) / 2.0;
+                        TempRange = GetTempRange(d.Temp_RID),
+                        Error = totalError
+                    };
+                })
+                .GroupBy(x => x.TempRange)
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.Average(x => x.Error)
+                );
 
-                        double pressureError =
-                            (referencePressure - d.PRESS) /
-                            referencePressure * 100.0;
-
-                        double totalError =
-                            fuelError * 0.7 + pressureError * 0.3;
-
-                        return new
-                        {
-                            TempRange = GetTempRange(d.Temp_RID),
-                            Error = totalError
-                        };
-                    })
-                    .GroupBy(x => x.TempRange)
-                    .ToDictionary(
-                        g => g.Key,
-                        g => g.Average(x => x.Error)
-                    );
-
+            // Compute new corrections
             var result = new Dictionary<string, int>();
 
             foreach (var (range, oldValue) in currentCorrections)
@@ -86,10 +61,29 @@ namespace LPGDataAnalyzer.Services
                 result[range] = newValue;
             }
 
-            return SmoothIntCorrections(result);
+            return enableSmooth ? SmoothIntCorrections(result) : result;
         }
-        Dictionary<string, int> SmoothIntCorrections(
-    Dictionary<string, int> table)
+
+        private static bool IsValid(DataItem d) =>
+            d.BENZ_b1 > 0 && d.GAS_b1 > 0 &&
+            d.BENZ_b2 > 0 && d.GAS_b2 > 0;
+
+        private static string GetTempRange(double tempRid)
+        {
+            return Settings.ReductorTemperatureRanges
+                .First(r => tempRid >= r.Min && tempRid <= r.Max)
+                .Label;
+        }
+
+        private static int ComputeStep(double error)
+        {
+            if (Math.Abs(error) < 1.0) return 0;           // dead zone
+            if (Math.Abs(error) < 3.0) return Math.Sign(error) * 1;
+            if (Math.Abs(error) < 6.0) return Math.Sign(error) * 2;
+            return Math.Sign(error) * 3;                   // hard limit per update
+        }
+
+        private static Dictionary<string, int> SmoothIntCorrections(Dictionary<string, int> table)
         {
             var keys = Settings.ReductorTemperatureRanges
                 .Select(r => r.Label)
@@ -110,6 +104,51 @@ namespace LPGDataAnalyzer.Services
             }
 
             return smoothed;
+        }
+
+        // ---------------- Core Error Calculation ----------------
+        private static double CalculateError(
+            DataItem d,
+            DataItem previous,
+            double referencePressure,
+            double referenceMAP,
+            double maxRPM)
+        {
+            double fuelError = d.Trim;
+
+            // Pressure effect
+            double pressureRatio = d.PRESS / referencePressure;
+            if (pressureRatio <= 0) pressureRatio = 1.0;
+            double pressureEffect = (Math.Sqrt(pressureRatio) - 1.0) * 100.0;
+            pressureEffect = Math.Clamp(pressureEffect, -20.0, 20.0);
+
+            // Transient detection
+            double pressureDelta = previous != null ? d.PRESS - previous.PRESS : 0.0;
+            double transientBoost = Math.Abs(pressureDelta) > 0.05 * referencePressure ? 0.15 : 0.0;
+
+            // Load-based weighting
+            double normalizedLoad = Math.Clamp(d.MAP / referenceMAP, 0.0, 1.0);
+            double normalizedRPM = Math.Clamp(d.RPM / maxRPM, 0.0, 1.0);
+            double loadFactor = 0.5 * normalizedLoad + 0.5 * normalizedRPM;
+
+            // Trim weight (heuristic for open-loop)
+            double trimWeight = 1.0;
+            if (d.RPM < 800 || d.MAP > 0.95 * referenceMAP)
+                trimWeight = 0.5;
+
+            // Adaptive pressure weight
+            double basePressureWeight = 0.25 * Math.Exp(-Math.Abs(fuelError) / 10.0);
+            basePressureWeight *= 0.5 + 0.5 * loadFactor;
+            double pressureWeight = basePressureWeight * (1.0 - trimWeight) + transientBoost;
+            pressureWeight = Math.Clamp(pressureWeight, 0.05, 0.45);
+
+            // Conflict correction
+            if (Math.Sign(fuelError) != Math.Sign(pressureEffect))
+                pressureWeight *= 0.5;
+
+            double totalError = fuelError * trimWeight + pressureEffect * pressureWeight;
+
+            return totalError;
         }
     }
 }

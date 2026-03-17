@@ -135,10 +135,20 @@ namespace LPGDataAnalyzer.Services
 
                 // Apply Driving range if available
                 var drivingRangeItem = Settings.DrivingModes.FirstOrDefault(dr => dr.Label == map.Label);
+
                 if (!drivingRangeItem.Equals(default))
                 {
                     mapData = mapData.Where(x => x.BENZ_b1 > drivingRangeItem.Min && x.BENZ_b1 <= drivingRangeItem.Max);
                 }
+
+                var rpmRangeItem = Settings.RpmRanges.FirstOrDefault(dr => dr.Label == map.Label);
+
+                if (!rpmRangeItem.Equals(default))
+                {
+                    mapData = mapData.Where(x => x.RPM > rpmRangeItem.Min && x.RPM <= rpmRangeItem.Max);
+                }
+
+
                 var mapArray = mapData.ToArray(); // Only enumerate once
 
                 // Compute averages

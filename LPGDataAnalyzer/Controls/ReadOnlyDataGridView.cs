@@ -1,10 +1,6 @@
 ﻿using LPGDataAnalyzer.Models;
-using LPGDataAnalyzer.Services;
-using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
-using System.Text;
 using static LPGDataAnalyzer.Models.Settings;
 
 namespace LPGDataAnalyzer.Controls
@@ -48,13 +44,11 @@ namespace LPGDataAnalyzer.Controls
         }
         private void InitializeComponents()
         {
-            this.Text = "Read-Only DataGridView Example";
             // Form settings
             this.Size = new Size(800, 500);
 
             // Title Label
             titleLabel = new Label();
-            titleLabel.Text = "My Read-Only Data Grid";
             titleLabel.Font = new Font("Segoe UI", 16, FontStyle.Bold);
             titleLabel.Dock = DockStyle.Top;
             titleLabel.TextAlign = ContentAlignment.MiddleCenter;
@@ -70,11 +64,10 @@ namespace LPGDataAnalyzer.Controls
             dataGridView.AllowUserToAddRows = false;
             dataGridView.AllowUserToDeleteRows = false;
             dataGridView.AllowUserToResizeRows = false;
-
+            dataGridView.SelectionMode = DataGridViewSelectionMode.CellSelect;
+            dataGridView.RowHeadersVisible = false;
             // Optional styling
             dataGridView.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
-            dataGridView.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-            dataGridView.MultiSelect = false;
             dataGridView.CellClick += DataGridView_CellClick;
             // Add controls to form
             this.Controls.Add(dataGridView);
@@ -90,7 +83,7 @@ namespace LPGDataAnalyzer.Controls
 
                 var rpm = Settings.RpmColumns[e.ColumnIndex - 1];
 
-                var dataItem = data.Where(x => x.RPM > rpm.Min && x.RPM <= rpm.Max && x.BENZ_b1 > range.Min && x.BENZ_b1 <= range.Max);
+                var dataItem = data.Where(x => x.RPM > rpm.Min && x.RPM <= rpm.Max && ((x.BENZ_b1 > range.Min && x.BENZ_b1 <= range.Max) || (x.BENZ_b2 > range.Min && x.BENZ_b2 <= range.Max)));
 
                 var message = string.Join("\r \n", dataItem.GroupBy(x => $"{x.SLOW_b1.Round()}_{x.FAST_b1.Round()}").Select(x => $"S_F Trim:{x.Key} Count: {x.Count()} PRESS: {dataItem.Where(y => $"{y.SLOW_b1.Round()}_{y.FAST_b1.Round()}" == x.Key).Average(y => y.PRESS).Round()}"));
 
@@ -111,11 +104,6 @@ namespace LPGDataAnalyzer.Controls
             dataGridView.DataSource = null;
             dataGridView.Columns.Clear();
             dataGridView.Rows.Clear();
-            dataGridView.ReadOnly = true;
-            dataGridView.AllowUserToAddRows = false;
-            dataGridView.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.AllCells;
-            dataGridView.SelectionMode = DataGridViewSelectionMode.CellSelect;
-            dataGridView.RowHeadersVisible = false;
         }
         private void FillRows(double?[,] table)
         {

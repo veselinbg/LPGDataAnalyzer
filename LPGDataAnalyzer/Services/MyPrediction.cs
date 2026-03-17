@@ -23,7 +23,8 @@ namespace LPGDataAnalyzer.Services
             }
         }
         public static double?[,] BuildTable(DataItem[] logs, double?[,] cellMap, int minCount = 0,
-            bool enableSmooth = true, bool enableInterpolation = false, bool showOnlyChanges = false, bool round = true, bool preFilter = true)
+            bool enableSmooth = true, bool enableInterpolation = false, bool showOnlyChanges = false, bool round = true, bool preFilter = true,
+            bool showOnlyMultiplayer = false, double minChangeValue = 0.5d)
         {
             int rpmLength = cellMap.GetLength(0);
             int injLength = cellMap.GetLength(1);
@@ -66,10 +67,16 @@ namespace LPGDataAnalyzer.Services
 
                     if (rpmLogs.Length > minCount)
                     {
-                        
-                        trim = 1 + (Math.Abs(rpmLogs.Median())>0.5? (rpmLogs.Median() / 100) :0);
-                        //result[rpmIndex, injIndex] = Math.Abs(rpmLogs.Median()) > 0.5 ? (rpmLogs.Median() / 100) : null;
-                        result[rpmIndex, injIndex] = cellMap[rpmIndex, injIndex].SafeMultiply(trim);
+                        if(showOnlyMultiplayer)
+                        {
+                            result[rpmIndex, injIndex] = rpmLogs.Median();
+                        }
+                        else
+                        {
+                            trim = 1 + (Math.Abs(rpmLogs.Median()) > minChangeValue ? (rpmLogs.Median() / 100) : 0);
+
+                            result[rpmIndex, injIndex] = cellMap[rpmIndex, injIndex].SafeMultiply(trim);
+                        }                       
                         continue;
                     }
                     if (enableInterpolation && rpm.Label > 3400 && inj.Label > 5.8)

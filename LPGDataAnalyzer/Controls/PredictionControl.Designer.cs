@@ -33,6 +33,8 @@
             buttonParceSelectedPhoto = new Button();
             dataGridViewOrig = new ReadOnlyDataGridView();
             dataGridViewPrediction = new ReadOnlyDataGridView();
+            checkBoxShowOnlyMiplayerChange = new CheckBox();
+            textBoxMinValueOfChange = new TextBox();
             panel1.SuspendLayout();
             SuspendLayout();
             // 
@@ -63,7 +65,7 @@
             // 
             // textBoxMinCount
             // 
-            textBoxMinCount.Location = new Point(1239, 383);
+            textBoxMinCount.Location = new Point(1239, 379);
             textBoxMinCount.Name = "textBoxMinCount";
             textBoxMinCount.RightToLeft = RightToLeft.Yes;
             textBoxMinCount.Size = new Size(45, 23);
@@ -75,7 +77,7 @@
             checkBoxPreFilter.AutoSize = true;
             checkBoxPreFilter.Checked = true;
             checkBoxPreFilter.CheckState = CheckState.Checked;
-            checkBoxPreFilter.Location = new Point(1164, 383);
+            checkBoxPreFilter.Location = new Point(1288, 348);
             checkBoxPreFilter.Name = "checkBoxPreFilter";
             checkBoxPreFilter.Size = new Size(72, 19);
             checkBoxPreFilter.TabIndex = 3;
@@ -86,7 +88,7 @@
             checkBoxRound.AutoSize = true;
             checkBoxRound.Checked = true;
             checkBoxRound.CheckState = CheckState.Checked;
-            checkBoxRound.Location = new Point(1167, 354);
+            checkBoxRound.Location = new Point(1223, 349);
             checkBoxRound.Name = "checkBoxRound";
             checkBoxRound.Size = new Size(61, 19);
             checkBoxRound.TabIndex = 4;
@@ -130,7 +132,7 @@
             // panelLegend
             // 
             panelLegend.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
-            panelLegend.Location = new Point(3, 350);
+            panelLegend.Location = new Point(3, 379);
             panelLegend.Name = "panelLegend";
             panelLegend.Size = new Size(818, 45);
             panelLegend.TabIndex = 9;
@@ -184,19 +186,38 @@
             dataGridViewOrig.Name = "dataGridViewOrig";
             dataGridViewOrig.Size = new Size(818, 341);
             dataGridViewOrig.TabIndex = 17;
-            dataGridViewOrig.Title = "My Read-Only Data Grid";
             // 
             // dataGridViewPrediction
             // 
             dataGridViewPrediction.EnableTitle = false;
             dataGridViewPrediction.Location = new Point(3, 401);
             dataGridViewPrediction.Name = "dataGridViewPrediction";
-            dataGridViewPrediction.Size = new Size(818, 315);
+            dataGridViewPrediction.Size = new Size(818, 335);
             dataGridViewPrediction.TabIndex = 18;
-            dataGridViewPrediction.Title = "My Read-Only Data Grid";
+            // 
+            // checkBoxShowOnlyMiplayerChange
+            // 
+            checkBoxShowOnlyMiplayerChange.AutoSize = true;
+            checkBoxShowOnlyMiplayerChange.Location = new Point(895, 363);
+            checkBoxShowOnlyMiplayerChange.Name = "checkBoxShowOnlyMiplayerChange";
+            checkBoxShowOnlyMiplayerChange.Size = new Size(196, 19);
+            checkBoxShowOnlyMiplayerChange.TabIndex = 19;
+            checkBoxShowOnlyMiplayerChange.Text = "Show Only Multy Player Change";
+            checkBoxShowOnlyMiplayerChange.UseVisualStyleBackColor = true;
+            // 
+            // textBoxMinValueOfChange
+            // 
+            textBoxMinValueOfChange.Location = new Point(1094, 363);
+            textBoxMinValueOfChange.Name = "textBoxMinValueOfChange";
+            textBoxMinValueOfChange.Size = new Size(60, 23);
+            textBoxMinValueOfChange.TabIndex = 20;
+            textBoxMinValueOfChange.Text = "0.5";
+            textBoxMinValueOfChange.TextAlign = HorizontalAlignment.Right;
             // 
             // PredictionControl
             // 
+            Controls.Add(textBoxMinValueOfChange);
+            Controls.Add(checkBoxShowOnlyMiplayerChange);
             Controls.Add(dataGridViewPrediction);
             Controls.Add(dataGridViewOrig);
             Controls.Add(checkBoxSaveSnapshot);
@@ -215,7 +236,7 @@
             Controls.Add(buttonContinue);
             Controls.Add(buttonParceSelectedPhoto);
             Name = "PredictionControl";
-            Size = new Size(1408, 734);
+            Size = new Size(1413, 763);
             panel1.ResumeLayout(false);
             ResumeLayout(false);
             PerformLayout();
@@ -239,5 +260,7 @@
         private Button buttonParceSelectedPhoto;
         private ReadOnlyDataGridView dataGridViewOrig;
         private ReadOnlyDataGridView dataGridViewPrediction;
+        private CheckBox checkBoxShowOnlyMiplayerChange;
+        private TextBox textBoxMinValueOfChange;
     }
 }

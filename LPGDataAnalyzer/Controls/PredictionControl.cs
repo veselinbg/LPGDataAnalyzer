@@ -61,8 +61,9 @@ namespace LPGDataAnalyzer.Controls
         {
             var table = textExtractor.BuildFinalTable(textBoxParsedData.Text);
 
-            var tableNew = MyPrediction.BuildTable(Data, table, int.Parse(textBoxMinCount.Text.Trim()),
-                cbEnableSmooth.Checked, cbInterpolation.Checked, checkBoxOnlyChanges.Checked, checkBoxRound.Checked, checkBoxPreFilter.Checked);
+            var tableNew = MyPrediction.BuildTable(Data, table, textBoxMinCount.Text.Trim().ToInt(),
+                cbEnableSmooth.Checked, cbInterpolation.Checked, checkBoxOnlyChanges.Checked, 
+                checkBoxRound.Checked, checkBoxPreFilter.Checked, checkBoxShowOnlyMiplayerChange.Checked, textBoxMinValueOfChange.Text.Trim().ToDouble());
 
             if (checkBoxSaveSnapshot.Checked)
             {
@@ -92,6 +93,5 @@ namespace LPGDataAnalyzer.Controls
             LegendPanelBuilder.CreateDynamicHorizontalHeatmapLegend(panelLegend, dataGridViewPrediction.Grid, vals.WLow, vals.WHigh);
 
         }
-
     }
 }
