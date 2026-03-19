@@ -1,4 +1,5 @@
-﻿using LPGDataAnalyzer.Models;
+﻿using LPGDataAnalyzer.Controls;
+using LPGDataAnalyzer.Models;
 
 namespace LPGDataAnalyzer.Services
 {
@@ -80,11 +81,17 @@ namespace LPGDataAnalyzer.Services
             }
         }
         public static double?[,] BuildTable(
-            DataItem[] logs, 
-            double?[,] cellMap, 
-            int minCount = 0,
-            bool enableSmooth = true, bool enableInterpolation = false, bool showOnlyChanges = false, bool round = true, bool preFilter = true,
-            bool showOnlyMultiplayer = false, double minChangeValue = 0.5d)
+                                        DataItem[] logs,
+                                        double?[,] cellMap,
+                                        HistorySnapshot[]? historySnapshots = null,
+                                        int minCount = 0,
+                                        bool enableSmooth = true,
+                                        bool enableInterpolation = false,
+                                        bool showOnlyChanges = false,
+                                        bool round = true,
+                                        bool preFilter = true,
+                                        bool showOnlyMultiplayer = false,
+                                        double minChangeValue = 0.5d)
         {
             int rpmLength = Settings.RpmColumns.Length;
             int injLength = Settings.InjectionRanges.Length;
@@ -149,7 +156,21 @@ namespace LPGDataAnalyzer.Services
                         }
                         else if (shouldUpdate)
                         {
-                            result[rpmIndex, injIndex] = cellMap[rpmIndex, injIndex].SafeMultiply(trim);
+                            double? currentValue = cellMap[rpmIndex, injIndex].SafeMultiply(trim);
+
+                            if (currentValue.HasValue)
+                            {
+                                if (historySnapshots != null && historySnapshots.Length > 0 && trim != 1)
+                                {
+                                    var values = HistoryHelper.GetCellHistoryValues(historySnapshots, rpmIndex, injIndex);
+
+                                    values.Add(currentValue.Value);
+
+                                    currentValue = values.Median();
+                                }
+
+                                result[rpmIndex, injIndex] = currentValue;
+                            }
                         }
                     }
                     else 

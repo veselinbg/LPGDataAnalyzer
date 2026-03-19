@@ -75,6 +75,10 @@ namespace LPGDataAnalyzer.Controls
         private readonly List<HistorySnapshot> history = new();
 
         public IReadOnlyList<HistorySnapshot> Items => history;
+        public void AddRange(IEnumerable<HistorySnapshot> snapshots)
+        {
+            history.AddRange(snapshots);
+        }
         public void Add(HistorySnapshot snapshot)
         {
             history.Add(snapshot); 
@@ -101,5 +105,57 @@ namespace LPGDataAnalyzer.Controls
         {
             history.Clear();
         }
+        public void ClearAndLoadFromDirectory(string directoryPath)
+        {
+            Clear();
+            LoadFromDirectory(directoryPath);
+        }
+        public void LoadFromDirectory(string directoryPath)
+        {
+            if (!Directory.Exists(directoryPath))
+                return;
+
+            foreach (var file in Directory.GetFiles(directoryPath, "*.json"))
+            {
+                try
+                {
+                    var snapshot = HistoryStorage.Load(file);
+                    if (snapshot != null)
+                        history.Add(snapshot);
+                }
+                catch
+                {
+                    // Optionally log or skip invalid JSON files
+                }
+            }
+        }
     }
+    public static class HistoryHelper
+    {
+        public static List<double> GetCellHistoryValues(
+            IEnumerable<HistorySnapshot> history,
+            int rpmIndex,
+            int injIndex)
+        {
+            var values = new List<double>();
+
+            foreach (var snapshot in history)
+            {
+                if (snapshot.CellMap == null || snapshot.NewCellMap == null)
+                    continue;
+
+                var oldValue = snapshot.CellMap[rpmIndex][injIndex];
+                var newValue = snapshot.NewCellMap[rpmIndex][injIndex];
+
+                // Only take changed cells
+                if (oldValue != newValue && newValue.HasValue)
+                {
+                    values.Add(newValue.Value);
+                }
+            }
+
+            return values;
+        }
+    }
+
 }

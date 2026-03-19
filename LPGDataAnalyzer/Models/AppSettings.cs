@@ -11,5 +11,11 @@ namespace LPGDataAnalyzer.Models
         /// This is last suggested new fuel table based on last analysed data.
         /// </summary>
         public string LastPredictedFuelTable { get; set; } = string.Empty;
+
+        /// <summary>
+        ///  Point to the folder where your JSON snapshots are stored.
+        /// </summary>
+        public string HistoryFolder { get; set; } = @"C:\Users\veselin.ivanov\Downloads\LPGDataAnalyzer\LPGDataAnalyzer\History";
+
     }
 }

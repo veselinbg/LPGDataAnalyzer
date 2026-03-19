@@ -35,6 +35,7 @@
             dataGridViewPrediction = new ReadOnlyDataGridView();
             checkBoxShowOnlyMiplayerChange = new CheckBox();
             textBoxMinValueOfChange = new TextBox();
+            checkBoxUseHistory = new CheckBox();
             panel1.SuspendLayout();
             SuspendLayout();
             // 
@@ -160,6 +161,7 @@
             buttonValidate.Size = new Size(75, 23);
             buttonValidate.TabIndex = 12;
             buttonValidate.Text = "Validate";
+            buttonValidate.Click += ButtonValidate_Click;
             // 
             // buttonContinue
             // 
@@ -186,6 +188,7 @@
             dataGridViewOrig.Name = "dataGridViewOrig";
             dataGridViewOrig.Size = new Size(818, 341);
             dataGridViewOrig.TabIndex = 17;
+            dataGridViewOrig.Title = "";
             // 
             // dataGridViewPrediction
             // 
@@ -194,6 +197,7 @@
             dataGridViewPrediction.Name = "dataGridViewPrediction";
             dataGridViewPrediction.Size = new Size(818, 335);
             dataGridViewPrediction.TabIndex = 18;
+            dataGridViewPrediction.Title = "";
             // 
             // checkBoxShowOnlyMiplayerChange
             // 
@@ -214,8 +218,21 @@
             textBoxMinValueOfChange.Text = "0.8";
             textBoxMinValueOfChange.TextAlign = HorizontalAlignment.Right;
             // 
+            // checkBoxUseHistory
+            // 
+            checkBoxUseHistory.AutoSize = true;
+            checkBoxUseHistory.Checked = true;
+            checkBoxUseHistory.CheckState = CheckState.Checked;
+            checkBoxUseHistory.Location = new Point(1312, 382);
+            checkBoxUseHistory.Name = "checkBoxUseHistory";
+            checkBoxUseHistory.Size = new Size(86, 19);
+            checkBoxUseHistory.TabIndex = 21;
+            checkBoxUseHistory.Text = "Use History";
+            checkBoxUseHistory.UseVisualStyleBackColor = true;
+            // 
             // PredictionControl
             // 
+            Controls.Add(checkBoxUseHistory);
             Controls.Add(textBoxMinValueOfChange);
             Controls.Add(checkBoxShowOnlyMiplayerChange);
             Controls.Add(dataGridViewPrediction);
@@ -262,5 +279,6 @@
         private ReadOnlyDataGridView dataGridViewPrediction;
         private CheckBox checkBoxShowOnlyMiplayerChange;
         private TextBox textBoxMinValueOfChange;
+        private CheckBox checkBoxUseHistory;
     }
 }

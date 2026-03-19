@@ -51,7 +51,22 @@ namespace LPGDataAnalyzer.Controls
             Manager.Clear();
             listHistory.Items.Clear();
         }
+        public void ClearAddSnapshots(HistorySnapshot[] snapshots)
+        {
+            Manager.Clear();
+            listHistory.Items.Clear();
 
+            AddSnapshots(snapshots);
+        }
+        public void AddSnapshots(HistorySnapshot[] snapshots)
+        {
+            Manager.AddRange(snapshots);
+
+            foreach (var snapshot in snapshots)
+            {
+                listHistory.Items.Add(snapshot.Name);
+            }
+        }
         public void AddSnapshot(DataItem[] logs, double?[,] cellMap, double?[,] newCellMap)
         {
             Manager.Add(logs, cellMap, newCellMap);
