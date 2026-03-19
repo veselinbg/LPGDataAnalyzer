@@ -69,6 +69,8 @@ namespace LPGDataAnalyzer.Controls
             // Optional styling
             dataGridView.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
             dataGridView.CellClick += DataGridView_CellClick;
+            dataGridView.DefaultCellStyle.SelectionBackColor = Color.Yellow;
+            dataGridView.DefaultCellStyle.SelectionForeColor = Color.Black;
             // Add controls to form
             this.Controls.Add(dataGridView);
             this.Controls.Add(titleLabel);
@@ -77,17 +79,22 @@ namespace LPGDataAnalyzer.Controls
 
         private void DataGridView_CellClick(object sender, DataGridViewCellEventArgs e)
         {
-            if (e.ColumnIndex != 0)
+            if (e.ColumnIndex != 0 && e.RowIndex >=0)
             {
                 var range = Settings.InjectionRanges[e.RowIndex];
-
                 var rpm = Settings.RpmColumns[e.ColumnIndex - 1];
 
-                var dataItem = data.Where(x => x.RPM > rpm.Min && x.RPM <= rpm.Max && ((x.BENZ_b1 > range.Min && x.BENZ_b1 <= range.Max) || (x.BENZ_b2 > range.Min && x.BENZ_b2 <= range.Max)));
+                var dataItem = data.Where(x =>
+                    x.RPM > rpm.Min && x.RPM <= rpm.Max &&
+                    ((x.BENZ_b1 > range.Min && x.BENZ_b1 <= range.Max) ||
+                     (x.BENZ_b2 > range.Min && x.BENZ_b2 <= range.Max)))
+                    .ToList();
 
-                var message = string.Join("\r \n", dataItem.GroupBy(x => $"{x.SLOW_b1.Round()}_{x.FAST_b1.Round()}").Select(x => $"S_F Trim:{x.Key} Count: {x.Count()} PRESS: {dataItem.Where(y => $"{y.SLOW_b1.Round()}_{y.FAST_b1.Round()}" == x.Key).Average(y => y.PRESS).Round()}"));
-
-                MessageBox.Show(message, "Info");
+                var form = new StatsForm(dataItem)
+                {
+                    Text = "Detailed Statistics"
+                };
+                form.ShowDialog(this);
             }
         }
         private void CreateColumns(IEnumerable<int> rpmColumns)

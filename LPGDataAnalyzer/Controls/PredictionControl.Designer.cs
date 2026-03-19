@@ -211,7 +211,7 @@
             textBoxMinValueOfChange.Name = "textBoxMinValueOfChange";
             textBoxMinValueOfChange.Size = new Size(60, 23);
             textBoxMinValueOfChange.TabIndex = 20;
-            textBoxMinValueOfChange.Text = "0.5";
+            textBoxMinValueOfChange.Text = "0.8";
             textBoxMinValueOfChange.TextAlign = HorizontalAlignment.Right;
             // 
             // PredictionControl

@@ -1,7 +1,4 @@
 ﻿using LPGDataAnalyzer.Models;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace LPGDataAnalyzer.Services
 {
@@ -22,32 +19,94 @@ namespace LPGDataAnalyzer.Services
                 }
             }
         }
-        public static double?[,] BuildTable(DataItem[] logs, double?[,] cellMap, int minCount = 0,
+        private static double? InterpolationFuelMap(int injIndex,
+            int rpmIndex,
+            DataItem[] injLogsB1,
+            DataItem[] injLogsB2,
+            double?[,]? cellMap, 
+            bool showOnlyChanges)
+        {
+            var inj = Settings.InjectionRanges[injIndex];
+            var rpm = Settings.RpmColumns[rpmIndex];
+            // Only skip filling if showOnlyChanges is true AND trim is 1
+           
+            if (rpm.Label <= 3400 || inj.Label <= 5.8)
+            {
+                return showOnlyChanges ? null : cellMap[rpmIndex, injIndex];
+            }
+            else
+            {
+                double t = 1.0;
+                int rpmSave = rpmIndex;
+
+                // Find the maximum t from lower RPMs
+                for (int lowerRpm = rpmIndex - 1; lowerRpm >= 0; lowerRpm--)
+                {
+                    var lowerLogsB1 = injLogsB1
+                        .Where(d => d.RPM > Settings.RpmColumns[lowerRpm].Min &&
+                                    d.RPM <= Settings.RpmColumns[lowerRpm].Max)
+                        .Select(d => d.Trim_b1)
+                        .ToArray();
+
+                    var lowerLogsB2 = injLogsB2
+                        .Where(d => d.RPM > Settings.RpmColumns[lowerRpm].Min &&
+                                    d.RPM <= Settings.RpmColumns[lowerRpm].Max)
+                        .Select(d => d.Trim_b2)
+                        .ToArray();
+
+                    var lowerLogs = lowerLogsB1.Merge(lowerLogsB2);
+
+                    if (lowerLogs.Length != 0)
+                    {
+                        double tNew = 1 + lowerLogs.Median() / 100;
+
+                        if (tNew > t)
+                        {
+                            t = tNew;
+                            rpmSave = lowerRpm;
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    }
+                }
+                // Compute final value once
+                double? newValue = cellMap[rpmIndex, injIndex].SafeMultiply(t);
+                if (inj.Label > 4.8)
+                    newValue += rpmIndex - rpmSave;
+
+                return newValue;
+            }
+        }
+        public static double?[,] BuildTable(
+            DataItem[] logs, 
+            double?[,] cellMap, 
+            int minCount = 0,
             bool enableSmooth = true, bool enableInterpolation = false, bool showOnlyChanges = false, bool round = true, bool preFilter = true,
             bool showOnlyMultiplayer = false, double minChangeValue = 0.5d)
         {
-            int rpmLength = cellMap.GetLength(0);
-            int injLength = cellMap.GetLength(1);
+            int rpmLength = Settings.RpmColumns.Length;
+            int injLength = Settings.InjectionRanges.Length;
+
             var result = new double?[rpmLength, injLength];
 
             // Precompute logs grouped by injection ranges
-            var logsByInjectionB1 = new List<DataItem>[injLength];
-            var logsByInjectionB2 = new List<DataItem>[injLength];
+            var logsByInjectionB1 = new DataItem[injLength][];
+            var logsByInjectionB2 = new DataItem[injLength][];
 
             for (int injIndex = 0; injIndex < injLength; injIndex++)
             {
                 var inj = Settings.InjectionRanges[injIndex];
                 logsByInjectionB1[injIndex] = logs
-                    .Where(d => (d.BENZ_b1 > inj.Min && d.BENZ_b1 <= inj.Max) && (!preFilter || (d.FAST_b1 >-10 && d.FAST_b1 < 10))).ToList();
+                    .Where(d => (d.BENZ_b1 > inj.Min && d.BENZ_b1 <= inj.Max) && (!preFilter || (d.FAST_b1 >-10 && d.FAST_b1 < 10))).ToArray();
 
                 logsByInjectionB2[injIndex] = logs
-                    .Where(d => (d.BENZ_b2 > inj.Min && d.BENZ_b2 <= inj.Max) && (!preFilter || (d.FAST_b2 >-10 && d.FAST_b2 < 10))).ToList();
+                    .Where(d => (d.BENZ_b2 > inj.Min && d.BENZ_b2 <= inj.Max) && (!preFilter || (d.FAST_b2 >-10 && d.FAST_b2 < 10))).ToArray();
             }
 
             for (int injIndex = 0; injIndex < injLength; injIndex++)
             {
-                var inj = Settings.InjectionRanges[injIndex];
-
                 var injLogsB1 = logsByInjectionB1[injIndex];
                 var injLogsB2 = logsByInjectionB2[injIndex];
 
@@ -63,73 +122,46 @@ namespace LPGDataAnalyzer.Services
                         .Select(d => d.Trim_b2)
                         .ToArray();
                     var rpmLogs = rpmLogsB1.Merge(rpmLogsB2);
-                    double trim = 1.0;
+                    bool hasEnoughLogs = rpmLogs.Length > minCount;
+                    double median = 0;
+                    double trim = 1;
 
-                    if (rpmLogs.Length > minCount)
+                    // Only compute median if needed
+                    if (rpmLogs.Length > 0 && (hasEnoughLogs || !showOnlyMultiplayer))
                     {
-                        if(showOnlyMultiplayer)
-                        {
-                            result[rpmIndex, injIndex] = rpmLogs.Median();
-                        }
-                        else
-                        {
-                            trim = 1 + (Math.Abs(rpmLogs.Median()) > minChangeValue ? (rpmLogs.Median() / 100) : 0);
-
-                            result[rpmIndex, injIndex] = cellMap[rpmIndex, injIndex].SafeMultiply(trim);
-                        }                       
-                        continue;
+                        median = rpmLogs.Median();
                     }
-                    if (enableInterpolation && rpm.Label > 3400 && inj.Label > 5.8)
+
+                    // Determine trim value if not showing only multiplayer
+                    if (hasEnoughLogs && !showOnlyMultiplayer)
                     {
-                        double t = 1.0;
-                        int rpmSave = rpmIndex;
+                        trim = 1 + (Math.Abs(median) > minChangeValue ? (median / 100) : 0);
+                    }
 
-                        for (int lowerRpm = rpmIndex - 1; lowerRpm >= 0; lowerRpm--)
+                    // Decide whether to update the result
+                    bool shouldUpdate = !showOnlyChanges || trim != 1;
+
+                    if (hasEnoughLogs)
+                    {
+                        if (showOnlyMultiplayer)
                         {
-                            var lowerLogsB1 = injLogsB1
-                                 .Where(d => d.RPM > Settings.RpmColumns[lowerRpm].Min &&
-                                                    d.RPM <= Settings.RpmColumns[lowerRpm].Max)
-                                .Select(d => d.Trim_b1)
-                                .ToArray();
-
-                            var lowerLogsB2 = injLogsB2
-                                 .Where(d => d.RPM > Settings.RpmColumns[lowerRpm].Min &&
-                                            d.RPM <= Settings.RpmColumns[lowerRpm].Max)
-                                .Select(d => d.Trim_b2)
-                                .ToArray();
-
-                            var lowerLogs = lowerLogsB1.Merge(lowerLogsB2);
-                            
-                            if (lowerLogs.Length > 0)
-                            {
-                                double tNew = 1 + lowerLogs.Median() / 100;
-
-                                if (tNew > t)
-                                {
-                                    t = tNew;
-                                    rpmSave = lowerRpm;
-                                }
-                                else
-                                {
-                                    rpmSave = rpmIndex;
-                                    break;
-                                }
-                            }
+                            result[rpmIndex, injIndex] = median;
                         }
-                        if (!showOnlyChanges || trim != 1)
+                        else if (shouldUpdate)
                         {
-                            var newValue = cellMap[rpmIndex, injIndex].SafeMultiply(t);
-
-                            if (inj.Label > 4.8) //increate table for more rpms 
-                                newValue += rpmIndex - rpmSave;
-
-                            result[rpmIndex, injIndex] = newValue;
+                            result[rpmIndex, injIndex] = cellMap[rpmIndex, injIndex].SafeMultiply(trim);
                         }
                     }
-                    else
+                    else 
                     {
-                        if (!showOnlyChanges || trim != 1)
+                        if (enableInterpolation)
+                        {
+                            result[rpmIndex, injIndex] = InterpolationFuelMap(injIndex, rpmIndex, injLogsB1, injLogsB2, cellMap, showOnlyChanges);
+                        }
+                        else if (shouldUpdate)
+                        {
                             result[rpmIndex, injIndex] = cellMap[rpmIndex, injIndex].SafeMultiply(trim);
+                        }
                     }
                 }
             }
