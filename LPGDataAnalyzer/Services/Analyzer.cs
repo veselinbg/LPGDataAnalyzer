@@ -5,34 +5,44 @@ namespace LPGDataAnalyzer.Services
     public class Analyzer
     {
         public object GroupByGasTemperature(
-                                                DataItem[] data,
-                                                double benzTimingFilterCuting,
-                                                Func<DataItem, double> selector1,
-                                                Func<DataItem, double> selector2)
+    DataItem[] data,
+    double benzTimingFilterCuting,
+    Func<DataItem, double> selector1,
+    Func<DataItem, double> selector2)
         {
-            return data.Where(x => Filter.BenzBanks(x, benzTimingFilterCuting))
-                .GroupBy(x => x.Temp_GAS)
-                .Select(x =>
+            return data
+                .Where(x => Filter.BenzBanks(x, benzTimingFilterCuting))
+                .GroupBy(x =>
+                    Settings.GasTemperatureRanges.First(r =>
+                        x.Temp_GAS >= r.Min && x.Temp_GAS <= r.Max))
+                .Select(g =>
                 {
-                    var bank1 = x.Select(selector1);
-                    var bank2 = x.Select(selector2);
-                    var Temp_RID = x.Select(y => y.Temp_RID);
+                    var bank1 = g.Select(selector1);
+                    var bank2 = g.Select(selector2);
+                    var tempRid = g.Select(y => y.Temp_RID);
 
                     return new
                     {
-                        GasTemp = x.Key,
-                        AverageTrim = x.Average(x=>x.Trim).Round(),
+                        LPG_Range = g.Key.Label,
+
+                        AverageTrim = g.Average(x => x.Trim).Round(),
+
                         AverageB1 = bank1.Average().Round(),
                         AverageB2 = bank2.Average().Round(),
+
                         MinB1 = bank1.Min().Round(),
                         MinB2 = bank2.Min().Round(),
+
                         MaxB1 = bank1.Max().Round(),
                         MaxB2 = bank2.Max().Round(),
-                        MinTempRed = Temp_RID.Min().Round(),
-                        MaxTempRed = Temp_RID.Max().Round(),
-                        AveragePressure = x.Average(y=>y.PRESS).Round()
+
+                        MinTempRed = tempRid.Min().Round(),
+                        MaxTempRed = tempRid.Max().Round(),
+
+                        AveragePressure = g.Average(y => y.PRESS).Round()
                     };
-                }).ToArray();
+                })
+                .ToArray();
         }
 
         public object GroupByRIDTemperature(
@@ -42,7 +52,9 @@ namespace LPGDataAnalyzer.Services
             Func<DataItem, double> selector2)
         {
             return data.Where(x => Filter.BenzBanks(x, benzTimingFilterCuting))
-                .GroupBy(x => x.Temp_RID)
+                .GroupBy(x =>
+                    Settings.ReductorTemperatureRanges.First(r =>
+                        x.Temp_RID >= r.Min && x.Temp_RID <= r.Max))
                 .Select(x =>
                 {
                     var bank1 = x.Select(selector1);
@@ -51,7 +63,8 @@ namespace LPGDataAnalyzer.Services
 
                     return new 
                     {
-                        Temp = x.Key,
+                        REDUCER_Temp = x.Key.Label,
+                        AverageTrim = x.Average(x => x.Trim).Round(),
                         AverageB1 = bank1.Average().Round(),
                         AverageB2 = bank2.Average().Round(),
                         MinB1 = bank1.Min().Round(),
@@ -66,23 +79,28 @@ namespace LPGDataAnalyzer.Services
         }
         public DataItem[] FilterByTemp(DataItem[] data, string sLPGTempGroup, string sReductorTempGroup)
         {
-            if (sReductorTempGroup == Settings.ALL)
+            if (data is null)
+                return [];
+
+            if (sReductorTempGroup == Settings.ALL && sLPGTempGroup ==Settings.ALL)
                 return data;
-            var lpgRange = Settings.GasTemperatureRanges
-                .FirstOrDefault(r => r.Label == sLPGTempGroup);
 
-            if (lpgRange.Label == null)
-                throw new Exception($"This Lpg Temperature group {sLPGTempGroup} is not supported.");
+            IEnumerable<DataItem> result = data;
 
-            var reductorRange = Settings.ReductorTemperatureRanges
-               .FirstOrDefault(r => r.Label == sReductorTempGroup);
+            if (sReductorTempGroup != Settings.ALL)
+            {
+                var reductorRange = Settings.ReductorTemperatureRanges.FirstOrDefault(r => r.Label == sReductorTempGroup);
+                result = data.Where(d => d.Temp_RID >= reductorRange.Min && d.Temp_RID <= reductorRange.Max);
+            }
+            
+            if (sLPGTempGroup != Settings.ALL)
+            {
+                var lpgRange = Settings.GasTemperatureRanges.FirstOrDefault(r => r.Label == sLPGTempGroup);
 
-            if (reductorRange.Label == null)
-                throw new Exception($"This Reductor Temperature group {sReductorTempGroup} is not supported.");
-
-            return [.. data.Where(d =>
-                d.Temp_GAS >= lpgRange.Min && d.Temp_GAS <= lpgRange.Max &&
-                d.Temp_RID >= reductorRange.Min && d.Temp_RID <= reductorRange.Max)];
+                result = result.Where(d => d.Temp_GAS >= lpgRange.Min && d.Temp_GAS <= lpgRange.Max);
+            }
+            
+          return [..result];
         }
 
 

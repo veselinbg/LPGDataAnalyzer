@@ -7,7 +7,7 @@ namespace LPGDataAnalyzer.Services
 {
     public class ReducerPrediction
     {
-        public static Dictionary<string, int> PredictNewReducerTempCorrections(
+        public static Dictionary<string, double> PredictNewReducerTempCorrections(
             ICollection<DataItem> liveData,
             Dictionary<string, int> currentCorrections,
             double referencePressure,
@@ -43,7 +43,7 @@ namespace LPGDataAnalyzer.Services
                 );
 
             // Compute new corrections
-            var result = new Dictionary<string, int>();
+            var result = new Dictionary<string, double>();
 
             foreach (var (range, oldValue) in currentCorrections)
             {
@@ -53,15 +53,16 @@ namespace LPGDataAnalyzer.Services
                     continue;
                 }
 
-                int step = ComputeStep(error);
+                //int step = ComputeStep(error);
+                //int newValue = oldValue + step;
 
-                int newValue = oldValue + step;
+                double newValue = oldValue + error;
                 newValue = Math.Clamp(newValue, -100, 100);
 
-                result[range] = newValue;
+                result[range] = newValue.Round();
             }
-
-            return enableSmooth ? SmoothIntCorrections(result) : result;
+            return result;
+            //return enableSmooth ? SmoothIntCorrections(result) : result;
         }
 
         private static bool IsValid(DataItem d) =>

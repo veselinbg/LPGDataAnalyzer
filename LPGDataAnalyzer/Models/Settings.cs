@@ -39,7 +39,8 @@
         {
             (int.MinValue, 0,  "Temp_to_0"),
             (0, 10,  "Temp_0_10"),
-            (11, 20, "Temp_21_30"),
+            (11, 20, "Temp_11_20"),
+            (21, 30, "Temp_21_30"),
             (31, 35, "Temp_31_35"),
             (36, 40, "Temp_36_40"),
             (41, 50, "Temp_41_50"),
@@ -64,10 +65,10 @@
         public static readonly (int Min, int Max, string Label)[] ReductorTemperatureRanges =
         {
             (int.MinValue, 20,  "Temp_to_20"),
-            (21, 25,  "Temp_21_25"),
+            (21, 25, "Temp_21_25"),
             (26, 30, "Temp_26_30"),
-            (31, 35,  "Temp_31_35"),
-            (36, 40,  "Temp_36_40"),
+            (31, 35, "Temp_31_35"),
+            (36, 40, "Temp_36_40"),
             (41, 50, "Temp_41_50"),
             (51, 60, "Temp_51_60"),
             (61, 70, "Temp_61_70"),

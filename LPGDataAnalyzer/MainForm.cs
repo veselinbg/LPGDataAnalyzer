@@ -146,7 +146,7 @@ namespace LPGDataAnalyzer
         private void buttonGroupByTemp_Click(object sender, EventArgs e)
         {
             dataGridViewGasData.DataSource = Analyser.GroupByGasTemperature(Parser.Data, BenzTimingFilterCuting, x => x.Trim_b1, y => y.Trim_b2);
-            dataGridViewRIDData.DataSource = Analyser.GroupByRIDTemperature(Parser.Data, BenzTimingFilterCuting, x => x.BENZ_b1, y => y.BENZ_b2);
+            dataGridViewRIDData.DataSource = Analyser.GroupByRIDTemperature(Parser.Data, BenzTimingFilterCuting, x => x.Trim_b1, y => y.Trim_b2);
         }
         
         public static void LoadDataSource(DataGridView dataGridView, object? dataSource)

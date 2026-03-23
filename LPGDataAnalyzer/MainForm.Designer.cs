@@ -108,38 +108,42 @@ namespace LPGDataAnalyzer
             // dataGridViewAnalyzeDataBank1t1
             // 
             dataGridViewAnalyzeDataBank1t1.Dock = DockStyle.Fill;
-            dataGridViewAnalyzeDataBank1t1.EnableTitle = true;
+            dataGridViewAnalyzeDataBank1t1.EnableTitle = false;
             dataGridViewAnalyzeDataBank1t1.Location = new Point(3, 3);
             dataGridViewAnalyzeDataBank1t1.Name = "dataGridViewAnalyzeDataBank1t1";
             dataGridViewAnalyzeDataBank1t1.Size = new Size(695, 358);
             dataGridViewAnalyzeDataBank1t1.TabIndex = 4;
+            dataGridViewAnalyzeDataBank1t1.Title = "";
             // 
             // dataGridViewAnalyzeDataBank1t2
             // 
             dataGridViewAnalyzeDataBank1t2.Dock = DockStyle.Fill;
-            dataGridViewAnalyzeDataBank1t2.EnableTitle = true;
+            dataGridViewAnalyzeDataBank1t2.EnableTitle = false;
             dataGridViewAnalyzeDataBank1t2.Location = new Point(704, 3);
             dataGridViewAnalyzeDataBank1t2.Name = "dataGridViewAnalyzeDataBank1t2";
             dataGridViewAnalyzeDataBank1t2.Size = new Size(695, 358);
             dataGridViewAnalyzeDataBank1t2.TabIndex = 6;
+            dataGridViewAnalyzeDataBank1t2.Title = "";
             // 
             // dataGridViewAnalyzeDataBank2t1
             // 
             dataGridViewAnalyzeDataBank2t1.Dock = DockStyle.Fill;
-            dataGridViewAnalyzeDataBank2t1.EnableTitle = true;
+            dataGridViewAnalyzeDataBank2t1.EnableTitle = false;
             dataGridViewAnalyzeDataBank2t1.Location = new Point(3, 367);
             dataGridViewAnalyzeDataBank2t1.Name = "dataGridViewAnalyzeDataBank2t1";
             dataGridViewAnalyzeDataBank2t1.Size = new Size(695, 358);
             dataGridViewAnalyzeDataBank2t1.TabIndex = 5;
+            dataGridViewAnalyzeDataBank2t1.Title = "";
             // 
             // dataGridViewAnalyzeDataBank2t2
             // 
             dataGridViewAnalyzeDataBank2t2.Dock = DockStyle.Fill;
-            dataGridViewAnalyzeDataBank2t2.EnableTitle = true;
+            dataGridViewAnalyzeDataBank2t2.EnableTitle = false;
             dataGridViewAnalyzeDataBank2t2.Location = new Point(704, 367);
             dataGridViewAnalyzeDataBank2t2.Name = "dataGridViewAnalyzeDataBank2t2";
             dataGridViewAnalyzeDataBank2t2.Size = new Size(695, 358);
             dataGridViewAnalyzeDataBank2t2.TabIndex = 7;
+            dataGridViewAnalyzeDataBank2t2.Title = "";
             // 
             // openFileDialog1
             // 
@@ -257,20 +261,19 @@ namespace LPGDataAnalyzer
             // 
             // dataGridViewRIDData
             // 
-            dataGridViewRIDData.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Right;
+            dataGridViewRIDData.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
             dataGridViewRIDData.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dataGridViewRIDData.Location = new Point(502, 3);
+            dataGridViewRIDData.Location = new Point(0, 376);
             dataGridViewRIDData.Name = "dataGridViewRIDData";
-            dataGridViewRIDData.Size = new Size(898, 728);
+            dataGridViewRIDData.Size = new Size(1405, 355);
             dataGridViewRIDData.TabIndex = 2;
             // 
             // dataGridViewGasData
             // 
-            dataGridViewGasData.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left;
             dataGridViewGasData.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             dataGridViewGasData.Location = new Point(3, 3);
             dataGridViewGasData.Name = "dataGridViewGasData";
-            dataGridViewGasData.Size = new Size(843, 731);
+            dataGridViewGasData.Size = new Size(1402, 367);
             dataGridViewGasData.TabIndex = 0;
             // 
             // tabPageMapAnalysis

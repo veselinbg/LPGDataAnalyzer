@@ -1,10 +1,7 @@
 ﻿using LPGDataAnalyzer.Models;
 using LPGDataAnalyzer.Services;
-using System;
-using System.Collections.Generic;
-using System.Text;
-using static LPGDataAnalyzer.Models.Settings;
 using System.ComponentModel;
+using static LPGDataAnalyzer.Models.Settings;
 
 namespace LPGDataAnalyzer.Controls
 {
@@ -78,7 +75,7 @@ namespace LPGDataAnalyzer.Controls
             textBoxReducerTempValues.Name = "textBoxReducerTempValues";
             textBoxReducerTempValues.Size = new Size(207, 23);
             textBoxReducerTempValues.TabIndex = 22;
-            textBoxReducerTempValues.Text = "-2,-2,-1,0,0,0,0,1,2";
+            textBoxReducerTempValues.Text = "-4,-3,-1,0,0,0,0,1,2";
             // 
             // buttonReducerPrediction
             // 
@@ -120,7 +117,5 @@ namespace LPGDataAnalyzer.Controls
         private Label labelRefPressure;
         private CheckBox checkBoxEnableSmooth;
         private Button buttonReducerPrediction;
-
-
     }
 }
