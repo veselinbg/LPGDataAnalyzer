@@ -20,23 +20,9 @@ namespace LPGDataAnalyzer
             
             txtFilePath.Text = AppSettings.LastSavedFilePath;
 
-            LoadParsedData();
-            predictionControl1.LoadSettings(_appSettingManager, Parser.Data);
-            reducerTempCorrection1.Data = Parser.Data;
-            comboBoxGasTemperatureb1.DataSource = GetExistGasTemperatureRanges(Parser.Data);
-            comboBoxGasTemperatureb1.SelectedIndex = 0;
-
-            comboBoxGasTemperatureb2.DataSource = GetExistGasTemperatureRanges(Parser.Data);
-            comboBoxGasTemperatureb2.SelectedIndex = 0;
-
-            comboBoxReductorTempGroup1.DataSource = GetExistReductorTempGroups(Parser.Data);
-            comboBoxReductorTempGroup1.SelectedIndex = 0;
-
-            comboBoxReductorTempGroup2.DataSource = GetExistReductorTempGroups(Parser.Data);
-            comboBoxReductorTempGroup2.SelectedIndex = 0;
-
             comboBoxAggregation.DataSource = Enum.GetValues<Aggregation>();
 
+            LoadParsedData();
         }
 
         private void BtnSelectFile_Click(object sender, EventArgs e)
@@ -66,6 +52,22 @@ namespace LPGDataAnalyzer
                 buttonAnalyze.Enabled = true;
                 buttonAnalyzeFastTrim.Enabled = true;
 
+                predictionControl1.LoadSettings(_appSettingManager, Parser.Data);
+
+                reducerTempCorrection1.Data = Parser.Data;
+
+                comboBoxGasTemperatureb1.DataSource = GetExistGasTemperatureRanges(Parser.Data);
+                comboBoxGasTemperatureb1.SelectedIndex = 0;
+
+                comboBoxGasTemperatureb2.DataSource = GetExistGasTemperatureRanges(Parser.Data);
+                comboBoxGasTemperatureb2.SelectedIndex = 0;
+
+                comboBoxReductorTempGroup1.DataSource = GetExistReductorTempGroups(Parser.Data);
+                comboBoxReductorTempGroup1.SelectedIndex = 0;
+
+                comboBoxReductorTempGroup2.DataSource = GetExistReductorTempGroups(Parser.Data);
+                comboBoxReductorTempGroup2.SelectedIndex = 0;
+
                 toolStripSummary.Text = $"Total Rows: {Parser.Data.Length} " +
                     $"LPG: Min Temp: {Parser.Data.Min(x => x.Temp_GAS)} Max Temp: {Parser.Data.Max(x => x.Temp_GAS)}" +
                     $" Min PRESS: {Parser.Data.Min(x => x.PRESS)} Max PRESS: {Parser.Data.Max(x => x.PRESS)} Avarige PRESS: {(Parser.Data.Average(x => x.PRESS)).Round()}" +
@@ -75,9 +77,6 @@ namespace LPGDataAnalyzer
         }
         private void ButtonShowRatio_Click(object sender, EventArgs e)
         {
-            if (Parser?.Data is null) return;
-
-
             BuildAnalises(Analyser, Parser.Data, [item => item.BENZ_b1, item => item.BENZ_b2, item => item.BENZ_b1, item => item.BENZ_b2], [
                             item => item.Ratio_b1,
                             item => item.Ratio_b2,
@@ -87,8 +86,6 @@ namespace LPGDataAnalyzer
         }
         private void ButtonShowTrims_Click(object sender, EventArgs e)
         {
-            if (Parser?.Data is null) return;
-
             BuildAnalises(Analyser, Parser.Data, [item => item.BENZ_b1, item => item.BENZ_b2, item => item.BENZ_b1, item => item.BENZ_b2], [
                             item => item.Trim_b1,
                             item => item.Trim_b2,
@@ -98,7 +95,6 @@ namespace LPGDataAnalyzer
         }
         private void buttonShowReducerPress_Click(object sender, EventArgs e)
         {
-            if (Parser?.Data is null) return;
             BuildAnalises(Analyser, Parser.Data, [item => item.BENZ, item => item.BENZ, item => item.BENZ, item => item.BENZ], [
                  item => item.AFR,
                 item => item.GAS,

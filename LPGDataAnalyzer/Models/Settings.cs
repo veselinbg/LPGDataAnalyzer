@@ -107,8 +107,8 @@
         };
         const double MIN_RPM_IDLE = 650;
         public static readonly (double Min, double Max, string Label)[] RpmRanges =
-      {
-             (0, MIN_RPM_IDLE,  "Idle"),
+        {
+            (0, MIN_RPM_IDLE,  "Idle"),
             (MIN_RPM_IDLE, int.MaxValue,  "Slow Down"),
             (MIN_RPM_IDLE, int.MaxValue,  "Cruise"),
             (MIN_RPM_IDLE, int.MaxValue,  "Acceleration"),

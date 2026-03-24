@@ -108,7 +108,6 @@ namespace LPGDataAnalyzer
             // dataGridViewAnalyzeDataBank1t1
             // 
             dataGridViewAnalyzeDataBank1t1.Dock = DockStyle.Fill;
-            dataGridViewAnalyzeDataBank1t1.EnableTitle = false;
             dataGridViewAnalyzeDataBank1t1.Location = new Point(3, 3);
             dataGridViewAnalyzeDataBank1t1.Name = "dataGridViewAnalyzeDataBank1t1";
             dataGridViewAnalyzeDataBank1t1.Size = new Size(695, 358);
@@ -118,7 +117,6 @@ namespace LPGDataAnalyzer
             // dataGridViewAnalyzeDataBank1t2
             // 
             dataGridViewAnalyzeDataBank1t2.Dock = DockStyle.Fill;
-            dataGridViewAnalyzeDataBank1t2.EnableTitle = false;
             dataGridViewAnalyzeDataBank1t2.Location = new Point(704, 3);
             dataGridViewAnalyzeDataBank1t2.Name = "dataGridViewAnalyzeDataBank1t2";
             dataGridViewAnalyzeDataBank1t2.Size = new Size(695, 358);
@@ -128,7 +126,6 @@ namespace LPGDataAnalyzer
             // dataGridViewAnalyzeDataBank2t1
             // 
             dataGridViewAnalyzeDataBank2t1.Dock = DockStyle.Fill;
-            dataGridViewAnalyzeDataBank2t1.EnableTitle = false;
             dataGridViewAnalyzeDataBank2t1.Location = new Point(3, 367);
             dataGridViewAnalyzeDataBank2t1.Name = "dataGridViewAnalyzeDataBank2t1";
             dataGridViewAnalyzeDataBank2t1.Size = new Size(695, 358);
@@ -138,7 +135,6 @@ namespace LPGDataAnalyzer
             // dataGridViewAnalyzeDataBank2t2
             // 
             dataGridViewAnalyzeDataBank2t2.Dock = DockStyle.Fill;
-            dataGridViewAnalyzeDataBank2t2.EnableTitle = false;
             dataGridViewAnalyzeDataBank2t2.Location = new Point(704, 367);
             dataGridViewAnalyzeDataBank2t2.Name = "dataGridViewAnalyzeDataBank2t2";
             dataGridViewAnalyzeDataBank2t2.Size = new Size(695, 358);

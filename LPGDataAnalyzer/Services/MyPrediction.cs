@@ -120,6 +120,7 @@ namespace LPGDataAnalyzer.Services
                 for (int rpmIndex = 0; rpmIndex < rpmLength; rpmIndex++)
                 {
                     var rpm = Settings.RpmColumns[rpmIndex];
+
                     var rpmLogsB1 = injLogsB1
                         .Where(d => d.RPM > rpm.Min && d.RPM <= rpm.Max)
                         .Select(d => d.Trim_b1)

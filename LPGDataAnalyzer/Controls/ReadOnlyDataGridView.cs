@@ -32,8 +32,6 @@ namespace LPGDataAnalyzer.Controls
             data = dataItems;
             Title = title;
 
-            PrepareGrid();
-
             CreateColumns(RpmColumns.Select(x => x.Label));
 
             FillRows( table);
@@ -48,26 +46,30 @@ namespace LPGDataAnalyzer.Controls
             this.Size = new Size(800, 500);
 
             // Title Label
-            titleLabel = new Label();
-            titleLabel.Font = new Font("Segoe UI", 16, FontStyle.Bold);
-            titleLabel.Dock = DockStyle.Top;
-            titleLabel.TextAlign = ContentAlignment.MiddleCenter;
-            titleLabel.Height = 50;
-            titleLabel.BackColor = Color.FromArgb(45, 45, 48);
-            titleLabel.ForeColor = Color.White;
+            titleLabel = new Label
+            {
+                Font = new Font("Segoe UI", 16, FontStyle.Bold),
+                Dock = DockStyle.Top,
+                TextAlign = ContentAlignment.MiddleCenter,
+                Height = 50,
+                BackColor = Color.FromArgb(45, 45, 48),
+                ForeColor = Color.White
+            };
             // DataGridView
-            dataGridView = new DataGridView();
-            dataGridView.Dock = DockStyle.Fill;
+            dataGridView = new DataGridView
+            {
+                Dock = DockStyle.Fill,
 
-            // Make it read-only
-            dataGridView.ReadOnly = true;
-            dataGridView.AllowUserToAddRows = false;
-            dataGridView.AllowUserToDeleteRows = false;
-            dataGridView.AllowUserToResizeRows = false;
-            dataGridView.SelectionMode = DataGridViewSelectionMode.CellSelect;
-            dataGridView.RowHeadersVisible = false;
-            // Optional styling
-            dataGridView.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+                // Make it read-only
+                ReadOnly = true,
+                AllowUserToAddRows = false,
+                AllowUserToDeleteRows = false,
+                AllowUserToResizeRows = false,
+                SelectionMode = DataGridViewSelectionMode.CellSelect,
+                RowHeadersVisible = false,
+                // Optional styling
+                AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill
+            };
             dataGridView.CellClick += DataGridView_CellClick;
             dataGridView.DefaultCellStyle.SelectionBackColor = Color.Yellow;
             dataGridView.DefaultCellStyle.SelectionForeColor = Color.Black;
@@ -99,18 +101,14 @@ namespace LPGDataAnalyzer.Controls
         }
         private void CreateColumns(IEnumerable<int> rpmColumns)
         {
+            dataGridView.Columns.Clear();
+
             dataGridView.Columns.Add("InjectionTime", "Inj.Time");
 
             foreach (int rpm in rpmColumns)
             {
                 dataGridView.Columns.Add($"RPM_{rpm}", rpm.ToString());
             }
-        }
-        private void PrepareGrid()
-        {
-            dataGridView.DataSource = null;
-            dataGridView.Columns.Clear();
-            dataGridView.Rows.Clear();
         }
         private void FillRows(double?[,] table)
         {
@@ -119,22 +117,30 @@ namespace LPGDataAnalyzer.Controls
             {
                 dataGridView.Rows.Clear();
 
-                for (var injIndex = 0; injIndex < InjectionRanges.Length; injIndex++)
+                int injCount = InjectionRanges.Length;
+                int rpmCount = RpmColumns.Length;
+
+                // Cache column indices
+                int injectionColIndex = dataGridView.Columns["InjectionTime"].Index;
+
+                int[] rpmColIndices = new int[rpmCount];
+                for (int i = 0; i < rpmCount; i++)
                 {
-                    var row = new DataGridViewRow();
-                    row.CreateCells(dataGridView);
+                    rpmColIndices[i] = dataGridView.Columns[$"RPM_{RpmColumns[i].Label}"].Index;
+                }
 
-                    row.Cells[dataGridView.Columns["InjectionTime"].Index].Value = InjectionRanges[injIndex].Label;
+                for (int injIndex = 0; injIndex < injCount; injIndex++)
+                {
+                    object[] cells = new object[dataGridView.Columns.Count];
 
-                    for (var rpmIndex = 0; rpmIndex < RpmColumns.Length; rpmIndex++)
+                    cells[injectionColIndex] = InjectionRanges[injIndex].Label;
+
+                    for (int rpmIndex = 0; rpmIndex < rpmCount; rpmIndex++)
                     {
-
-
-                        row.Cells[dataGridView.Columns[$"RPM_{RpmColumns[rpmIndex].Label}"].Index].Value = table[rpmIndex, injIndex];
-
+                        cells[rpmColIndices[rpmIndex]] = table[rpmIndex, injIndex];
                     }
 
-                    dataGridView.Rows.Add(row);
+                    dataGridView.Rows.Add(cells);
                 }
             }
             finally

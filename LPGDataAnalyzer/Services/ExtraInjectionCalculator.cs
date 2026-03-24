@@ -10,8 +10,8 @@ namespace LPGDataAnalyzer.Services
             // 1️⃣ Filter steady-state data
             var benzValues = data
                 .Where(d => d.RPM > 0 && d.RPM < 3500)
-                .Where(d => d.MAP > 0 && d.MAP < 0.7)
-                .Where(d => d.BENZ_b1< 6.0 || d.BENZ_b2 < 6.0)
+                .Where(d => d.MAP > 0 && d.MAP < 0.35)
+                .Where(d => d.BENZ_b1< 3.0 || d.BENZ_b2 < 3.0)
                 .Select(d=>d.BENZ)
                 .ToList();
 

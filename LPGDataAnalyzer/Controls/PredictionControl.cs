@@ -20,6 +20,7 @@ namespace LPGDataAnalyzer.Controls
         public PredictionControl()
         {
             InitializeComponent();
+
         }
         public void LoadSettings(AppSettingManager appSettingManager, DataItem[] data)
         {

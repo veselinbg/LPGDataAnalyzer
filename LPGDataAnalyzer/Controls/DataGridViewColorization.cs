@@ -180,8 +180,5 @@ namespace LPGDataAnalyzer.Controls
 
             return new AxisSplit<int>(minIndex, maxIndex, minSigned, maxSigned);
         }
-
-        
-
     }
 }
