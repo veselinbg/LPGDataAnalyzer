@@ -3,64 +3,6 @@ using System.Linq.Expressions;
 
 namespace LPGDataAnalyzer.Controls
 {
-    public interface IColumnFilter<T>
-    {
-        IEnumerable<T> Apply(IEnumerable<T> data);
-    }
-    public class CombinedColumnFilter<T> : IColumnFilter<T>
-    {
-        private readonly Func<T, object> getter;
-        private readonly HashSet<object> values;
-        private readonly double? min;
-        private readonly double? max;
-        private readonly bool useOr;
-
-        public CombinedColumnFilter(
-            Func<T, object> getter,
-            HashSet<object> values,
-            double? min,
-            double? max,
-            bool useOr)
-        {
-            this.getter = getter;
-            this.values = values;
-            this.min = min;
-            this.max = max;
-            this.useOr = useOr;
-        }
-
-        public IEnumerable<T> Apply(IEnumerable<T> data)
-        {
-            foreach (var item in data)
-            {
-                var val = getter(item);
-
-                bool valueMatch = true;
-                bool rangeMatch = true;
-
-                if (values.Count > 0)
-                    valueMatch = val != null && values.Contains(val);
-
-                if (min.HasValue || max.HasValue)
-                {
-                    if (val == null || !double.TryParse(val.ToString(), out var d))
-                        rangeMatch = false;
-                    else
-                    {
-                        if (min.HasValue && d < min.Value) rangeMatch = false;
-                        if (max.HasValue && d > max.Value) rangeMatch = false;
-                    }
-                }
-
-                bool pass = useOr
-                    ? (valueMatch || rangeMatch)
-                    : (valueMatch && rangeMatch);
-
-                if (pass)
-                    yield return item;
-            }
-        }
-    }
     public class ColumnFilterSelection
     {
         public HashSet<object> SelectedValues { get; set; } = new();
@@ -99,10 +41,8 @@ namespace LPGDataAnalyzer.Controls
         private List<T> source = new();
         private List<T> filtered = new();
 
-        private Dictionary<string, List<IColumnFilter<T>>> filters = new();
         private Dictionary<string, ColumnFilterSelection> columnSelections = new();
         private Dictionary<string, Func<T, object>> getters = new();
-        private Dictionary<string, List<object>> columnValueCache = new();
         // Floating filter panel
         private Panel filterPanel = new() { Visible = false, BorderStyle = BorderStyle.FixedSingle };
         private CheckedListBox valueList = new();
@@ -123,21 +63,6 @@ namespace LPGDataAnalyzer.Controls
             BuildFilterPanel();
         }
 
-        private IEnumerable<T> GetDataFilteredExcept(string excludeColumn)
-        {
-            IEnumerable<T> data = source;
-
-            foreach (var kv in filters)
-            {
-                if (kv.Key == excludeColumn)
-                    continue;
-
-                foreach (var f in kv.Value)
-                    data = f.Apply(data);
-            }
-
-            return data;
-        }
         private void BuildLayout()
         {
             titleBar.Dock = DockStyle.Top;
@@ -406,10 +331,14 @@ namespace LPGDataAnalyzer.Controls
         private async Task ClearAllFilters()
         {
             searchBox.Clear();
-            filters.Clear();
             columnSelections.Clear();
-            minBox.Clear();
-            maxBox.Clear();
+
+            UpdateUI(() =>
+            {
+                minBox.Clear();
+                maxBox.Clear();
+            });
+
             UpdateColumnHeaderStyles();
             UpdateTitleStyle();
 
@@ -419,9 +348,6 @@ namespace LPGDataAnalyzer.Controls
         {
             source = data.ToList();
             filtered = source;
-
-            BuildColumnCache();
-
             grid.DataSource = new BindingList<T>(filtered);
 
             UpdateTitleInfo();
@@ -433,22 +359,7 @@ namespace LPGDataAnalyzer.Controls
             // Update checkbox list filtered items
             FilterCheckboxList();
         }
-        private void BuildColumnCache()
-        {
-            columnValueCache.Clear();
-
-            foreach (var column in getters.Keys)
-            {
-                columnValueCache[column] = source
-                    .Select(x => getters[column](x))
-                    .ToList();
-            }
-        }
-        private void AddFilter(string column, IColumnFilter<T> filter)
-        {
-            if (!filters.ContainsKey(column)) filters[column] = new List<IColumnFilter<T>>();
-            filters[column].Add(filter);
-        }
+        
         private void UpdateUI(Action action)
         {
             if (InvokeRequired)
@@ -469,7 +380,7 @@ namespace LPGDataAnalyzer.Controls
         }
         private void ShowFilterPanel(string column, Point headerLocation)
         {
-            bool enable = filters.Count > 0;
+            bool enable = columnSelections.Any(kv => kv.Key != column);
             andButton.Enabled = orButton.Enabled = enable;
             andButton.ForeColor = enable ? Color.Black : Color.Gray;
             orButton.ForeColor = enable ? Color.Black : Color.Gray;
@@ -479,10 +390,12 @@ namespace LPGDataAnalyzer.Controls
             if (!columnSelections.ContainsKey(column))
                 columnSelections[column] = new ColumnFilterSelection();
 
+            var sel = columnSelections[column];
+
             UpdateUI(() =>
             {
-                minBox.Text = "";
-                maxBox.Text = "";
+                minBox.Text = sel.Min?.ToString() ?? "";
+                maxBox.Text = sel.Max?.ToString() ?? "";
             });
 
             PopulateValueList(columnSelections[column]);
@@ -498,29 +411,17 @@ namespace LPGDataAnalyzer.Controls
             filterPanel.BringToFront();
             filterPanel.Visible = true;
         }
-        private void ClearFilters(string column = null)
-        {
-            if (column == null)
-            {
-                filters.Clear();
-                columnSelections.Clear();
-            }
-            else
-            {
-                filters.Remove(column);
-            }
-        }
 
         private void UpdateTitleStyle()
         {
-            titleLabel.Font = new System.Drawing.Font(titleLabel.Font, filters.Count > 0 ? System.Drawing.FontStyle.Bold : System.Drawing.FontStyle.Regular);
+            titleLabel.Font = new System.Drawing.Font(titleLabel.Font, columnSelections.Count > 0 ? System.Drawing.FontStyle.Bold : System.Drawing.FontStyle.Regular);
         }
 
         private void UpdateColumnHeaderStyles()
         {
             foreach (DataGridViewColumn col in grid.Columns)
             {
-                if (filters.ContainsKey(col.DataPropertyName))
+                if (columnSelections.ContainsKey(col.DataPropertyName))
                     col.HeaderCell.Style.Font = new System.Drawing.Font(col.HeaderCell.Style.Font ?? grid.Font, System.Drawing.FontStyle.Bold);
                 else
                     col.HeaderCell.Style.Font = new System.Drawing.Font(col.HeaderCell.Style.Font ?? grid.Font, System.Drawing.FontStyle.Regular);
@@ -528,19 +429,29 @@ namespace LPGDataAnalyzer.Controls
         }
         private bool EvaluateColumn(object val, ColumnFilterSelection sel)
         {
-            bool hasValueFilter = sel.SelectedValues.Count > 0;
+            bool hasValueFilter = sel.SelectedValues != null && sel.SelectedValues.Count > 0;
             bool hasRangeFilter = sel.Min.HasValue || sel.Max.HasValue;
 
-            bool valueMatch = true;
+            bool valueMatch;
             bool rangeMatch = true;
 
-            if (hasValueFilter)
+            // VALUE FILTER
+            if (!hasValueFilter)
+            {
+                valueMatch = true; // "Select All"
+            }
+            else
+            {
                 valueMatch = val != null && sel.SelectedValues.Contains(val);
+            }
 
+            // RANGE FILTER
             if (hasRangeFilter)
             {
                 if (val == null || !double.TryParse(val.ToString(), out var d))
+                {
                     rangeMatch = false;
+                }
                 else
                 {
                     if (sel.Min.HasValue && d < sel.Min.Value)
@@ -551,6 +462,7 @@ namespace LPGDataAnalyzer.Controls
                 }
             }
 
+            // COMBINE
             if (hasValueFilter && hasRangeFilter)
                 return sel.UseOrLogic ? (valueMatch || rangeMatch) : (valueMatch && rangeMatch);
 
@@ -605,7 +517,7 @@ namespace LPGDataAnalyzer.Controls
 
                         return false;
                     });
-
+                    
                     finalRows = andRows.Concat(orRows).Distinct();
                 }
 
@@ -630,6 +542,9 @@ namespace LPGDataAnalyzer.Controls
             });
 
             filtered = result;
+
+            if (!grid.IsHandleCreated || grid.IsDisposed)
+                return;
 
             grid.Invoke(() =>
             {
@@ -684,8 +599,6 @@ namespace LPGDataAnalyzer.Controls
                 var sel = columnSelections[currentColumn];
 
                 sel.SelectedValues = valueList.CheckedItems
-                    .Cast<object>()
-                    .Where(x => x is ValueItem)
                     .Cast<ValueItem>()
                     .Select(x => x.Value)
                     .ToHashSet();
@@ -693,7 +606,7 @@ namespace LPGDataAnalyzer.Controls
         }
         private void SelectAllCheckBox_CheckedChanged(object sender, EventArgs e)
         {
-            if (isUpdatingUI)
+            if (isUpdatingUI || currentColumn == null)
                 return;
 
             bool check = selectAllCheckBox.Checked;
@@ -740,14 +653,14 @@ namespace LPGDataAnalyzer.Controls
                     var val = getter(item);
                     if (val == null) return decimal.MinValue; // nulls first
                     if (val is IComparable) return val;       // numeric/date/string
-                    return val.ToString();                     // fallback to string
+                    return val?.ToString();                  // fallback to string
                 }).ToList()
                 : filtered.OrderByDescending(item =>
                 {
                     var val = getter(item);
                     if (val == null) return decimal.MinValue;
                     if (val is IComparable) return val;
-                    return val.ToString();
+                    return val?.ToString();
                 }).ToList();
 
             grid.DataSource = new BindingList<T>(filtered);
@@ -770,27 +683,22 @@ namespace LPGDataAnalyzer.Controls
             if (!columnSelections.TryGetValue(currentColumn, out var sel))
                 sel = new ColumnFilterSelection();
 
-            IEnumerable<T> data = source;
-
-            foreach (var kv in filters)
-            {
-                if (kv.Key == currentColumn) continue;
-                foreach (var f in kv.Value)
-                    data = f.Apply(data);
-            }
+            // Apply all OTHER filters
+            var data = ApplyFiltersExcept(currentColumn);
 
             var counts = new Dictionary<object, int>();
+
+            double? min = double.TryParse(minBox.Text, out var minVal) ? minVal : null;
+            double? max = double.TryParse(maxBox.Text, out var maxVal) ? maxVal : null;
 
             foreach (var item in data)
             {
                 var v = getters[currentColumn](item);
                 if (v == null) continue;
 
+                // Apply ONLY range filter from UI (live typing)
                 if (double.TryParse(v.ToString(), out var d))
                 {
-                    double? min = double.TryParse(minBox.Text, out var minVal) ? minVal : null;
-                    double? max = double.TryParse(maxBox.Text, out var maxVal) ? maxVal : null;
-
                     if (min.HasValue && d < min.Value) continue;
                     if (max.HasValue && d > max.Value) continue;
                 }
@@ -808,8 +716,8 @@ namespace LPGDataAnalyzer.Controls
                 valueList.Items.Clear();
 
                 selectAllCheckBox.Checked =
-                    sel.SelectedValues.Count == 0 ||
-                    sel.SelectedValues.Count == values.Count;
+                        sel.SelectedValues.Count == 0 ||
+                        values.All(v => sel.SelectedValues.Contains(v));
 
                 foreach (var v in values)
                 {
@@ -826,6 +734,24 @@ namespace LPGDataAnalyzer.Controls
                 }
             });
         }
+        private IEnumerable<T> ApplyFiltersExcept(string excludeColumn)
+        {
+            return source.Where(row =>
+            {
+                foreach (var kv in columnSelections)
+                {
+                    if (kv.Key == excludeColumn)
+                        continue;
+
+                    var val = getters[kv.Key](row);
+
+                    if (!EvaluateColumn(val, kv.Value))
+                        return false;
+                }
+
+                return true;
+            });
+        }
         private void PopulateValueList(ColumnFilterSelection sel)
         {
             if (currentColumn == null) return;
@@ -834,7 +760,7 @@ namespace LPGDataAnalyzer.Controls
 
             if (orButton.Checked)
             {
-                var andFiltered = GetDataFilteredExcept(currentColumn);
+                var andFiltered = ApplyFiltersExcept(currentColumn);
 
                 IEnumerable<T> orFiltered = Enumerable.Empty<T>();
 
@@ -843,34 +769,7 @@ namespace LPGDataAnalyzer.Controls
                     orFiltered = source.Where(row =>
                     {
                         var val = getters[currentColumn](row);
-
-                        bool valueMatch = true;
-                        bool rangeMatch = true;
-
-                        if (currentSel.SelectedValues.Count > 0)
-                            valueMatch = val != null && currentSel.SelectedValues.Contains(val);
-
-                        if (currentSel.Min.HasValue || currentSel.Max.HasValue)
-                        {
-                            if (val == null || !double.TryParse(val.ToString(), out var d))
-                                rangeMatch = false;
-                            else
-                            {
-                                if (currentSel.Min.HasValue && d < currentSel.Min.Value) rangeMatch = false;
-                                if (currentSel.Max.HasValue && d > currentSel.Max.Value) rangeMatch = false;
-                            }
-                        }
-
-                        bool hasValueFilter = currentSel.SelectedValues.Count > 0;
-                        bool hasRangeFilter = currentSel.Min.HasValue || currentSel.Max.HasValue;
-
-                        if (hasValueFilter && hasRangeFilter)
-                            return valueMatch || rangeMatch;
-
-                        if (hasValueFilter) return valueMatch;
-                        if (hasRangeFilter) return rangeMatch;
-
-                        return true;
+                        return EvaluateColumn(val, currentSel);
                     });
                 }
 
@@ -878,7 +777,7 @@ namespace LPGDataAnalyzer.Controls
             }
             else
             {
-                data = GetDataFilteredExcept(currentColumn);
+                data = ApplyFiltersExcept(currentColumn);
             }
 
             var counts = new Dictionary<object, int>();
@@ -888,10 +787,10 @@ namespace LPGDataAnalyzer.Controls
                 var v = getters[currentColumn](item);
                 if (v == null) continue;
 
-                if (decimal.TryParse(v.ToString(), out var d))
+                if (double.TryParse(v.ToString(), out var d))
                 {
-                    if (sel.Min.HasValue && d < (decimal)sel.Min.Value) continue;
-                    if (sel.Max.HasValue && d > (decimal)sel.Max.Value) continue;
+                    if (sel.Min.HasValue && d < sel.Min.Value) continue;
+                    if (sel.Max.HasValue && d > sel.Max.Value) continue;
                 }
 
                 if (counts.TryGetValue(v, out var c))
@@ -933,11 +832,11 @@ namespace LPGDataAnalyzer.Controls
         }
         private async Task ApplyFilterForColumn()
         {
+            if (currentColumn == null) return;
+
             filterPanel.Visible = false;
 
             var selectedValues = valueList.CheckedItems
-                .Cast<object>()
-                .Where(x => x is ValueItem)
                 .Cast<ValueItem>()
                 .Select(x => x.Value)
                 .ToHashSet();
@@ -945,25 +844,12 @@ namespace LPGDataAnalyzer.Controls
             var sel = new ColumnFilterSelection
             {
                 SelectedValues = selectedValues,
-                Min = double.TryParse(minBox.Text, out var min) ? min : (double?)null,
-                Max = double.TryParse(maxBox.Text, out var max) ? max : (double?)null,
+                Min = double.TryParse(minBox.Text, out var min) ? min : null,
+                Max = double.TryParse(maxBox.Text, out var max) ? max : null,
                 UseOrLogic = orButton.Checked
             };
 
             columnSelections[currentColumn] = sel;
-
-            ClearFilters(currentColumn);
-
-            if (sel.SelectedValues.Count > 0 || sel.Min.HasValue || sel.Max.HasValue)
-            {
-                AddFilter(currentColumn,
-                    new CombinedColumnFilter<T>(
-                        getters[currentColumn],
-                        sel.SelectedValues,
-                        sel.Min,
-                        sel.Max,
-                        sel.UseOrLogic));
-            }
 
             UpdateColumnHeaderStyles();
             UpdateTitleStyle();
@@ -972,23 +858,26 @@ namespace LPGDataAnalyzer.Controls
         }
         private async Task ResetFilterPanel()
         {
-            valueList.ItemCheck -= ValueList_ItemCheck;
-            for (int i = 0; i < valueList.Items.Count; i++)
-                valueList.SetItemChecked(i, true);
-            valueList.ItemCheck += ValueList_ItemCheck;
+            if (currentColumn == null) return;
 
-            minBox.Clear();
-            maxBox.Clear();
-            andButton.Checked = true;
-            orButton.Checked = false;
-            selectAllCheckBox.Checked = true;
+            UpdateUI(() =>
+            {
+                for (int i = 0; i < valueList.Items.Count; i++)
+                    valueList.SetItemChecked(i, true);
+
+                minBox.Clear();
+                maxBox.Clear();
+                andButton.Checked = true;
+                orButton.Checked = false;
+                selectAllCheckBox.Checked = true;
+            });
 
             columnSelections.Remove(currentColumn);
-            ClearFilters(currentColumn);
+
             UpdateColumnHeaderStyles();
             UpdateTitleStyle();
+
             await ApplyFiltersAsync();
         }
-
     }
 }
