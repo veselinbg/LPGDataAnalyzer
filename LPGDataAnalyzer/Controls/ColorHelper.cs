@@ -1,23 +1,23 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
+﻿
 namespace LPGDataAnalyzer.Controls
 {
     public class ColorHelper
     {
+        public static readonly Color Blue = Color.FromArgb(100, 140, 255);
+        public static readonly Color White = Color.White;
+        public static readonly Color Red = Color.FromArgb(255, 120, 120);
+
+        public static readonly Font BoldFont = new("Segoe UI", 9, FontStyle.Bold);
+        public static readonly Color DarkBackColor = Color.FromArgb(45, 45, 48);
+        public static readonly Font TitleFontBold = new Font("Segoe UI", 16, FontStyle.Bold);
         public static Color InterpolateDiverging(double value)
         {
             value = Math.Max(-1, Math.Min(1, value));
 
-            Color blue = Color.FromArgb(100, 140, 255);
-            Color white = Color.White;
-            Color red = Color.FromArgb(255, 120, 120);
-
             if (value < 0)
-                return Blend(blue, white, value + 1);
+                return Blend(Blue, White, value + 1);
             else
-                return Blend(white, red, value);
+                return Blend(White, Red, value);
         }
         private static Color Blend(Color c1, Color c2, double t)
         {

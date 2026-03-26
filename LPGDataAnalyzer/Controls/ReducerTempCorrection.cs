@@ -38,7 +38,7 @@ namespace LPGDataAnalyzer.Controls
             textBoxReferencePressure = new TextBox();
             labelCurrent = new Label();
             textBoxReducerTempValues = new TextBox();
-            buttonReducerPrediction = new Button();
+            buttonReducerPrediction = new();
             checkBoxEnableSmooth = new CheckBox();
             SuspendLayout();
             // 

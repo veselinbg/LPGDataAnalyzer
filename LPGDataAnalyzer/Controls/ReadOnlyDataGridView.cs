@@ -5,16 +5,47 @@ using static LPGDataAnalyzer.Models.Settings;
 
 namespace LPGDataAnalyzer.Controls
 {
+    public class DataGridViewUC : DataGridView
+    {
+        public DataGridViewUC()
+        {
+            // DataGridView
+            Dock = DockStyle.Fill;
+            EnableHeadersVisualStyles = false;
+            // Make it read-only
+            ReadOnly = true;
+            AllowUserToAddRows = false;
+            AllowUserToDeleteRows = false;
+            AllowUserToResizeRows = false;
+            SelectionMode = DataGridViewSelectionMode.CellSelect;
+            RowHeadersVisible = false;
+            // Optional styling
+            AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+            ApplyDarkBoldStyle(RowHeadersDefaultCellStyle);
+            ApplyDarkBoldStyle(ColumnHeadersDefaultCellStyle);
+            DefaultCellStyle.SelectionBackColor = Color.Yellow;
+            DefaultCellStyle.SelectionForeColor = Color.Black;
+
+            DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+        }
+        public void ApplyDarkBoldStyle(DataGridViewCellStyle style)
+        {
+            style.Font = ColorHelper.BoldFont;
+            style.BackColor = ColorHelper.DarkBackColor;
+            style.ForeColor = ColorHelper.White;
+        }
+    }
     public class ReadOnlyDataGridView : UserControl
     {
         private Label titleLabel;
-        private DataGridView dataGridView;
+        private DataGridViewUC dataGridView;
         private DataItem[] data;
         public ReadOnlyDataGridView()
         {
             InitializeComponents();
         }
-        public DataGridView Grid {  get { return dataGridView; } }
+        public DataGridViewUC Grid {  get { return dataGridView; } }
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public string Title
         {
@@ -36,50 +67,37 @@ namespace LPGDataAnalyzer.Controls
 
             FillRows( table);
         }
-        public void LoadDataSource(object? dataSource)
-        {
-            dataGridView.DataSource = dataSource;
-        }
         private void InitializeComponents()
         {
             // Form settings
             this.Size = new Size(800, 500);
-
+            dataGridView = new DataGridViewUC();
             // Title Label
             titleLabel = new Label
             {
-                Font = new Font("Segoe UI", 16, FontStyle.Bold),
+                Font = ColorHelper.TitleFontBold,
                 Dock = DockStyle.Top,
                 TextAlign = ContentAlignment.MiddleCenter,
                 Height = 50,
-                BackColor = Color.FromArgb(45, 45, 48),
-                ForeColor = Color.White
+                BackColor = ColorHelper.DarkBackColor,
+                ForeColor = ColorHelper.White
             };
-            // DataGridView
-            dataGridView = new DataGridView
-            {
-                Dock = DockStyle.Fill,
-
-                // Make it read-only
-                ReadOnly = true,
-                AllowUserToAddRows = false,
-                AllowUserToDeleteRows = false,
-                AllowUserToResizeRows = false,
-                SelectionMode = DataGridViewSelectionMode.CellSelect,
-                RowHeadersVisible = false,
-                // Optional styling
-                AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill
-            };
+            
+            dataGridView.CellFormatting += DataGridView_CellFormatting;
             dataGridView.CellClick += DataGridView_CellClick;
-            dataGridView.DefaultCellStyle.SelectionBackColor = Color.Yellow;
-            dataGridView.DefaultCellStyle.SelectionForeColor = Color.Black;
-            // Add controls to form
+            
             this.Controls.Add(dataGridView);
             this.Controls.Add(titleLabel);
         }
-
-
-        private void DataGridView_CellClick(object sender, DataGridViewCellEventArgs e)
+        private void DataGridView_CellFormatting(object? sender, DataGridViewCellFormattingEventArgs e)
+        {
+            if (e.ColumnIndex == dataGridView.Columns["InjectionTime"].Index)
+            {
+                dataGridView.ApplyDarkBoldStyle(e.CellStyle);
+            }
+        }
+        
+        private void DataGridView_CellClick(object? sender, DataGridViewCellEventArgs e)
         {
             if (e.ColumnIndex != 0 && e.RowIndex >=0)
             {
@@ -92,7 +110,7 @@ namespace LPGDataAnalyzer.Controls
                      (x.BENZ_b2 > range.Min && x.BENZ_b2 <= range.Max)))
                     .ToList();
 
-                var form = new StatsForm(dataItem)
+                var form = new Statsistics(dataItem)
                 {
                     Text = "Detailed Statistics"
                 };
@@ -103,11 +121,24 @@ namespace LPGDataAnalyzer.Controls
         {
             dataGridView.Columns.Clear();
 
-            dataGridView.Columns.Add("InjectionTime", "Inj.Time");
+            var col = new DataGridViewTextBoxColumn
+            {
+                Name = "InjectionTime",
+                HeaderText = "Inj.Time",
+                ValueType = typeof(string)
+            };
+            dataGridView.Columns.Add(col);
 
             foreach (int rpm in rpmColumns)
             {
-                dataGridView.Columns.Add($"RPM_{rpm}", rpm.ToString());
+                var rpmCol = new DataGridViewTextBoxColumn
+                {
+                    Name = $"RPM_{rpm}",
+                    HeaderText = rpm.ToString(),
+                    ValueType = typeof(double)
+                };
+                //rpmCol.DefaultCellStyle.Format = "F2"; // automatic formatting
+                dataGridView.Columns.Add(rpmCol);
             }
         }
         private void FillRows(double?[,] table)

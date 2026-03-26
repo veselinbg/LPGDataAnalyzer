@@ -8,9 +8,9 @@ using System.Windows.Forms;
 
 namespace LPGDataAnalyzer.Controls
 {
-    public partial class StatsForm : Form
+    public partial class Statsistics : Form
     {
-        public StatsForm(List<DataItem> data)
+        public Statsistics(List<DataItem> data)
         {
             InitializeComponent();
 
@@ -34,7 +34,7 @@ namespace LPGDataAnalyzer.Controls
                 Text = $"OVERALL → PRESS Min: {overall.MinPress:F2}  Avg: {overall.AvgPress:F2}  Max: {overall.MaxPress:F2} | MAP Min: {overall.MinMap:F2}  Avg: {overall.AvgMap:F2}  Max: {overall.MaxMap:F2}",
                 TextAlign = ContentAlignment.MiddleCenter
             };
-            var statsList = new SortableBindingList<GroupStat>(stats);
+            var statsList = new SortableBindingList<GroupStatsistic>(stats);
 
             var grid = new DataGridView
             {
@@ -61,21 +61,21 @@ namespace LPGDataAnalyzer.Controls
                     grid.Columns[name].HeaderText = header;
             }
 
-            Set(nameof(GroupStat.Slow_b1), "Slow B1");
-            Set(nameof(GroupStat.Fast_b1), "Fast B1");
-            Set(nameof(GroupStat.Slow_b2), "Slow B2");
-            Set(nameof(GroupStat.Fast_b2), "Fast B2");
+            Set(nameof(GroupStatsistic.Slow_b1), "Slow B1");
+            Set(nameof(GroupStatsistic.Fast_b1), "Fast B1");
+            Set(nameof(GroupStatsistic.Slow_b2), "Slow B2");
+            Set(nameof(GroupStatsistic.Fast_b2), "Fast B2");
 
-            Set(nameof(GroupStat.Trim), "Trim (Avg)");
-            Set(nameof(GroupStat.Count), "Count");
+            Set(nameof(GroupStatsistic.Trim), "Trim (Avg)");
+            Set(nameof(GroupStatsistic.Count), "Count");
 
-            Set(nameof(GroupStat.MinPress), "Min PRESS");
-            Set(nameof(GroupStat.AvgPress), "Avg PRESS");
-            Set(nameof(GroupStat.MaxPress), "Max PRESS");
+            Set(nameof(GroupStatsistic.MinPress), "Min PRESS");
+            Set(nameof(GroupStatsistic.AvgPress), "Avg PRESS");
+            Set(nameof(GroupStatsistic.MaxPress), "Max PRESS");
 
-            Set(nameof(GroupStat.MinMap), "Min MAP");
-            Set(nameof(GroupStat.AvgMap), "Avg MAP");
-            Set(nameof(GroupStat.MaxMap), "Max MAP");
+            Set(nameof(GroupStatsistic.MinMap), "Min MAP");
+            Set(nameof(GroupStatsistic.AvgMap), "Avg MAP");
+            Set(nameof(GroupStatsistic.MaxMap), "Max MAP");
 
             // format numbers
             foreach (DataGridViewColumn col in grid.Columns)
@@ -84,7 +84,7 @@ namespace LPGDataAnalyzer.Controls
                     col.DefaultCellStyle.Format = "F2";
             }
         }
-        private (List<GroupStat>, OverallStat) BuildStats(List<DataItem> data)
+        private (List<GroupStatsistic>, OverallStatsistic) BuildStats(List<DataItem> data)
         {
             var stats = data
                 .GroupBy(x => new
@@ -94,7 +94,7 @@ namespace LPGDataAnalyzer.Controls
                     Slow_b2 = x.SLOW_b2.Round(),
                     Fast_b2 = x.FAST_b2.Round()
                 })
-                .Select(g => new GroupStat
+                .Select(g => new GroupStatsistic
                 {
                     Slow_b1 = g.Key.Slow_b1,
                     Fast_b1 = g.Key.Fast_b1,
@@ -116,7 +116,7 @@ namespace LPGDataAnalyzer.Controls
                 .OrderByDescending(x => x.Count)
                 .ToList();
 
-            var overall = new OverallStat
+            var overall = new OverallStatsistic
             {
                 MinPress = data.Min(x => x.PRESS).Round(),
                 AvgPress = data.Avg(x => x.PRESS).Round(),
@@ -131,7 +131,7 @@ namespace LPGDataAnalyzer.Controls
         }
     }
 
-    public class GroupStat
+    public class GroupStatsistic
     {
         public int Count { get; set; }
 
@@ -150,7 +150,7 @@ namespace LPGDataAnalyzer.Controls
         public double AvgMap { get; set; }
         public double MaxMap { get; set; }
     }
-    public class OverallStat
+    public class OverallStatsistic
     {
         public double MinPress { get; set; }
         public double AvgPress { get; set; }
