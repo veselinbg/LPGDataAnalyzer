@@ -64,7 +64,7 @@ namespace LPGDataAnalyzer.Controls
         private void ButtonPredict_Click(object sender, EventArgs e)
         {
             var table = textExtractor.BuildFinalTable(textBoxParsedData.Text);
-            
+
             // Load all JSON files from that folder
             historyManager.ClearAndLoadFromDirectory(AppSettings.HistoryFolder);
 
@@ -72,10 +72,10 @@ namespace LPGDataAnalyzer.Controls
             var historySnapshots = historyManager.Items.ToArray();
             historyControl1.ClearAddSnapshots(historySnapshots);
 
-            historySnapshots = checkBoxUseHistory.Checked? historySnapshots: null;
+            historySnapshots = checkBoxUseHistory.Checked ? historySnapshots : null;
 
-            var tableNew = MyPrediction.BuildTable(Data, table, historySnapshots, textBoxMinCount.Text.Trim().ToInt(),
-                cbEnableSmooth.Checked, cbInterpolation.Checked, checkBoxOnlyChanges.Checked, 
+            var tableNew = FuelMapPrediction.BuildTable(Data, table, historySnapshots, textBoxMinCount.Text.Trim().ToInt(),
+                cbEnableSmooth.Checked, cbInterpolation.Checked, checkBoxOnlyChanges.Checked,
                 checkBoxRound.Checked, checkBoxPreFilter.Checked, checkBoxShowOnlyMiplayerChange.Checked, textBoxMinValueOfChange.Text.Trim().ToDouble());
 
             if (checkBoxSaveSnapshot.Checked)
@@ -99,7 +99,7 @@ namespace LPGDataAnalyzer.Controls
             dataGridViewOrig.SetData(table, Data);
             dataGridViewPrediction.SetData(tableNew, Data);
 
-            if(checkBoxShowOnlyMiplayerChange.Checked)
+            if (checkBoxShowOnlyMiplayerChange.Checked)
             {
                 DataGridViewColorization.HighlightDifferencesHeatmapWithValues(dataGridViewPrediction.Grid, null, tolerance: 0.01);
             }

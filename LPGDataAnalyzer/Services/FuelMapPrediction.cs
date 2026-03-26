@@ -3,7 +3,7 @@ using LPGDataAnalyzer.Models;
 
 namespace LPGDataAnalyzer.Services
 {
-    public class MyPrediction
+    public class FuelMapPrediction
     {
         private const int KernelSize = 5;
         private const double KernelSigma = 1.2;

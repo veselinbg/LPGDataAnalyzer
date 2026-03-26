@@ -50,8 +50,8 @@ namespace LPGDataAnalyzer.Services
             double binSize = 0.1;
 
             var values = data
-                .Where(d => d.RPM > 500 && d.RPM < 3500)
-                .Where(d => d.MAP > 0.2 && d.MAP < 0.7)
+                .Where(d => d.RPM > 0 && d.RPM < 3500)
+                .Where(d => d.MAP > 0 && d.MAP < 0.7)
                 .Select(d => d.BENZ_b1)
                 .Where(v => v > 0.3 && v < 6.0)
                 .ToList();
@@ -152,7 +152,7 @@ namespace LPGDataAnalyzer.Services
                 }
             }
 
-            return Math.Round(Math.Clamp(learnedExtra, 0, 20), 2); // Return the learned extra injection time
+            return Math.Clamp(learnedExtra, 0, 20).Round(); // Return the learned extra injection time
         }
     }
 }

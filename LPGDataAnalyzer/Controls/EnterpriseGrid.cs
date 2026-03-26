@@ -5,7 +5,7 @@ namespace LPGDataAnalyzer.Controls
 {
     public class ColumnFilterSelection
     {
-        public HashSet<object> SelectedValues { get; set; } = new();
+        public HashSet<object> SelectedValues { get; set; } = [];
         public double? Min { get; set; }
         public double? Max { get; set; }
         public bool UseOrLogic { get; set; } = false;

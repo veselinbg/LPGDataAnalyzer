@@ -42,7 +42,7 @@
             // checkBoxSaveSnapshot
             // 
             checkBoxSaveSnapshot.AutoSize = true;
-            checkBoxSaveSnapshot.Location = new Point(895, 388);
+            checkBoxSaveSnapshot.Location = new Point(895, 401);
             checkBoxSaveSnapshot.Name = "checkBoxSaveSnapshot";
             checkBoxSaveSnapshot.Size = new Size(102, 19);
             checkBoxSaveSnapshot.TabIndex = 0;
@@ -78,7 +78,7 @@
             checkBoxPreFilter.AutoSize = true;
             checkBoxPreFilter.Checked = true;
             checkBoxPreFilter.CheckState = CheckState.Checked;
-            checkBoxPreFilter.Location = new Point(1288, 348);
+            checkBoxPreFilter.Location = new Point(1312, 357);
             checkBoxPreFilter.Name = "checkBoxPreFilter";
             checkBoxPreFilter.Size = new Size(72, 19);
             checkBoxPreFilter.TabIndex = 3;
@@ -89,7 +89,7 @@
             checkBoxRound.AutoSize = true;
             checkBoxRound.Checked = true;
             checkBoxRound.CheckState = CheckState.Checked;
-            checkBoxRound.Location = new Point(1223, 349);
+            checkBoxRound.Location = new Point(1245, 357);
             checkBoxRound.Name = "checkBoxRound";
             checkBoxRound.Size = new Size(61, 19);
             checkBoxRound.TabIndex = 4;
@@ -202,7 +202,7 @@
             // checkBoxShowOnlyMiplayerChange
             // 
             checkBoxShowOnlyMiplayerChange.AutoSize = true;
-            checkBoxShowOnlyMiplayerChange.Location = new Point(895, 363);
+            checkBoxShowOnlyMiplayerChange.Location = new Point(895, 373);
             checkBoxShowOnlyMiplayerChange.Name = "checkBoxShowOnlyMiplayerChange";
             checkBoxShowOnlyMiplayerChange.Size = new Size(196, 19);
             checkBoxShowOnlyMiplayerChange.TabIndex = 19;
@@ -211,7 +211,7 @@
             // 
             // textBoxMinValueOfChange
             // 
-            textBoxMinValueOfChange.Location = new Point(1094, 363);
+            textBoxMinValueOfChange.Location = new Point(1094, 373);
             textBoxMinValueOfChange.Name = "textBoxMinValueOfChange";
             textBoxMinValueOfChange.Size = new Size(60, 23);
             textBoxMinValueOfChange.TabIndex = 20;

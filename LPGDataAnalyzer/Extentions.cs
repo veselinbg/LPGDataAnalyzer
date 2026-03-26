@@ -39,7 +39,7 @@ namespace LPGDataAnalyzer
         }
         public static double StdDev(this IEnumerable<double> list)
         {
-            if (list.Count() == 0)
+            if (list is null || list.Count() == 0)
                 return 0;
 
             double avg = list.Average();
