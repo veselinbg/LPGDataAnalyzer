@@ -41,6 +41,7 @@ namespace LPGDataAnalyzer.Controls
         private Label titleLabel;
         private DataGridViewUC dataGridView;
         private DataItem[] data;
+        private double?[,] currentTable;
         public ReadOnlyDataGridView()
         {
             InitializeComponents();
@@ -60,6 +61,7 @@ namespace LPGDataAnalyzer.Controls
         }
         public void SetData(double?[,] table, DataItem[] dataItems, string title = "")
         {
+            currentTable = table;
             data = dataItems;
             Title = title;
 
@@ -109,8 +111,8 @@ namespace LPGDataAnalyzer.Controls
                     ((x.BENZ_b1 > range.Min && x.BENZ_b1 <= range.Max) ||
                      (x.BENZ_b2 > range.Min && x.BENZ_b2 <= range.Max)))
                     .ToList();
-
-                var form = new Statsistics(dataItem)
+                var cellValue = currentTable[e.ColumnIndex - 1, e.RowIndex];
+                var form = new Statsistics(dataItem, cellValue)
                 {
                     Text = "Detailed Statistics"
                 };

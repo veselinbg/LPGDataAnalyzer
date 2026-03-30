@@ -29,7 +29,7 @@ namespace LPGDataAnalyzer.Controls
             textBoxParsedData.Text = AppSettings.LastLoadedFuelTable;
             textBoxImagePath.Text = AppSettings.ImagePath;
             textBoxLastPredictedFuelTable.Text = AppSettings.LastPredictedFuelTable;
-            Data = data;
+            Data = data.Where(x => x.Temp_GAS < 30).ToArray();
             historyControl1.HistorySelected += HistoryControl1_HistorySelected;
         }
 
@@ -73,8 +73,8 @@ namespace LPGDataAnalyzer.Controls
             historyControl1.ClearAddSnapshots(historySnapshots);
 
             historySnapshots = checkBoxUseHistory.Checked ? historySnapshots : null;
-
-            var tableNew = FuelMapPrediction.BuildTable(Data, table, historySnapshots, textBoxMinCount.Text.Trim().ToInt(),
+            
+            var tableNew = FuelMapPrediction.BuildTable(Data, table, 1.45, historySnapshots, textBoxMinCount.Text.Trim().ToInt(),
                 cbEnableSmooth.Checked, cbInterpolation.Checked, checkBoxOnlyChanges.Checked,
                 checkBoxRound.Checked, checkBoxPreFilter.Checked, checkBoxShowOnlyMiplayerChange.Checked, textBoxMinValueOfChange.Text.Trim().ToDouble());
 

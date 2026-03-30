@@ -75,7 +75,7 @@ namespace LPGDataAnalyzer.Controls
             textBoxReducerTempValues.Name = "textBoxReducerTempValues";
             textBoxReducerTempValues.Size = new Size(207, 23);
             textBoxReducerTempValues.TabIndex = 22;
-            textBoxReducerTempValues.Text = "-4,-3,-1,0,0,0,0,1,2";
+            textBoxReducerTempValues.Text = "-5,-3,0,0,0,0,0,0,0"; //"-4,-3,-1,0,0,0,0,1,2";
             // 
             // buttonReducerPrediction
             // 

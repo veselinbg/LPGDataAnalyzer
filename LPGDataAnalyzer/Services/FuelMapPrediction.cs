@@ -83,6 +83,7 @@ namespace LPGDataAnalyzer.Services
         public static double?[,] BuildTable(
                                         DataItem[] logs,
                                         double?[,] cellMap,
+                                        double referencePressure,
                                         HistorySnapshot[]? historySnapshots = null,
                                         int minCount = 0,
                                         bool enableSmooth = true,
@@ -123,27 +124,59 @@ namespace LPGDataAnalyzer.Services
 
                     var rpmLogsB1 = injLogsB1
                         .Where(d => d.RPM > rpm.Min && d.RPM <= rpm.Max)
-                        .Select(d => d.Trim_b1)
+                        .Select(d =>
+                         new {
+                            Trim = d.Trim_b1,
+                            d.Temp_GAS,
+                            d.Temp_RID,
+                            d.PRESS
+                        })
                         .ToArray();
                     var rpmLogsB2 = injLogsB2
                         .Where(d => d.RPM > rpm.Min && d.RPM <= rpm.Max)
-                        .Select(d => d.Trim_b2)
+                        .Select(d =>
+                         new {
+                             Trim = d.Trim_b2,
+                             d.Temp_GAS, 
+                             d.Temp_RID, 
+                             d.PRESS
+                         })
                         .ToArray();
-                    var rpmLogs = rpmLogsB1.Merge(rpmLogsB2);
+                    var rpmLogs = rpmLogsB1.Concat(rpmLogsB2).ToArray();//rpmLogsB1.Merge(rpmLogsB2);
                     bool hasEnoughLogs = rpmLogs.Length > minCount;
                     double median = 0;
                     double trim = 1;
+                    ///
+                    double[] trimWithCorrections = new double[rpmLogs.Length];
+                     
+                    for (int i =0; i< rpmLogs.Length; i ++)
+                    {
+                        var item = rpmLogs[i];
+                        var indexGas = Settings.GasTemperatureRanges.IndexOf(Settings.GasTemperatureRanges.Single(x => x.Min <= item.Temp_GAS && item.Temp_GAS < x.Max));
+                        var lpgCoef = Settings.GasTemperatureCorrectionCoef[indexGas];
+
+                        var indexRID = Settings.ReductorTemperatureRanges.IndexOf(Settings.ReductorTemperatureRanges.Single(x => x.Min <= item.Temp_RID && item.Temp_RID  < x.Max));
+                        var ridCoef = Settings.ReductorTemperatureCorrectionCoef[indexRID];
+
+                        var pressCoef = CalculatePressCoef(referencePressure, item.PRESS);
+
+                        trimWithCorrections[i] = item.Trim - (item.Trim * pressCoef)/100 + (item.Trim * lpgCoef) /100 + (item.Trim * ridCoef )/100;
+
+                    }
 
                     // Only compute median if needed
                     if (rpmLogs.Length > 0 && (hasEnoughLogs || !showOnlyMultiplayer))
                     {
-                        median = rpmLogs.Median();
+                        median = trimWithCorrections.Median();
                     }
 
                     // Determine trim value if not showing only multiplayer
                     if (hasEnoughLogs && !showOnlyMultiplayer)
                     {
-                        trim = 1 + (Math.Abs(median) > minChangeValue ? (median / 100) : 0);
+                        
+
+
+                        trim = TrimCalulation(median, minChangeValue);
                     }
 
                     // Decide whether to update the result
@@ -195,6 +228,13 @@ namespace LPGDataAnalyzer.Services
 
             return result;
         }
-
+        public static double CalculatePressCoef(double referencePressure, double value)
+        {
+            return (value - referencePressure) / referencePressure * 100.0;
+        }
+        public static double TrimCalulation(double median, double minChangeValue)
+        {
+            return 1 + (Math.Abs(median) > minChangeValue ? (median / 100) : 0);
+        }
     }
 }

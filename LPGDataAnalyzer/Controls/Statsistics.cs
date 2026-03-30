@@ -1,5 +1,6 @@
 ﻿using LPGDataAnalyzer.Models;
 using LPGDataAnalyzer.Models.Common;
+using LPGDataAnalyzer.Services;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -10,13 +11,14 @@ namespace LPGDataAnalyzer.Controls
 {
     public partial class Statsistics : Form
     {
-        public Statsistics(List<DataItem> data)
+        private Dictionary<string, (double min, double max)> _columnRanges;
+        public Statsistics(List<DataItem> data, double? value)
         {
             InitializeComponent();
 
             this.StartPosition = FormStartPosition.CenterParent;
             this.FormBorderStyle = FormBorderStyle.FixedDialog;
-            this.Width = 900;
+            this.Width = 1000;
             this.Height = 550;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
@@ -25,7 +27,7 @@ namespace LPGDataAnalyzer.Controls
             
             this.Icon = SystemIcons.Information;
 
-            var (stats, overall) = BuildStats(data);
+            var (stats, overall) = BuildStats(data, value);
 
             var label = new Label
             {
@@ -35,7 +37,7 @@ namespace LPGDataAnalyzer.Controls
                 TextAlign = ContentAlignment.MiddleCenter
             };
             var statsList = new SortableBindingList<GroupStatsistic>(stats);
-
+            BuildColumnRanges(stats);
             var grid = new DataGridView
             {
                 Dock = DockStyle.Fill,
@@ -47,11 +49,86 @@ namespace LPGDataAnalyzer.Controls
                 SelectionMode = DataGridViewSelectionMode.CellSelect,
                 DataSource = statsList
             };
-
+            grid.CellFormatting += (s, e) => ApplyHeatmap(grid, e);
             grid.DataBindingComplete += (s, e) => ConfigureGrid(grid);
 
             Controls.Add(grid);
             Controls.Add(label);
+
+        }
+        private void ApplyHeatmap(DataGridView grid, DataGridViewCellFormattingEventArgs e)
+        {
+            var column = grid.Columns[e.ColumnIndex];
+            var name = column.DataPropertyName;
+
+            if (name == nameof(GroupStatsistic.Count))
+                return;
+
+            if (!_columnRanges.ContainsKey(name))
+                return;
+
+            if (e.Value == null || !double.TryParse(e.Value.ToString(), out double val))
+                return;
+
+            var (min, max) = _columnRanges[name];
+
+            if (Math.Abs(max - min) < 0.0001)
+                return;
+
+            // Normalize to 0..1
+            double normalized = (val - min) / (max - min);
+
+            // Convert to -1..1 for diverging
+            double diverging = normalized * 2 - 1;
+
+            var color = ColorHelper.InterpolateDiverging(diverging);
+
+            e.CellStyle.BackColor = color;
+
+            // Optional: improve readability
+            e.CellStyle.ForeColor = GetContrastColor(color);
+
+            if (name == nameof(GroupStatsistic.Trim) || name == nameof(GroupStatsistic.Val))
+            {
+                e.CellStyle.Font = ColorHelper.BoldFont;
+            }
+        }
+        private Color GetContrastColor(Color bg)
+        {
+            double luminance = (0.299 * bg.R + 0.587 * bg.G + 0.114 * bg.B) / 255;
+
+            return luminance > 0.6 ? Color.Black : Color.White;
+        }
+        private void BuildColumnRanges(List<GroupStatsistic> stats)
+        {
+            _columnRanges = new Dictionary<string, (double, double)>();
+
+            void Add(string name, Func<GroupStatsistic, double?> selector)
+            {
+                var values = stats.Select(selector)
+                                  .Where(v => v.HasValue)
+                                  .Select(v => v.Value)
+                                  .ToList();
+
+                if (values.Any())
+                    _columnRanges[name] = (values.Min(), values.Max());
+            }
+
+            Add(nameof(GroupStatsistic.Trim), x => x.Trim);
+            Add(nameof(GroupStatsistic.Count), x => x.Count);
+
+            Add(nameof(GroupStatsistic.MinPress), x => x.MinPress);
+            Add(nameof(GroupStatsistic.AvgPress), x => x.AvgPress);
+            Add(nameof(GroupStatsistic.MaxPress), x => x.MaxPress);
+
+            Add(nameof(GroupStatsistic.MinMap), x => x.MinMap);
+            Add(nameof(GroupStatsistic.AvgMap), x => x.AvgMap);
+            Add(nameof(GroupStatsistic.MaxMap), x => x.MaxMap);
+
+            Add(nameof(GroupStatsistic.Temp_GAS), x => x.Temp_GAS);
+            Add(nameof(GroupStatsistic.Temp_RID), x => x.Temp_RID);
+
+            Add(nameof(GroupStatsistic.Val), x => x.Val);
         }
         private void ConfigureGrid(DataGridView grid)
         {
@@ -84,7 +161,7 @@ namespace LPGDataAnalyzer.Controls
                     col.DefaultCellStyle.Format = "F2";
             }
         }
-        private (List<GroupStatsistic>, OverallStatsistic) BuildStats(List<DataItem> data)
+        private (List<GroupStatsistic>, OverallStatsistic) BuildStats(List<DataItem> data, double? value)
         {
             var stats = data
                 .GroupBy(x => new
@@ -111,7 +188,10 @@ namespace LPGDataAnalyzer.Controls
 
                     MinMap = g.Min(x => x.MAP).Round(),
                     AvgMap = g.Avg(x => x.MAP).Round(),
-                    MaxMap = g.Max(x => x.MAP).Round()
+                    MaxMap = g.Max(x => x.MAP).Round(),
+                    Temp_GAS = g.Avg(x => x.Temp_GAS).Round(),
+                    Temp_RID = g.Avg(x => x.Temp_RID).Round(), 
+                    Val = value.SafeMultiply(FuelMapPrediction.TrimCalulation(g.Avg(x => x.Trim), 0))?.Round()
                 })
                 .OrderByDescending(x => x.Count)
                 .ToList();
@@ -149,6 +229,9 @@ namespace LPGDataAnalyzer.Controls
         public double MinMap { get; set; }
         public double AvgMap { get; set; }
         public double MaxMap { get; set; }
+        public double Temp_GAS { get; set; }
+        public double Temp_RID { get; set; }
+        public double? Val { get; set; }
     }
     public class OverallStatsistic
     {

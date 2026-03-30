@@ -43,8 +43,17 @@
         public double Trim{ get; set; }
         public double Trim_b1 { get; set; }
         public double Trim_b2 { get; set; }
+        /// <summary>
+        /// AFR before correction if is less then 15.6 is lean if is higher is rich mixure
+        /// </summary>
         public double AFR { get; set; }
-        public double AFR_b1 { get;set;  }
+        /// <summary>
+        /// AFR before correction if is less then 15.6 is lean if is higher is rich mixure
+        /// </summary>
+        public double AFR_b1 { get;set; }        
+        /// <summary>
+        /// AFR before correction if is less then 15.6 is lean if is higher is rich mixure
+        /// </summary>
         public double AFR_b2 { get; set; }
         /// <summary>
         /// GAS time sum of two banks /2
