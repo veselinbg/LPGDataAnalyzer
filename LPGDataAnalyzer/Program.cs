@@ -1,3 +1,4 @@
+using LPGDataAnalyzer.Services;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace LPGDataAnalyzer
@@ -10,6 +11,7 @@ namespace LPGDataAnalyzer
         [STAThread]
         static void Main()
         {
+            //Parser.Do();
             ApplicationConfiguration.Initialize();
 
             var services = new ServiceCollection();

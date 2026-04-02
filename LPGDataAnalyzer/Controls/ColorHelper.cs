@@ -9,7 +9,7 @@ namespace LPGDataAnalyzer.Controls
 
         public static readonly Font BoldFont = new("Segoe UI", 9, FontStyle.Bold);
         public static readonly Color DarkBackColor = Color.FromArgb(45, 45, 48);
-        public static readonly Font TitleFontBold = new("Segoe UI", 16, FontStyle.Bold);
+        public static readonly Font TitleFontBold = new("Segoe UI", 14, FontStyle.Bold);
         public static Color InterpolateDiverging(double value)
         {
             value = Math.Max(-1, Math.Min(1, value));

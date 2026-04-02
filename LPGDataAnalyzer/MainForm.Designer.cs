@@ -30,55 +30,45 @@ namespace LPGDataAnalyzer
         /// </summary>
         private void InitializeComponent()
         {
-            tableLayoutPanelAnalyses = new();
-            dataGridViewAnalyzeDataBank1t1 = new();
-            dataGridViewAnalyzeDataBank1t2 = new();
-            dataGridViewAnalyzeDataBank2t1 = new();
-            dataGridViewAnalyzeDataBank2t2 = new();
-            openFileDialog1 = new();
-            statusBar = new();
-            toolStripSummary = new();
-            label1 = new();
-            tbBenzTimingFilterCuting = new();
-            txtFilePath = new();
-            buttonSelectFile = new();
-            tabControlMain = new();
-            tabPageMainData = new();
-            dataGridViewMainData = new();
-            tabPageAnalyses = new();
-            tabPageGroupByTemp = new();
-            dataGridViewRIDData = new();
-            dataGridViewGasData = new();
-            tabPageMapAnalysis = new();
-            dataGridView1 = new();
-            dataGridViewInjectionTimeAnalisys = new();
-            dataGridViewMapAnalysis = new();
-            tabPagePredictions = new();
-            predictionControl1 = new();
-            tabPageReducerPred = new();
-            reducerTempCorrection1 = new();
-            buttonAnalyzeFastTrim = new();
-            buttonAnalyze = new();
-            comboBoxReductorTempGroup2 = new();
-            comboBoxReductorTempGroup1 = new();
-            comboBoxGasTemperatureb2 = new();
-            comboBoxGasTemperatureb1 = new();
-            buttonAnalysisByMap = new();
-            button1 = new();
-            buttonReducerThermalLag = new();
-            buttonAFR = new();
-            buttonExtraInjectionCalculator = new();
-            buttonShowReducerPress = new();
-            comboBoxAggregation = new();
-            buttonGroupByTemp = new();
-            tableLayoutPanelAnalyses.SuspendLayout();
+            DataGridViewCellStyle dataGridViewCellStyle1 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle2 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle3 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle4 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle5 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle6 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle7 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle8 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle9 = new DataGridViewCellStyle();
+            openFileDialog1 = new OpenFileDialog();
+            statusBar = new StatusStrip();
+            toolStripSummary = new ToolStripStatusLabel();
+            label1 = new Label();
+            tbBenzTimingFilterCuting = new TextBox();
+            txtFilePath = new TextBox();
+            buttonSelectFile = new Button();
+            tabControlMain = new TabControl();
+            tabPageMainData = new TabPage();
+            dataGridViewMainData = new DataItemGrid();
+            tabPageAnalyses = new TabPage();
+            analysisUC = new AnalysisUC();
+            tabPageGroupByTemp = new TabPage();
+            temperatureAnalyzerui1 = new TemperatureAnalyzerUI();
+            tabPageMapAnalysis = new TabPage();
+            dataGridView1 = new DataGridViewUC();
+            dataGridViewInjectionTimeAnalisys = new DataGridViewUC();
+            dataGridViewMapAnalysis = new DataGridViewUC();
+            tabPagePredictions = new TabPage();
+            predictionControl1 = new PredictionControl();
+            tabPageReducerPred = new TabPage();
+            reducerTempCorrection1 = new ReducerTempCorrection();
+            buttonAnalysisByMap = new Button();
+            button1 = new Button();
+            buttonExtraInjectionCalculator = new Button();
             statusBar.SuspendLayout();
             tabControlMain.SuspendLayout();
             tabPageMainData.SuspendLayout();
             tabPageAnalyses.SuspendLayout();
             tabPageGroupByTemp.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)dataGridViewRIDData).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)dataGridViewGasData).BeginInit();
             tabPageMapAnalysis.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)dataGridView1).BeginInit();
             ((System.ComponentModel.ISupportInitialize)dataGridViewInjectionTimeAnalisys).BeginInit();
@@ -86,60 +76,6 @@ namespace LPGDataAnalyzer
             tabPagePredictions.SuspendLayout();
             tabPageReducerPred.SuspendLayout();
             SuspendLayout();
-            // 
-            // tableLayoutPanelAnalyses
-            // 
-            tableLayoutPanelAnalyses.ColumnCount = 2;
-            tableLayoutPanelAnalyses.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
-            tableLayoutPanelAnalyses.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
-            tableLayoutPanelAnalyses.Controls.Add(dataGridViewAnalyzeDataBank1t1, 0, 0);
-            tableLayoutPanelAnalyses.Controls.Add(dataGridViewAnalyzeDataBank1t2, 1, 0);
-            tableLayoutPanelAnalyses.Controls.Add(dataGridViewAnalyzeDataBank2t1, 0, 1);
-            tableLayoutPanelAnalyses.Controls.Add(dataGridViewAnalyzeDataBank2t2, 1, 1);
-            tableLayoutPanelAnalyses.Dock = DockStyle.Fill;
-            tableLayoutPanelAnalyses.Location = new Point(3, 3);
-            tableLayoutPanelAnalyses.Name = "tableLayoutPanelAnalyses";
-            tableLayoutPanelAnalyses.RowCount = 2;
-            tableLayoutPanelAnalyses.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
-            tableLayoutPanelAnalyses.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
-            tableLayoutPanelAnalyses.Size = new Size(1402, 728);
-            tableLayoutPanelAnalyses.TabIndex = 0;
-            // 
-            // dataGridViewAnalyzeDataBank1t1
-            // 
-            dataGridViewAnalyzeDataBank1t1.Dock = DockStyle.Fill;
-            dataGridViewAnalyzeDataBank1t1.Location = new Point(3, 3);
-            dataGridViewAnalyzeDataBank1t1.Name = "dataGridViewAnalyzeDataBank1t1";
-            dataGridViewAnalyzeDataBank1t1.Size = new Size(695, 358);
-            dataGridViewAnalyzeDataBank1t1.TabIndex = 4;
-            dataGridViewAnalyzeDataBank1t1.Title = "";
-            // 
-            // dataGridViewAnalyzeDataBank1t2
-            // 
-            dataGridViewAnalyzeDataBank1t2.Dock = DockStyle.Fill;
-            dataGridViewAnalyzeDataBank1t2.Location = new Point(704, 3);
-            dataGridViewAnalyzeDataBank1t2.Name = "dataGridViewAnalyzeDataBank1t2";
-            dataGridViewAnalyzeDataBank1t2.Size = new Size(695, 358);
-            dataGridViewAnalyzeDataBank1t2.TabIndex = 6;
-            dataGridViewAnalyzeDataBank1t2.Title = "";
-            // 
-            // dataGridViewAnalyzeDataBank2t1
-            // 
-            dataGridViewAnalyzeDataBank2t1.Dock = DockStyle.Fill;
-            dataGridViewAnalyzeDataBank2t1.Location = new Point(3, 367);
-            dataGridViewAnalyzeDataBank2t1.Name = "dataGridViewAnalyzeDataBank2t1";
-            dataGridViewAnalyzeDataBank2t1.Size = new Size(695, 358);
-            dataGridViewAnalyzeDataBank2t1.TabIndex = 5;
-            dataGridViewAnalyzeDataBank2t1.Title = "";
-            // 
-            // dataGridViewAnalyzeDataBank2t2
-            // 
-            dataGridViewAnalyzeDataBank2t2.Dock = DockStyle.Fill;
-            dataGridViewAnalyzeDataBank2t2.Location = new Point(704, 367);
-            dataGridViewAnalyzeDataBank2t2.Name = "dataGridViewAnalyzeDataBank2t2";
-            dataGridViewAnalyzeDataBank2t2.Size = new Size(695, 358);
-            dataGridViewAnalyzeDataBank2t2.TabIndex = 7;
-            dataGridViewAnalyzeDataBank2t2.Title = "";
             // 
             // openFileDialog1
             // 
@@ -172,7 +108,7 @@ namespace LPGDataAnalyzer
             // tbBenzTimingFilterCuting
             // 
             tbBenzTimingFilterCuting.AccessibleDescription = "Benz Timing Cutting Filter ";
-            tbBenzTimingFilterCuting.Location = new Point(891, 52);
+            tbBenzTimingFilterCuting.Location = new Point(970, 37);
             tbBenzTimingFilterCuting.Name = "tbBenzTimingFilterCuting";
             tbBenzTimingFilterCuting.Size = new Size(34, 23);
             tbBenzTimingFilterCuting.TabIndex = 7;
@@ -206,10 +142,10 @@ namespace LPGDataAnalyzer
             tabControlMain.Controls.Add(tabPageMapAnalysis);
             tabControlMain.Controls.Add(tabPagePredictions);
             tabControlMain.Controls.Add(tabPageReducerPred);
-            tabControlMain.Location = new Point(0, 81);
+            tabControlMain.Location = new Point(0, 66);
             tabControlMain.Name = "tabControlMain";
             tabControlMain.SelectedIndex = 0;
-            tabControlMain.Size = new Size(1416, 762);
+            tabControlMain.Size = new Size(1416, 777);
             tabControlMain.TabIndex = 5;
             // 
             // tabPageMainData
@@ -218,7 +154,7 @@ namespace LPGDataAnalyzer
             tabPageMainData.Location = new Point(4, 24);
             tabPageMainData.Name = "tabPageMainData";
             tabPageMainData.Padding = new Padding(3);
-            tabPageMainData.Size = new Size(1408, 734);
+            tabPageMainData.Size = new Size(1408, 749);
             tabPageMainData.TabIndex = 0;
             tabPageMainData.Text = "Main Data";
             tabPageMainData.UseVisualStyleBackColor = true;
@@ -229,48 +165,45 @@ namespace LPGDataAnalyzer
             dataGridViewMainData.Location = new Point(-4, 0);
             dataGridViewMainData.Name = "dataGridViewMainData";
             dataGridViewMainData.ReadOnly = true;
-            dataGridViewMainData.Size = new Size(1412, 734);
+            dataGridViewMainData.Size = new Size(1412, 749);
             dataGridViewMainData.TabIndex = 0;
             dataGridViewMainData.Title = "All logged data";
             // 
             // tabPageAnalyses
             // 
-            tabPageAnalyses.Controls.Add(tableLayoutPanelAnalyses);
+            tabPageAnalyses.Controls.Add(analysisUC);
             tabPageAnalyses.Location = new Point(4, 24);
             tabPageAnalyses.Name = "tabPageAnalyses";
             tabPageAnalyses.Padding = new Padding(3);
-            tabPageAnalyses.Size = new Size(1408, 734);
+            tabPageAnalyses.Size = new Size(192, 72);
             tabPageAnalyses.TabIndex = 1;
             tabPageAnalyses.Text = "Analyses";
             tabPageAnalyses.UseVisualStyleBackColor = true;
             // 
+            // analysisUC
+            // 
+            analysisUC.Location = new Point(0, 0);
+            analysisUC.Name = "analysisUC";
+            analysisUC.Size = new Size(1516, 848);
+            analysisUC.TabIndex = 0;
+            // 
             // tabPageGroupByTemp
             // 
-            tabPageGroupByTemp.Controls.Add(dataGridViewRIDData);
-            tabPageGroupByTemp.Controls.Add(dataGridViewGasData);
+            tabPageGroupByTemp.Controls.Add(temperatureAnalyzerui1);
             tabPageGroupByTemp.Location = new Point(4, 24);
             tabPageGroupByTemp.Name = "tabPageGroupByTemp";
-            tabPageGroupByTemp.Size = new Size(1408, 734);
+            tabPageGroupByTemp.Size = new Size(1408, 749);
             tabPageGroupByTemp.TabIndex = 2;
-            tabPageGroupByTemp.Text = "Group By Temp";
+            tabPageGroupByTemp.Text = "Temperature";
             tabPageGroupByTemp.UseVisualStyleBackColor = true;
             // 
-            // dataGridViewRIDData
+            // temperatureAnalyzerui1
             // 
-            dataGridViewRIDData.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
-            dataGridViewRIDData.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dataGridViewRIDData.Location = new Point(0, 376);
-            dataGridViewRIDData.Name = "dataGridViewRIDData";
-            dataGridViewRIDData.Size = new Size(1405, 355);
-            dataGridViewRIDData.TabIndex = 2;
-            // 
-            // dataGridViewGasData
-            // 
-            dataGridViewGasData.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dataGridViewGasData.Location = new Point(3, 3);
-            dataGridViewGasData.Name = "dataGridViewGasData";
-            dataGridViewGasData.Size = new Size(1402, 367);
-            dataGridViewGasData.TabIndex = 0;
+            temperatureAnalyzerui1.Dock = DockStyle.Fill;
+            temperatureAnalyzerui1.Location = new Point(0, 0);
+            temperatureAnalyzerui1.Name = "temperatureAnalyzerui1";
+            temperatureAnalyzerui1.Size = new Size(1408, 749);
+            temperatureAnalyzerui1.TabIndex = 0;
             // 
             // tabPageMapAnalysis
             // 
@@ -279,38 +212,132 @@ namespace LPGDataAnalyzer
             tabPageMapAnalysis.Controls.Add(dataGridViewMapAnalysis);
             tabPageMapAnalysis.Location = new Point(4, 24);
             tabPageMapAnalysis.Name = "tabPageMapAnalysis";
-            tabPageMapAnalysis.Size = new Size(1408, 734);
+            tabPageMapAnalysis.Size = new Size(192, 72);
             tabPageMapAnalysis.TabIndex = 3;
             tabPageMapAnalysis.Text = "Map Analysis";
             tabPageMapAnalysis.UseVisualStyleBackColor = true;
             // 
             // dataGridView1
             // 
+            dataGridView1.AllowUserToAddRows = false;
+            dataGridView1.AllowUserToDeleteRows = false;
+            dataGridView1.AllowUserToResizeRows = false;
             dataGridView1.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Right;
+            dataGridView1.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+            dataGridViewCellStyle1.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            dataGridViewCellStyle1.BackColor = Color.FromArgb(45, 45, 48);
+            dataGridViewCellStyle1.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+            dataGridViewCellStyle1.ForeColor = Color.White;
+            dataGridViewCellStyle1.SelectionBackColor = SystemColors.Highlight;
+            dataGridViewCellStyle1.SelectionForeColor = SystemColors.HighlightText;
+            dataGridViewCellStyle1.WrapMode = DataGridViewTriState.True;
+            dataGridView1.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
             dataGridView1.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dataGridView1.Location = new Point(789, 3);
+            dataGridViewCellStyle2.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            dataGridViewCellStyle2.BackColor = SystemColors.Window;
+            dataGridViewCellStyle2.Font = new Font("Segoe UI", 9F);
+            dataGridViewCellStyle2.ForeColor = SystemColors.ControlText;
+            dataGridViewCellStyle2.SelectionBackColor = Color.Yellow;
+            dataGridViewCellStyle2.SelectionForeColor = Color.Black;
+            dataGridViewCellStyle2.WrapMode = DataGridViewTriState.False;
+            dataGridView1.DefaultCellStyle = dataGridViewCellStyle2;
+            dataGridView1.EnableHeadersVisualStyles = false;
+            dataGridView1.Location = new Point(-427, 3);
             dataGridView1.Name = "dataGridView1";
-            dataGridView1.Size = new Size(616, 728);
+            dataGridView1.ReadOnly = true;
+            dataGridViewCellStyle3.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle3.BackColor = Color.FromArgb(45, 45, 48);
+            dataGridViewCellStyle3.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+            dataGridViewCellStyle3.ForeColor = Color.White;
+            dataGridViewCellStyle3.SelectionBackColor = SystemColors.Highlight;
+            dataGridViewCellStyle3.SelectionForeColor = SystemColors.HighlightText;
+            dataGridViewCellStyle3.WrapMode = DataGridViewTriState.True;
+            dataGridView1.RowHeadersDefaultCellStyle = dataGridViewCellStyle3;
+            dataGridView1.RowHeadersVisible = false;
+            dataGridView1.SelectionMode = DataGridViewSelectionMode.CellSelect;
+            dataGridView1.Size = new Size(616, 66);
             dataGridView1.TabIndex = 3;
             // 
             // dataGridViewInjectionTimeAnalisys
             // 
+            dataGridViewInjectionTimeAnalisys.AllowUserToAddRows = false;
+            dataGridViewInjectionTimeAnalisys.AllowUserToDeleteRows = false;
+            dataGridViewInjectionTimeAnalisys.AllowUserToResizeRows = false;
             dataGridViewInjectionTimeAnalisys.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            dataGridViewInjectionTimeAnalisys.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+            dataGridViewCellStyle4.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            dataGridViewCellStyle4.BackColor = Color.FromArgb(45, 45, 48);
+            dataGridViewCellStyle4.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+            dataGridViewCellStyle4.ForeColor = Color.White;
+            dataGridViewCellStyle4.SelectionBackColor = SystemColors.Highlight;
+            dataGridViewCellStyle4.SelectionForeColor = SystemColors.HighlightText;
+            dataGridViewCellStyle4.WrapMode = DataGridViewTriState.True;
+            dataGridViewInjectionTimeAnalisys.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle4;
             dataGridViewInjectionTimeAnalisys.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dataGridViewInjectionTimeAnalisys.Location = new Point(3, 383);
+            dataGridViewCellStyle5.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            dataGridViewCellStyle5.BackColor = SystemColors.Window;
+            dataGridViewCellStyle5.Font = new Font("Segoe UI", 9F);
+            dataGridViewCellStyle5.ForeColor = SystemColors.ControlText;
+            dataGridViewCellStyle5.SelectionBackColor = Color.Yellow;
+            dataGridViewCellStyle5.SelectionForeColor = Color.Black;
+            dataGridViewCellStyle5.WrapMode = DataGridViewTriState.False;
+            dataGridViewInjectionTimeAnalisys.DefaultCellStyle = dataGridViewCellStyle5;
+            dataGridViewInjectionTimeAnalisys.EnableHeadersVisualStyles = false;
+            dataGridViewInjectionTimeAnalisys.Location = new Point(3, -279);
             dataGridViewInjectionTimeAnalisys.Name = "dataGridViewInjectionTimeAnalisys";
             dataGridViewInjectionTimeAnalisys.ReadOnly = true;
-            dataGridViewInjectionTimeAnalisys.Size = new Size(780, 348);
+            dataGridViewCellStyle6.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle6.BackColor = Color.FromArgb(45, 45, 48);
+            dataGridViewCellStyle6.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+            dataGridViewCellStyle6.ForeColor = Color.White;
+            dataGridViewCellStyle6.SelectionBackColor = SystemColors.Highlight;
+            dataGridViewCellStyle6.SelectionForeColor = SystemColors.HighlightText;
+            dataGridViewCellStyle6.WrapMode = DataGridViewTriState.True;
+            dataGridViewInjectionTimeAnalisys.RowHeadersDefaultCellStyle = dataGridViewCellStyle6;
+            dataGridViewInjectionTimeAnalisys.RowHeadersVisible = false;
+            dataGridViewInjectionTimeAnalisys.SelectionMode = DataGridViewSelectionMode.CellSelect;
+            dataGridViewInjectionTimeAnalisys.Size = new Size(0, 348);
             dataGridViewInjectionTimeAnalisys.TabIndex = 2;
             // 
             // dataGridViewMapAnalysis
             // 
+            dataGridViewMapAnalysis.AllowUserToAddRows = false;
+            dataGridViewMapAnalysis.AllowUserToDeleteRows = false;
+            dataGridViewMapAnalysis.AllowUserToResizeRows = false;
             dataGridViewMapAnalysis.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            dataGridViewMapAnalysis.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+            dataGridViewCellStyle7.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            dataGridViewCellStyle7.BackColor = Color.FromArgb(45, 45, 48);
+            dataGridViewCellStyle7.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+            dataGridViewCellStyle7.ForeColor = Color.White;
+            dataGridViewCellStyle7.SelectionBackColor = SystemColors.Highlight;
+            dataGridViewCellStyle7.SelectionForeColor = SystemColors.HighlightText;
+            dataGridViewCellStyle7.WrapMode = DataGridViewTriState.True;
+            dataGridViewMapAnalysis.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle7;
             dataGridViewMapAnalysis.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            dataGridViewCellStyle8.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            dataGridViewCellStyle8.BackColor = SystemColors.Window;
+            dataGridViewCellStyle8.Font = new Font("Segoe UI", 9F);
+            dataGridViewCellStyle8.ForeColor = SystemColors.ControlText;
+            dataGridViewCellStyle8.SelectionBackColor = Color.Yellow;
+            dataGridViewCellStyle8.SelectionForeColor = Color.Black;
+            dataGridViewCellStyle8.WrapMode = DataGridViewTriState.False;
+            dataGridViewMapAnalysis.DefaultCellStyle = dataGridViewCellStyle8;
+            dataGridViewMapAnalysis.EnableHeadersVisualStyles = false;
             dataGridViewMapAnalysis.Location = new Point(3, 3);
             dataGridViewMapAnalysis.Name = "dataGridViewMapAnalysis";
             dataGridViewMapAnalysis.ReadOnly = true;
-            dataGridViewMapAnalysis.Size = new Size(777, 346);
+            dataGridViewCellStyle9.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle9.BackColor = Color.FromArgb(45, 45, 48);
+            dataGridViewCellStyle9.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+            dataGridViewCellStyle9.ForeColor = Color.White;
+            dataGridViewCellStyle9.SelectionBackColor = SystemColors.Highlight;
+            dataGridViewCellStyle9.SelectionForeColor = SystemColors.HighlightText;
+            dataGridViewCellStyle9.WrapMode = DataGridViewTriState.True;
+            dataGridViewMapAnalysis.RowHeadersDefaultCellStyle = dataGridViewCellStyle9;
+            dataGridViewMapAnalysis.RowHeadersVisible = false;
+            dataGridViewMapAnalysis.SelectionMode = DataGridViewSelectionMode.CellSelect;
+            dataGridViewMapAnalysis.Size = new Size(0, 0);
             dataGridViewMapAnalysis.TabIndex = 0;
             // 
             // tabPagePredictions
@@ -318,7 +345,7 @@ namespace LPGDataAnalyzer
             tabPagePredictions.Controls.Add(predictionControl1);
             tabPagePredictions.Location = new Point(4, 24);
             tabPagePredictions.Name = "tabPagePredictions";
-            tabPagePredictions.Size = new Size(1408, 734);
+            tabPagePredictions.Size = new Size(192, 72);
             tabPagePredictions.TabIndex = 4;
             tabPagePredictions.Text = "Prediction";
             tabPagePredictions.UseVisualStyleBackColor = true;
@@ -328,7 +355,7 @@ namespace LPGDataAnalyzer
             predictionControl1.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             predictionControl1.Location = new Point(0, 3);
             predictionControl1.Name = "predictionControl1";
-            predictionControl1.Size = new Size(1408, 734);
+            predictionControl1.Size = new Size(192, 72);
             predictionControl1.TabIndex = 0;
             // 
             // tabPageReducerPred
@@ -336,7 +363,7 @@ namespace LPGDataAnalyzer
             tabPageReducerPred.Controls.Add(reducerTempCorrection1);
             tabPageReducerPred.Location = new Point(4, 24);
             tabPageReducerPred.Name = "tabPageReducerPred";
-            tabPageReducerPred.Size = new Size(1408, 734);
+            tabPageReducerPred.Size = new Size(192, 72);
             tabPageReducerPred.TabIndex = 5;
             tabPageReducerPred.Text = "Reducer prediction";
             tabPageReducerPred.UseVisualStyleBackColor = true;
@@ -347,64 +374,12 @@ namespace LPGDataAnalyzer
             reducerTempCorrection1.AutoSize = true;
             reducerTempCorrection1.Location = new Point(191, 145);
             reducerTempCorrection1.Name = "reducerTempCorrection1";
-            reducerTempCorrection1.Size = new Size(589, 157);
+            reducerTempCorrection1.Size = new Size(631, 240);
             reducerTempCorrection1.TabIndex = 0;
-            // 
-            // buttonAnalyzeFastTrim
-            // 
-            buttonAnalyzeFastTrim.Location = new Point(707, 42);
-            buttonAnalyzeFastTrim.Name = "buttonAnalyzeFastTrim";
-            buttonAnalyzeFastTrim.Size = new Size(58, 23);
-            buttonAnalyzeFastTrim.TabIndex = 15;
-            buttonAnalyzeFastTrim.Text = "Trim";
-            buttonAnalyzeFastTrim.UseVisualStyleBackColor = true;
-            buttonAnalyzeFastTrim.Click += ButtonShowTrims_Click;
-            // 
-            // buttonAnalyze
-            // 
-            buttonAnalyze.Location = new Point(596, 42);
-            buttonAnalyze.Name = "buttonAnalyze";
-            buttonAnalyze.Size = new Size(53, 23);
-            buttonAnalyze.TabIndex = 14;
-            buttonAnalyze.Text = "Ration";
-            buttonAnalyze.UseVisualStyleBackColor = true;
-            buttonAnalyze.Click += ButtonShowRatio_Click;
-            // 
-            // comboBoxReductorTempGroup2
-            // 
-            comboBoxReductorTempGroup2.FormattingEnabled = true;
-            comboBoxReductorTempGroup2.Location = new Point(393, 40);
-            comboBoxReductorTempGroup2.Name = "comboBoxReductorTempGroup2";
-            comboBoxReductorTempGroup2.Size = new Size(121, 23);
-            comboBoxReductorTempGroup2.TabIndex = 13;
-            // 
-            // comboBoxReductorTempGroup1
-            // 
-            comboBoxReductorTempGroup1.FormattingEnabled = true;
-            comboBoxReductorTempGroup1.Location = new Point(134, 39);
-            comboBoxReductorTempGroup1.Name = "comboBoxReductorTempGroup1";
-            comboBoxReductorTempGroup1.Size = new Size(121, 23);
-            comboBoxReductorTempGroup1.TabIndex = 12;
-            // 
-            // comboBoxGasTemperatureb2
-            // 
-            comboBoxGasTemperatureb2.FormattingEnabled = true;
-            comboBoxGasTemperatureb2.Location = new Point(266, 39);
-            comboBoxGasTemperatureb2.Name = "comboBoxGasTemperatureb2";
-            comboBoxGasTemperatureb2.Size = new Size(121, 23);
-            comboBoxGasTemperatureb2.TabIndex = 11;
-            // 
-            // comboBoxGasTemperatureb1
-            // 
-            comboBoxGasTemperatureb1.FormattingEnabled = true;
-            comboBoxGasTemperatureb1.Location = new Point(7, 39);
-            comboBoxGasTemperatureb1.Name = "comboBoxGasTemperatureb1";
-            comboBoxGasTemperatureb1.Size = new Size(121, 23);
-            comboBoxGasTemperatureb1.TabIndex = 10;
             // 
             // buttonAnalysisByMap
             // 
-            buttonAnalysisByMap.Location = new Point(931, 52);
+            buttonAnalysisByMap.Location = new Point(1014, 36);
             buttonAnalysisByMap.Name = "buttonAnalysisByMap";
             buttonAnalysisByMap.Size = new Size(68, 23);
             buttonAnalysisByMap.TabIndex = 16;
@@ -422,29 +397,9 @@ namespace LPGDataAnalyzer
             button1.UseVisualStyleBackColor = true;
             button1.Click += button1_Click;
             // 
-            // buttonReducerThermalLag
-            // 
-            buttonReducerThermalLag.Location = new Point(1014, 42);
-            buttonReducerThermalLag.Name = "buttonReducerThermalLag";
-            buttonReducerThermalLag.Size = new Size(130, 23);
-            buttonReducerThermalLag.TabIndex = 18;
-            buttonReducerThermalLag.Text = "Reducer Thermal Lag";
-            buttonReducerThermalLag.UseVisualStyleBackColor = true;
-            buttonReducerThermalLag.Click += buttonReducerThermalLag_Click;
-            // 
-            // buttonAFR
-            // 
-            buttonAFR.Location = new Point(655, 42);
-            buttonAFR.Name = "buttonAFR";
-            buttonAFR.Size = new Size(46, 23);
-            buttonAFR.TabIndex = 20;
-            buttonAFR.Text = "AFR";
-            buttonAFR.UseVisualStyleBackColor = true;
-            buttonAFR.Click += buttonAFR_Click;
-            // 
             // buttonExtraInjectionCalculator
             // 
-            buttonExtraInjectionCalculator.Location = new Point(1150, 56);
+            buttonExtraInjectionCalculator.Location = new Point(1216, 11);
             buttonExtraInjectionCalculator.Name = "buttonExtraInjectionCalculator";
             buttonExtraInjectionCalculator.Size = new Size(152, 23);
             buttonExtraInjectionCalculator.TabIndex = 21;
@@ -452,71 +407,29 @@ namespace LPGDataAnalyzer
             buttonExtraInjectionCalculator.UseVisualStyleBackColor = true;
             buttonExtraInjectionCalculator.Click += buttonExtraInjectionCalculator_Click;
             // 
-            // buttonShowReducerPress
-            // 
-            buttonShowReducerPress.Location = new Point(771, 42);
-            buttonShowReducerPress.Name = "buttonShowReducerPress";
-            buttonShowReducerPress.Size = new Size(54, 23);
-            buttonShowReducerPress.TabIndex = 22;
-            buttonShowReducerPress.Text = "Press";
-            buttonShowReducerPress.UseVisualStyleBackColor = true;
-            buttonShowReducerPress.Click += buttonShowReducerPress_Click;
-            // 
-            // comboBoxAggregation
-            // 
-            comboBoxAggregation.FormattingEnabled = true;
-            comboBoxAggregation.Location = new Point(519, 40);
-            comboBoxAggregation.Name = "comboBoxAggregation";
-            comboBoxAggregation.Size = new Size(71, 23);
-            comboBoxAggregation.TabIndex = 23;
-            // 
-            // buttonGroupByTemp
-            // 
-            buttonGroupByTemp.Location = new Point(1105, 12);
-            buttonGroupByTemp.Name = "buttonGroupByTemp";
-            buttonGroupByTemp.Size = new Size(105, 23);
-            buttonGroupByTemp.TabIndex = 24;
-            buttonGroupByTemp.Text = "Goup By Temp";
-            buttonGroupByTemp.UseVisualStyleBackColor = true;
-            buttonGroupByTemp.Click += buttonGroupByTemp_Click;
-            // 
             // MainForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(1416, 868);
-            Controls.Add(buttonGroupByTemp);
-            Controls.Add(comboBoxAggregation);
-            Controls.Add(buttonShowReducerPress);
             Controls.Add(buttonExtraInjectionCalculator);
-            Controls.Add(buttonAFR);
-            Controls.Add(buttonReducerThermalLag);
             Controls.Add(button1);
             Controls.Add(buttonAnalysisByMap);
-            Controls.Add(buttonAnalyzeFastTrim);
             Controls.Add(txtFilePath);
-            Controls.Add(buttonAnalyze);
             Controls.Add(tbBenzTimingFilterCuting);
             Controls.Add(label1);
             Controls.Add(tabControlMain);
-            Controls.Add(comboBoxReductorTempGroup2);
             Controls.Add(buttonSelectFile);
-            Controls.Add(comboBoxReductorTempGroup1);
             Controls.Add(statusBar);
-            Controls.Add(comboBoxGasTemperatureb2);
-            Controls.Add(comboBoxGasTemperatureb1);
             Name = "MainForm";
             Text = "LPG Analyser";
             WindowState = FormWindowState.Maximized;
-            tableLayoutPanelAnalyses.ResumeLayout(false);
             statusBar.ResumeLayout(false);
             statusBar.PerformLayout();
             tabControlMain.ResumeLayout(false);
             tabPageMainData.ResumeLayout(false);
             tabPageAnalyses.ResumeLayout(false);
             tabPageGroupByTemp.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)dataGridViewRIDData).EndInit();
-            ((System.ComponentModel.ISupportInitialize)dataGridViewGasData).EndInit();
             tabPageMapAnalysis.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)dataGridView1).EndInit();
             ((System.ComponentModel.ISupportInitialize)dataGridViewInjectionTimeAnalisys).EndInit();
@@ -529,7 +442,6 @@ namespace LPGDataAnalyzer
         }
 
         #endregion
-        private TableLayoutPanel tableLayoutPanelAnalyses;
         private OpenFileDialog openFileDialog1;
         private StatusStrip statusBar;
         private TextBox txtFilePath;
@@ -539,36 +451,21 @@ namespace LPGDataAnalyzer
         private ToolStripStatusLabel toolStripSummary;
         private TabControl tabControlMain;
         private TabPage tabPageMainData;
-        private TabPage tabPageAnalyses;
-        private ComboBox comboBoxGasTemperatureb2;
-        private ComboBox comboBoxGasTemperatureb1;
-        private ComboBox comboBoxReductorTempGroup2;
-        private ComboBox comboBoxReductorTempGroup1;
-        private Button buttonAnalyze;
-        private Button buttonAnalyzeFastTrim;
         private TabPage tabPageGroupByTemp;
-        private DataGridViewUC dataGridViewGasData;
         private Button buttonAnalysisByMap;
         private TabPage tabPageMapAnalysis;
         private DataGridViewUC dataGridViewMapAnalysis;
         private DataGridViewUC dataGridViewInjectionTimeAnalisys;
         private DataGridViewUC dataGridView1;
         private Button button1;
-        private Button buttonReducerThermalLag;
         private TabPage tabPagePredictions;
-        private Button buttonAFR;
         private TabPage tabPageReducerPred;
         private Button buttonExtraInjectionCalculator;
-        private DataGridViewUC dataGridViewRIDData;
-        private ComboBox comboBoxAggregation;
-        private Button buttonShowReducerPress;
         private Controls.DataItemGrid dataGridViewMainData;
-        private Button buttonGroupByTemp;
-        private ReadOnlyDataGridView dataGridViewAnalyzeDataBank2t2;
-        private ReadOnlyDataGridView dataGridViewAnalyzeDataBank1t2;
-        private ReadOnlyDataGridView dataGridViewAnalyzeDataBank2t1;
-        private ReadOnlyDataGridView dataGridViewAnalyzeDataBank1t1;
         private PredictionControl predictionControl1;
         private ReducerTempCorrection reducerTempCorrection1;
+        private TabPage tabPageAnalyses;
+        private AnalysisUC analysisUC;
+        private TemperatureAnalyzerUI temperatureAnalyzerui1;
     }
 }

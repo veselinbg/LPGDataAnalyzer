@@ -20,8 +20,10 @@ namespace LPGDataAnalyzer.Controls
         public PredictionControl()
         {
             InitializeComponent();
-
+            panelLegend.Paint += PanelLegendBuilder.PanelLegend_Paint;
         }
+
+
         public void LoadSettings(AppSettingManager appSettingManager, DataItem[] data)
         {
             AppSettingManager = appSettingManager;
@@ -29,7 +31,7 @@ namespace LPGDataAnalyzer.Controls
             textBoxParsedData.Text = AppSettings.LastLoadedFuelTable;
             textBoxImagePath.Text = AppSettings.ImagePath;
             textBoxLastPredictedFuelTable.Text = AppSettings.LastPredictedFuelTable;
-            Data = data.Where(x => x.Temp_GAS < 30).ToArray();
+            Data = data;
             historyControl1.HistorySelected += HistoryControl1_HistorySelected;
         }
 
@@ -40,7 +42,7 @@ namespace LPGDataAnalyzer.Controls
 
             var cellMap = ArrayConverter.To2D(snapshot.CellMap);
             var newCellMap = ArrayConverter.To2D(snapshot.NewCellMap);
-
+            //textBoxParsedData.Text = cellMap.ToText();
             textBoxLastPredictedFuelTable.Text = newCellMap.ToText();
 
             PreviewPrediction(cellMap, newCellMap);
@@ -73,10 +75,10 @@ namespace LPGDataAnalyzer.Controls
             historyControl1.ClearAddSnapshots(historySnapshots);
 
             historySnapshots = checkBoxUseHistory.Checked ? historySnapshots : null;
-            
-            var tableNew = FuelMapPrediction.BuildTable(Data, table, 1.45, historySnapshots, textBoxMinCount.Text.Trim().ToInt(),
+            var referencePressure = double.Parse(textBoxRefPress.Text.Trim());
+            var tableNew = FuelMapPrediction.BuildTable(Data, table, referencePressure, historySnapshots, textBoxMinCount.Text.Trim().ToInt(),
                 cbEnableSmooth.Checked, cbInterpolation.Checked, checkBoxOnlyChanges.Checked,
-                checkBoxRound.Checked, checkBoxPreFilter.Checked, checkBoxShowOnlyMiplayerChange.Checked, textBoxMinValueOfChange.Text.Trim().ToDouble());
+                checkBoxRound.Checked, checkBoxShowOnlyMiplayerChange.Checked, textBoxMinValueOfChange.Text.Trim().ToDouble());
 
             if (checkBoxSaveSnapshot.Checked)
             {
@@ -109,7 +111,7 @@ namespace LPGDataAnalyzer.Controls
                 var vals = DataGridViewColorization.HighlightDifferencesHeatmapWithValues(dataGridViewPrediction.Grid, dataGridViewOrig.Grid, tolerance: 0.01);
 
                 // Create horizontal legend aligned with DataGridView
-                LegendPanelBuilder.CreateDynamicHorizontalHeatmapLegend(panelLegend, dataGridViewPrediction.Grid, vals.WLow, vals.WHigh);
+                PanelLegendBuilder.CreateDynamicHorizontalHeatmapLegend(panelLegend, dataGridViewPrediction.Grid, vals.WLow, vals.WHigh);
             }
         }
     }

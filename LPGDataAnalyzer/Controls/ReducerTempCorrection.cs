@@ -10,6 +10,8 @@ namespace LPGDataAnalyzer.Controls
         public ReducerTempCorrection()
         {
             InitializeComponent();
+            textBox1.Text = string.Join(",", Settings.GasTemperatureCorrectionCoef);
+            textBoxReducerTempValues.Text = string.Join(",", Settings.ReductorTemperatureCorrectionCoef);
         }
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public DataItem[] Data { get; set; }
@@ -27,19 +29,41 @@ namespace LPGDataAnalyzer.Controls
             }
 
             var result = ReducerPrediction.PredictNewReducerTempCorrections(Data,
-                currentCorrections, 
+                currentCorrections,
                 double.Parse(textBoxReferencePressure.Text.Trim()), checkBoxEnableSmooth.Checked);
 
             MessageBox.Show(string.Join(",", result.Select(x => x.Value)), "LPG Reducer correction");
         }
+        private void buttonGasTempCorr_Click(object sender, EventArgs e)
+        {
+            if (Data is null) return;
+
+            Dictionary<string, int> currentCorrections = [];
+
+            var values = textBox1.Text.Split(',', StringSplitOptions.RemoveEmptyEntries);
+
+            for (int i = 0; i < GasTemperatureRanges.Length; i++)
+            {
+                currentCorrections.Add(GasTemperatureRanges[i].Label, int.Parse(values[i]));
+            }
+
+            var result = GasTempCorrection.PredictNewReducerTempCorrections(Data,
+                currentCorrections,
+                double.Parse(textBoxReferencePressure.Text.Trim()), checkBoxEnableSmooth.Checked);
+
+            MessageBox.Show(string.Join(",", result.Select(x => x.Value)), "Gas Temperature correction");
+        }
+
         private void InitializeComponent()
         {
             labelRefPressure = new Label();
             textBoxReferencePressure = new TextBox();
             labelCurrent = new Label();
             textBoxReducerTempValues = new TextBox();
-            buttonReducerPrediction = new();
+            buttonReducerPrediction = new Button();
             checkBoxEnableSmooth = new CheckBox();
+            textBox1 = new TextBox();
+            buttonGasTempCorr = new Button();
             SuspendLayout();
             // 
             // labelRefPressure
@@ -58,7 +82,7 @@ namespace LPGDataAnalyzer.Controls
             textBoxReferencePressure.RightToLeft = RightToLeft.Yes;
             textBoxReferencePressure.Size = new Size(62, 23);
             textBoxReferencePressure.TabIndex = 24;
-            textBoxReferencePressure.Text = "1.5";
+            textBoxReferencePressure.Text = "1.45";
             // 
             // labelCurrent
             // 
@@ -75,7 +99,7 @@ namespace LPGDataAnalyzer.Controls
             textBoxReducerTempValues.Name = "textBoxReducerTempValues";
             textBoxReducerTempValues.Size = new Size(207, 23);
             textBoxReducerTempValues.TabIndex = 22;
-            textBoxReducerTempValues.Text = "-5,-3,0,0,0,0,0,0,0"; //"-4,-3,-1,0,0,0,0,1,2";
+            textBoxReducerTempValues.Text = "-5,-3,0,0,0,0,0,0,0";
             // 
             // buttonReducerPrediction
             // 
@@ -97,9 +121,28 @@ namespace LPGDataAnalyzer.Controls
             checkBoxEnableSmooth.Text = "Smooth";
             checkBoxEnableSmooth.UseVisualStyleBackColor = true;
             // 
+            // textBox1
+            // 
+            textBox1.Location = new Point(230, 214);
+            textBox1.Name = "textBox1";
+            textBox1.Size = new Size(204, 23);
+            textBox1.TabIndex = 27;
+            // 
+            // buttonGasTempCorr
+            // 
+            buttonGasTempCorr.Location = new Point(445, 214);
+            buttonGasTempCorr.Name = "buttonGasTempCorr";
+            buttonGasTempCorr.Size = new Size(183, 23);
+            buttonGasTempCorr.TabIndex = 28;
+            buttonGasTempCorr.Text = "Gas Temperature Corr";
+            buttonGasTempCorr.UseVisualStyleBackColor = true;
+            buttonGasTempCorr.Click += buttonGasTempCorr_Click;
+            // 
             // ReducerTempCorrection
             // 
             AutoSize = true;
+            Controls.Add(buttonGasTempCorr);
+            Controls.Add(textBox1);
             Controls.Add(checkBoxEnableSmooth);
             Controls.Add(labelRefPressure);
             Controls.Add(textBoxReferencePressure);
@@ -116,6 +159,9 @@ namespace LPGDataAnalyzer.Controls
         private TextBox textBoxReferencePressure;
         private Label labelRefPressure;
         private CheckBox checkBoxEnableSmooth;
+        private TextBox textBox1;
+        private Button buttonGasTempCorr;
         private Button buttonReducerPrediction;
+
     }
 }

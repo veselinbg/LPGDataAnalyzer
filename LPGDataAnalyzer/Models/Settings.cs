@@ -37,8 +37,8 @@
                                                                                         ];
         public static readonly (int Min, int Max, string Label)[] GasTemperatureRanges =
         {
-            (int.MinValue, 0,  "Temp_to_0"),
-            (0, 10,  "Temp_0_10"),
+            (-20, 0,  "Temp_-20_0"),
+            (0, 10, "Temp_0_10"),
             (10, 20, "Temp_11_20"),
             (20, 30, "Temp_21_30"),
             (30, 40, "Temp_31_40"),
@@ -47,7 +47,7 @@
             (60, 70, "Temp_61_70"),
             (70, int.MaxValue, "Temp_71_Over")
         };
-        public static readonly double[] GasTemperatureCorrectionCoef = {-7d,-5d,-3d,-1d,0d,3d,5d,6d,7d };
+        public static readonly double[] GasTemperatureCorrectionCoef = {-7d,-5d,-3d,-1d,0d,2d,4d,6d,8d };
         public static readonly string[] LPGTempGroups = [ALL, .. GasTemperatureRanges.Select(t => t.Label)];
 
         public static string[] GetExistGasTemperatureRanges(DataItem[] data)
@@ -64,7 +64,7 @@
 
         public static readonly (int Min, int Max, string Label)[] ReductorTemperatureRanges =
         {
-            (int.MinValue, 20,  "Temp_to_20"),
+            (int.MinValue, 20,  "Temp_0_20"),
             (20, 25, "Temp_21_25"),
             (25, 30, "Temp_26_30"),
             (30, 35, "Temp_31_35"),
@@ -74,7 +74,7 @@
             (60, 70, "Temp_61_70"),
             (70, int.MaxValue, "Temp_71_over"),
         };
-        public static readonly double[] ReductorTemperatureCorrectionCoef = { -5d,-3d,0d,0d,0d,0d,0d,0d,0d };
+        public static readonly double[] ReductorTemperatureCorrectionCoef = { -9d,-4d,0d,0d,0d,0d,0d,0d,0d };
          
         public static readonly string[] ReductorTempGroups = [ALL, .. ReductorTemperatureRanges.Select(t => t.Label)];
         public static string[] GetExistReductorTempGroups(DataItem[] data)
@@ -101,8 +101,8 @@
 
         public static readonly (double Min, double Max, string Label)[] MapRanges =
        {
-            (0, 0.28,  "Slow Down"),
-            (0.28, 0.4,  "Idle"),
+            (0, 0.33,  "Slow Down"),
+            (0.33, 0.4,  "Idle"),
             (0.4, 0.6,  "Cruise"),
             (0.6, 0.8,  "Acceleration"),
             (0.8, int.MaxValue,  "High load"),
@@ -123,6 +123,18 @@
             Min,
             Max,
             Average
+        }
+        public enum FieldsToShow
+        {
+            AFR,
+            Trim,
+            FastTrim,
+            Ratio,
+            GasTime
+        }
+        public enum Banks
+        {
+            ALL, B1, B2
         }
     }
 }

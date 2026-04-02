@@ -57,6 +57,8 @@ namespace LPGDataAnalyzer.Controls
         private string currentColumn;
         private Dictionary<string, Rectangle> headerButtonRectangles = new();
         private CheckBox selectAllCheckBox = new CheckBox();
+        private BindingSource bindingSource = new();
+        private BindingList<T> bindingList = new();
         public EnterpriseGrid()
         {
             BuildLayout();
@@ -116,6 +118,9 @@ namespace LPGDataAnalyzer.Controls
             grid.CellMouseDown += Grid_CellMouseDown;
             grid.CellPainting += Grid_CellPainting;
             grid.ColumnDisplayIndexChanged += Grid_ColumnDisplayIndexChanged;
+
+            grid.DataSource = bindingSource;
+            bindingSource.DataSource = bindingList;
 
             Controls.Add(filterPanel);
             Controls.Add(grid);
@@ -349,7 +354,7 @@ namespace LPGDataAnalyzer.Controls
         {
             source = data.ToList();
             filtered = source;
-            grid.DataSource = new BindingList<T>(filtered);
+            RefreshBindingList(filtered);
 
             UpdateTitleInfo();
         }
@@ -408,6 +413,9 @@ namespace LPGDataAnalyzer.Controls
             // Prevent panel from going outside the right edge
             if (filterPanel.Right > this.Width)
                 filterPanel.Left = this.Width - filterPanel.Width - 5;
+
+            if (filterPanel.Bottom > this.Height)
+                filterPanel.Top = this.Height - filterPanel.Height - 5;
 
             filterPanel.BringToFront();
             filterPanel.Visible = true;
@@ -547,11 +555,8 @@ namespace LPGDataAnalyzer.Controls
             if (!grid.IsHandleCreated || grid.IsDisposed)
                 return;
 
-            grid.Invoke(() =>
-            {
-                grid.DataSource = new BindingList<T>(filtered);
-                UpdateTitleInfo();
-            });
+            RefreshBindingListSafe(filtered);
+            UpdateTitleInfo();
         }
         private void Grid_CellMouseDown(object sender, DataGridViewCellMouseEventArgs e)
         {
@@ -664,9 +669,32 @@ namespace LPGDataAnalyzer.Controls
                     return val?.ToString();
                 }).ToList();
 
-            grid.DataSource = new BindingList<T>(filtered);
+            RefreshBindingList(filtered);
 
             UpdateHeaderSortArrows();
+        }
+        private void RefreshBindingList(List<T> data)
+        {
+            bindingList.RaiseListChangedEvents = false;
+
+            bindingList.Clear();
+
+            foreach (var item in data)
+                bindingList.Add(item);
+
+            bindingList.RaiseListChangedEvents = true;
+            bindingList.ResetBindings();
+        }
+        private void RefreshBindingListSafe(List<T> data)
+        {
+            if (grid.InvokeRequired)
+            {
+                grid.Invoke(() => RefreshBindingList(data));
+            }
+            else
+            {
+                RefreshBindingList(data);
+            }
         }
         private void UpdateHeaderSortArrows()
         {
@@ -861,11 +889,10 @@ namespace LPGDataAnalyzer.Controls
         {
             if (currentColumn == null) return;
 
+            columnSelections.Remove(currentColumn);
+
             UpdateUI(() =>
             {
-                for (int i = 0; i < valueList.Items.Count; i++)
-                    valueList.SetItemChecked(i, true);
-
                 minBox.Clear();
                 maxBox.Clear();
                 andButton.Checked = true;
@@ -873,7 +900,7 @@ namespace LPGDataAnalyzer.Controls
                 selectAllCheckBox.Checked = true;
             });
 
-            columnSelections.Remove(currentColumn);
+            FilterCheckboxList();
 
             UpdateColumnHeaderStyles();
             UpdateTitleStyle();

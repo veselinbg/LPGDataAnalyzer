@@ -16,80 +16,89 @@
         private void InitializeComponent()
         {
             checkBoxSaveSnapshot = new CheckBox();
-            panel1 = new Panel();
+            panelHistory = new Panel();
             historyControl1 = new HistoryControl();
             textBoxMinCount = new TextBox();
-            checkBoxPreFilter = new CheckBox();
             checkBoxRound = new CheckBox();
             checkBoxOnlyChanges = new CheckBox();
             cbInterpolation = new CheckBox();
             cbEnableSmooth = new CheckBox();
             textBoxLastPredictedFuelTable = new TextBox();
-            panelLegend = new Panel();
-            textBoxImagePath = new TextBox();
             textBoxParsedData = new TextBox();
             buttonValidate = new Button();
             buttonContinue = new Button();
             buttonParceSelectedPhoto = new Button();
-            dataGridViewOrig = new ReadOnlyDataGridView();
-            dataGridViewPrediction = new ReadOnlyDataGridView();
             checkBoxShowOnlyMiplayerChange = new CheckBox();
             textBoxMinValueOfChange = new TextBox();
             checkBoxUseHistory = new CheckBox();
+            textBoxRefPress = new TextBox();
+            tableLayoutPanelMain = new TableLayoutPanel();
+            tableLayoutPanelLeft = new TableLayoutPanel();
+            tableLayoutPanelManagement = new TableLayoutPanel();
+            panel1 = new Panel();
+            panel3 = new Panel();
+            labelMinCount = new Label();
+            labelPress = new Label();
+            labelValueOfChange = new Label();
+            panel4 = new Panel();
+            tableLayoutPanelTopLine = new TableLayoutPanel();
+            textBoxImagePath = new TextBox();
+            tableLayoutPanelRight = new TableLayoutPanel();
+            dataGridViewPrediction = new ReadOnlyDataGridView();
+            dataGridViewOrig = new ReadOnlyDataGridView();
+            panelLegend = new Panel();
+            panelHistory.SuspendLayout();
+            tableLayoutPanelMain.SuspendLayout();
+            tableLayoutPanelLeft.SuspendLayout();
+            tableLayoutPanelManagement.SuspendLayout();
             panel1.SuspendLayout();
+            panel3.SuspendLayout();
+            panel4.SuspendLayout();
+            tableLayoutPanelTopLine.SuspendLayout();
+            tableLayoutPanelRight.SuspendLayout();
             SuspendLayout();
             // 
             // checkBoxSaveSnapshot
             // 
             checkBoxSaveSnapshot.AutoSize = true;
-            checkBoxSaveSnapshot.Location = new Point(895, 401);
+            checkBoxSaveSnapshot.Location = new Point(7, 125);
             checkBoxSaveSnapshot.Name = "checkBoxSaveSnapshot";
             checkBoxSaveSnapshot.Size = new Size(102, 19);
             checkBoxSaveSnapshot.TabIndex = 0;
             checkBoxSaveSnapshot.Text = "Save Snapshot";
             // 
-            // panel1
+            // panelHistory
             // 
-            panel1.Controls.Add(historyControl1);
-            panel1.Location = new Point(888, 434);
-            panel1.Name = "panel1";
-            panel1.Size = new Size(512, 282);
-            panel1.TabIndex = 1;
+            panelHistory.Controls.Add(historyControl1);
+            panelHistory.Dock = DockStyle.Fill;
+            panelHistory.Location = new Point(3, 399);
+            panelHistory.Name = "panelHistory";
+            panelHistory.Size = new Size(836, 355);
+            panelHistory.TabIndex = 1;
             // 
             // historyControl1
             // 
             historyControl1.Dock = DockStyle.Fill;
             historyControl1.Location = new Point(0, 0);
             historyControl1.Name = "historyControl1";
-            historyControl1.Size = new Size(512, 282);
-            historyControl1.TabIndex = 0;
+            historyControl1.Size = new Size(836, 355);
+            historyControl1.TabIndex = 1;
             // 
             // textBoxMinCount
             // 
-            textBoxMinCount.Location = new Point(1239, 379);
+            textBoxMinCount.Location = new Point(364, 98);
             textBoxMinCount.Name = "textBoxMinCount";
             textBoxMinCount.RightToLeft = RightToLeft.Yes;
             textBoxMinCount.Size = new Size(45, 23);
             textBoxMinCount.TabIndex = 2;
-            textBoxMinCount.Text = "3";
-            // 
-            // checkBoxPreFilter
-            // 
-            checkBoxPreFilter.AutoSize = true;
-            checkBoxPreFilter.Checked = true;
-            checkBoxPreFilter.CheckState = CheckState.Checked;
-            checkBoxPreFilter.Location = new Point(1312, 357);
-            checkBoxPreFilter.Name = "checkBoxPreFilter";
-            checkBoxPreFilter.Size = new Size(72, 19);
-            checkBoxPreFilter.TabIndex = 3;
-            checkBoxPreFilter.Text = "Pre Filter";
+            textBoxMinCount.Text = "0";
             // 
             // checkBoxRound
             // 
             checkBoxRound.AutoSize = true;
             checkBoxRound.Checked = true;
             checkBoxRound.CheckState = CheckState.Checked;
-            checkBoxRound.Location = new Point(1245, 357);
+            checkBoxRound.Location = new Point(7, 73);
             checkBoxRound.Name = "checkBoxRound";
             checkBoxRound.Size = new Size(61, 19);
             checkBoxRound.TabIndex = 4;
@@ -98,7 +107,7 @@
             // checkBoxOnlyChanges
             // 
             checkBoxOnlyChanges.AutoSize = true;
-            checkBoxOnlyChanges.Location = new Point(1335, 323);
+            checkBoxOnlyChanges.Location = new Point(3, 48);
             checkBoxOnlyChanges.Name = "checkBoxOnlyChanges";
             checkBoxOnlyChanges.Size = new Size(98, 19);
             checkBoxOnlyChanges.TabIndex = 5;
@@ -107,7 +116,7 @@
             // cbInterpolation
             // 
             cbInterpolation.AutoSize = true;
-            cbInterpolation.Location = new Point(1239, 324);
+            cbInterpolation.Location = new Point(77, 6);
             cbInterpolation.Name = "cbInterpolation";
             cbInterpolation.Size = new Size(94, 19);
             cbInterpolation.TabIndex = 6;
@@ -116,7 +125,7 @@
             // cbEnableSmooth
             // 
             cbEnableSmooth.AutoSize = true;
-            cbEnableSmooth.Location = new Point(1169, 322);
+            cbEnableSmooth.Location = new Point(3, 6);
             cbEnableSmooth.Name = "cbEnableSmooth";
             cbEnableSmooth.Size = new Size(68, 19);
             cbEnableSmooth.TabIndex = 7;
@@ -124,39 +133,25 @@
             // 
             // textBoxLastPredictedFuelTable
             // 
-            textBoxLastPredictedFuelTable.Location = new Point(1153, 29);
+            textBoxLastPredictedFuelTable.Dock = DockStyle.Fill;
+            textBoxLastPredictedFuelTable.Location = new Point(421, 3);
             textBoxLastPredictedFuelTable.Multiline = true;
             textBoxLastPredictedFuelTable.Name = "textBoxLastPredictedFuelTable";
-            textBoxLastPredictedFuelTable.Size = new Size(252, 288);
+            textBoxLastPredictedFuelTable.Size = new Size(412, 171);
             textBoxLastPredictedFuelTable.TabIndex = 8;
-            // 
-            // panelLegend
-            // 
-            panelLegend.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
-            panelLegend.Location = new Point(3, 379);
-            panelLegend.Name = "panelLegend";
-            panelLegend.Size = new Size(818, 45);
-            panelLegend.TabIndex = 9;
-            // 
-            // textBoxImagePath
-            // 
-            textBoxImagePath.Location = new Point(883, 3);
-            textBoxImagePath.Name = "textBoxImagePath";
-            textBoxImagePath.ReadOnly = true;
-            textBoxImagePath.Size = new Size(517, 23);
-            textBoxImagePath.TabIndex = 10;
             // 
             // textBoxParsedData
             // 
-            textBoxParsedData.Location = new Point(883, 29);
+            textBoxParsedData.Dock = DockStyle.Fill;
+            textBoxParsedData.Location = new Point(0, 0);
             textBoxParsedData.Multiline = true;
             textBoxParsedData.Name = "textBoxParsedData";
-            textBoxParsedData.Size = new Size(271, 288);
+            textBoxParsedData.Size = new Size(412, 171);
             textBoxParsedData.TabIndex = 11;
             // 
             // buttonValidate
             // 
-            buttonValidate.Location = new Point(998, 319);
+            buttonValidate.Location = new Point(253, 3);
             buttonValidate.Name = "buttonValidate";
             buttonValidate.Size = new Size(75, 23);
             buttonValidate.TabIndex = 12;
@@ -165,7 +160,7 @@
             // 
             // buttonContinue
             // 
-            buttonContinue.Location = new Point(1079, 319);
+            buttonContinue.Location = new Point(334, 3);
             buttonContinue.Name = "buttonContinue";
             buttonContinue.Size = new Size(75, 23);
             buttonContinue.TabIndex = 13;
@@ -174,35 +169,17 @@
             // 
             // buttonParceSelectedPhoto
             // 
-            buttonParceSelectedPhoto.Location = new Point(883, 317);
+            buttonParceSelectedPhoto.Location = new Point(671, 3);
             buttonParceSelectedPhoto.Name = "buttonParceSelectedPhoto";
-            buttonParceSelectedPhoto.Size = new Size(75, 23);
+            buttonParceSelectedPhoto.Size = new Size(96, 23);
             buttonParceSelectedPhoto.TabIndex = 14;
             buttonParceSelectedPhoto.Text = "Parse";
             buttonParceSelectedPhoto.Click += ButtonParceSelectedImage_Click;
             // 
-            // dataGridViewOrig
-            // 
-            dataGridViewOrig.EnableTitle = false;
-            dataGridViewOrig.Location = new Point(3, 3);
-            dataGridViewOrig.Name = "dataGridViewOrig";
-            dataGridViewOrig.Size = new Size(818, 341);
-            dataGridViewOrig.TabIndex = 17;
-            dataGridViewOrig.Title = "";
-            // 
-            // dataGridViewPrediction
-            // 
-            dataGridViewPrediction.EnableTitle = false;
-            dataGridViewPrediction.Location = new Point(3, 401);
-            dataGridViewPrediction.Name = "dataGridViewPrediction";
-            dataGridViewPrediction.Size = new Size(818, 335);
-            dataGridViewPrediction.TabIndex = 18;
-            dataGridViewPrediction.Title = "";
-            // 
             // checkBoxShowOnlyMiplayerChange
             // 
             checkBoxShowOnlyMiplayerChange.AutoSize = true;
-            checkBoxShowOnlyMiplayerChange.Location = new Point(895, 373);
+            checkBoxShowOnlyMiplayerChange.Location = new Point(7, 48);
             checkBoxShowOnlyMiplayerChange.Name = "checkBoxShowOnlyMiplayerChange";
             checkBoxShowOnlyMiplayerChange.Size = new Size(196, 19);
             checkBoxShowOnlyMiplayerChange.TabIndex = 19;
@@ -211,74 +188,276 @@
             // 
             // textBoxMinValueOfChange
             // 
-            textBoxMinValueOfChange.Location = new Point(1094, 373);
+            textBoxMinValueOfChange.Location = new Point(364, 44);
             textBoxMinValueOfChange.Name = "textBoxMinValueOfChange";
-            textBoxMinValueOfChange.Size = new Size(60, 23);
+            textBoxMinValueOfChange.Size = new Size(45, 23);
             textBoxMinValueOfChange.TabIndex = 20;
-            textBoxMinValueOfChange.Text = "0.8";
+            textBoxMinValueOfChange.Text = "0";
             textBoxMinValueOfChange.TextAlign = HorizontalAlignment.Right;
             // 
             // checkBoxUseHistory
             // 
             checkBoxUseHistory.AutoSize = true;
-            checkBoxUseHistory.Checked = true;
-            checkBoxUseHistory.CheckState = CheckState.Checked;
-            checkBoxUseHistory.Location = new Point(1312, 382);
+            checkBoxUseHistory.Location = new Point(7, 150);
             checkBoxUseHistory.Name = "checkBoxUseHistory";
             checkBoxUseHistory.Size = new Size(86, 19);
             checkBoxUseHistory.TabIndex = 21;
             checkBoxUseHistory.Text = "Use History";
             checkBoxUseHistory.UseVisualStyleBackColor = true;
             // 
+            // textBoxRefPress
+            // 
+            textBoxRefPress.Location = new Point(364, 69);
+            textBoxRefPress.Name = "textBoxRefPress";
+            textBoxRefPress.RightToLeft = RightToLeft.Yes;
+            textBoxRefPress.Size = new Size(45, 23);
+            textBoxRefPress.TabIndex = 22;
+            textBoxRefPress.Text = "1.49";
+            // 
+            // tableLayoutPanelMain
+            // 
+            tableLayoutPanelMain.ColumnCount = 2;
+            tableLayoutPanelMain.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 40F));
+            tableLayoutPanelMain.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 60F));
+            tableLayoutPanelMain.Controls.Add(tableLayoutPanelLeft, 1, 0);
+            tableLayoutPanelMain.Controls.Add(tableLayoutPanelRight, 0, 0);
+            tableLayoutPanelMain.Dock = DockStyle.Fill;
+            tableLayoutPanelMain.Location = new Point(0, 0);
+            tableLayoutPanelMain.Name = "tableLayoutPanelMain";
+            tableLayoutPanelMain.RowCount = 1;
+            tableLayoutPanelMain.RowStyles.Add(new RowStyle());
+            tableLayoutPanelMain.Size = new Size(1413, 763);
+            tableLayoutPanelMain.TabIndex = 24;
+            // 
+            // tableLayoutPanelLeft
+            // 
+            tableLayoutPanelLeft.ColumnCount = 1;
+            tableLayoutPanelLeft.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            tableLayoutPanelLeft.Controls.Add(panelHistory, 0, 2);
+            tableLayoutPanelLeft.Controls.Add(tableLayoutPanelManagement, 0, 1);
+            tableLayoutPanelLeft.Controls.Add(tableLayoutPanelTopLine, 0, 0);
+            tableLayoutPanelLeft.Dock = DockStyle.Fill;
+            tableLayoutPanelLeft.Location = new Point(568, 3);
+            tableLayoutPanelLeft.Name = "tableLayoutPanelLeft";
+            tableLayoutPanelLeft.RowCount = 3;
+            tableLayoutPanelLeft.RowStyles.Add(new RowStyle(SizeType.Absolute, 35F));
+            tableLayoutPanelLeft.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
+            tableLayoutPanelLeft.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
+            tableLayoutPanelLeft.Size = new Size(842, 757);
+            tableLayoutPanelLeft.TabIndex = 25;
+            // 
+            // tableLayoutPanelManagement
+            // 
+            tableLayoutPanelManagement.ColumnCount = 2;
+            tableLayoutPanelManagement.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+            tableLayoutPanelManagement.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+            tableLayoutPanelManagement.Controls.Add(panel1, 0, 0);
+            tableLayoutPanelManagement.Controls.Add(textBoxLastPredictedFuelTable, 1, 0);
+            tableLayoutPanelManagement.Controls.Add(panel3, 0, 1);
+            tableLayoutPanelManagement.Controls.Add(panel4, 1, 1);
+            tableLayoutPanelManagement.Dock = DockStyle.Fill;
+            tableLayoutPanelManagement.Location = new Point(3, 38);
+            tableLayoutPanelManagement.Name = "tableLayoutPanelManagement";
+            tableLayoutPanelManagement.RowCount = 2;
+            tableLayoutPanelManagement.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
+            tableLayoutPanelManagement.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
+            tableLayoutPanelManagement.Size = new Size(836, 355);
+            tableLayoutPanelManagement.TabIndex = 11;
+            // 
+            // panel1
+            // 
+            panel1.Controls.Add(textBoxParsedData);
+            panel1.Dock = DockStyle.Fill;
+            panel1.Location = new Point(3, 3);
+            panel1.Name = "panel1";
+            panel1.Size = new Size(412, 171);
+            panel1.TabIndex = 0;
+            // 
+            // panel3
+            // 
+            panel3.Controls.Add(labelMinCount);
+            panel3.Controls.Add(checkBoxUseHistory);
+            panel3.Controls.Add(labelPress);
+            panel3.Controls.Add(labelValueOfChange);
+            panel3.Controls.Add(checkBoxSaveSnapshot);
+            panel3.Controls.Add(buttonContinue);
+            panel3.Controls.Add(buttonValidate);
+            panel3.Controls.Add(checkBoxShowOnlyMiplayerChange);
+            panel3.Controls.Add(textBoxMinCount);
+            panel3.Controls.Add(textBoxRefPress);
+            panel3.Controls.Add(checkBoxRound);
+            panel3.Controls.Add(textBoxMinValueOfChange);
+            panel3.Dock = DockStyle.Fill;
+            panel3.Location = new Point(3, 180);
+            panel3.Name = "panel3";
+            panel3.Size = new Size(412, 172);
+            panel3.TabIndex = 9;
+            // 
+            // labelMinCount
+            // 
+            labelMinCount.AutoSize = true;
+            labelMinCount.Location = new Point(273, 104);
+            labelMinCount.Name = "labelMinCount";
+            labelMinCount.Size = new Size(64, 15);
+            labelMinCount.TabIndex = 25;
+            labelMinCount.Text = "Min Count";
+            // 
+            // labelPress
+            // 
+            labelPress.AutoSize = true;
+            labelPress.Location = new Point(273, 77);
+            labelPress.Name = "labelPress";
+            labelPress.Size = new Size(34, 15);
+            labelPress.TabIndex = 24;
+            labelPress.Text = "Press";
+            // 
+            // labelValueOfChange
+            // 
+            labelValueOfChange.AutoSize = true;
+            labelValueOfChange.Location = new Point(267, 47);
+            labelValueOfChange.Name = "labelValueOfChange";
+            labelValueOfChange.Size = new Size(91, 15);
+            labelValueOfChange.TabIndex = 23;
+            labelValueOfChange.Text = "Value of change";
+            // 
+            // panel4
+            // 
+            panel4.Controls.Add(cbEnableSmooth);
+            panel4.Controls.Add(cbInterpolation);
+            panel4.Controls.Add(checkBoxOnlyChanges);
+            panel4.Dock = DockStyle.Fill;
+            panel4.Location = new Point(421, 180);
+            panel4.Name = "panel4";
+            panel4.Size = new Size(412, 172);
+            panel4.TabIndex = 10;
+            // 
+            // tableLayoutPanelTopLine
+            // 
+            tableLayoutPanelTopLine.ColumnCount = 2;
+            tableLayoutPanelTopLine.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 80F));
+            tableLayoutPanelTopLine.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 20F));
+            tableLayoutPanelTopLine.Controls.Add(buttonParceSelectedPhoto, 1, 0);
+            tableLayoutPanelTopLine.Controls.Add(textBoxImagePath, 0, 0);
+            tableLayoutPanelTopLine.Dock = DockStyle.Fill;
+            tableLayoutPanelTopLine.Location = new Point(3, 3);
+            tableLayoutPanelTopLine.Name = "tableLayoutPanelTopLine";
+            tableLayoutPanelTopLine.RowCount = 1;
+            tableLayoutPanelTopLine.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+            tableLayoutPanelTopLine.RowStyles.Add(new RowStyle(SizeType.Absolute, 20F));
+            tableLayoutPanelTopLine.Size = new Size(836, 29);
+            tableLayoutPanelTopLine.TabIndex = 12;
+            // 
+            // textBoxImagePath
+            // 
+            textBoxImagePath.Dock = DockStyle.Fill;
+            textBoxImagePath.Location = new Point(3, 3);
+            textBoxImagePath.Name = "textBoxImagePath";
+            textBoxImagePath.Size = new Size(662, 23);
+            textBoxImagePath.TabIndex = 15;
+            // 
+            // tableLayoutPanelRight
+            // 
+            tableLayoutPanelRight.ColumnCount = 1;
+            tableLayoutPanelRight.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            tableLayoutPanelRight.Controls.Add(dataGridViewPrediction, 0, 2);
+            tableLayoutPanelRight.Controls.Add(dataGridViewOrig, 0, 0);
+            tableLayoutPanelRight.Controls.Add(panelLegend, 0, 1);
+            tableLayoutPanelRight.Dock = DockStyle.Fill;
+            tableLayoutPanelRight.Location = new Point(3, 3);
+            tableLayoutPanelRight.Name = "tableLayoutPanelRight";
+            tableLayoutPanelRight.RowCount = 3;
+            tableLayoutPanelRight.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
+            tableLayoutPanelRight.RowStyles.Add(new RowStyle(SizeType.Absolute, 50F));
+            tableLayoutPanelRight.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
+            tableLayoutPanelRight.Size = new Size(559, 757);
+            tableLayoutPanelRight.TabIndex = 23;
+            // 
+            // dataGridViewPrediction
+            // 
+            dataGridViewPrediction.AutoSize = true;
+            dataGridViewPrediction.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+            dataGridViewPrediction.Dock = DockStyle.Fill;
+            dataGridViewPrediction.EnableTitle = false;
+            dataGridViewPrediction.Location = new Point(3, 406);
+            dataGridViewPrediction.Name = "dataGridViewPrediction";
+            dataGridViewPrediction.Size = new Size(553, 348);
+            dataGridViewPrediction.TabIndex = 18;
+            dataGridViewPrediction.Title = "";
+            // 
+            // dataGridViewOrig
+            // 
+            dataGridViewOrig.AutoSize = true;
+            dataGridViewOrig.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+            dataGridViewOrig.Dock = DockStyle.Fill;
+            dataGridViewOrig.EnableTitle = false;
+            dataGridViewOrig.Location = new Point(3, 3);
+            dataGridViewOrig.Name = "dataGridViewOrig";
+            dataGridViewOrig.Size = new Size(553, 347);
+            dataGridViewOrig.TabIndex = 17;
+            dataGridViewOrig.Title = "";
+            // 
+            // panelLegend
+            // 
+            panelLegend.Dock = DockStyle.Fill;
+            panelLegend.Location = new Point(3, 356);
+            panelLegend.Name = "panelLegend";
+            panelLegend.Size = new Size(553, 44);
+            panelLegend.TabIndex = 9;
+            // 
             // PredictionControl
             // 
-            Controls.Add(checkBoxUseHistory);
-            Controls.Add(textBoxMinValueOfChange);
-            Controls.Add(checkBoxShowOnlyMiplayerChange);
-            Controls.Add(dataGridViewPrediction);
-            Controls.Add(dataGridViewOrig);
-            Controls.Add(checkBoxSaveSnapshot);
-            Controls.Add(panel1);
-            Controls.Add(textBoxMinCount);
-            Controls.Add(checkBoxPreFilter);
-            Controls.Add(checkBoxRound);
-            Controls.Add(checkBoxOnlyChanges);
-            Controls.Add(cbInterpolation);
-            Controls.Add(cbEnableSmooth);
-            Controls.Add(textBoxLastPredictedFuelTable);
-            Controls.Add(panelLegend);
-            Controls.Add(textBoxImagePath);
-            Controls.Add(textBoxParsedData);
-            Controls.Add(buttonValidate);
-            Controls.Add(buttonContinue);
-            Controls.Add(buttonParceSelectedPhoto);
+            Controls.Add(tableLayoutPanelMain);
             Name = "PredictionControl";
             Size = new Size(1413, 763);
+            panelHistory.ResumeLayout(false);
+            tableLayoutPanelMain.ResumeLayout(false);
+            tableLayoutPanelLeft.ResumeLayout(false);
+            tableLayoutPanelManagement.ResumeLayout(false);
+            tableLayoutPanelManagement.PerformLayout();
             panel1.ResumeLayout(false);
+            panel1.PerformLayout();
+            panel3.ResumeLayout(false);
+            panel3.PerformLayout();
+            panel4.ResumeLayout(false);
+            panel4.PerformLayout();
+            tableLayoutPanelTopLine.ResumeLayout(false);
+            tableLayoutPanelTopLine.PerformLayout();
+            tableLayoutPanelRight.ResumeLayout(false);
+            tableLayoutPanelRight.PerformLayout();
             ResumeLayout(false);
-            PerformLayout();
         }
 
         private CheckBox checkBoxSaveSnapshot;
-        private Panel panel1;
-        private HistoryControl historyControl1;
+        private Panel panelHistory;
         private TextBox textBoxMinCount;
-        private CheckBox checkBoxPreFilter;
         private CheckBox checkBoxRound;
         private CheckBox checkBoxOnlyChanges;
         private CheckBox cbInterpolation;
         private CheckBox cbEnableSmooth;
         private TextBox textBoxLastPredictedFuelTable;
-        private Panel panelLegend;
-        private TextBox textBoxImagePath;
         private TextBox textBoxParsedData;
         private Button buttonValidate;
         private Button buttonContinue;
         private Button buttonParceSelectedPhoto;
-        private ReadOnlyDataGridView dataGridViewOrig;
-        private ReadOnlyDataGridView dataGridViewPrediction;
         private CheckBox checkBoxShowOnlyMiplayerChange;
         private TextBox textBoxMinValueOfChange;
         private CheckBox checkBoxUseHistory;
+        private TextBox textBoxRefPress;
+        private TableLayoutPanel tableLayoutPanelMain;
+        private Panel panelLegend;
+        private ReadOnlyDataGridView dataGridViewOrig;
+        private ReadOnlyDataGridView dataGridViewPrediction;
+        private TableLayoutPanel tableLayoutPanelRight;
+        private HistoryControl historyControl1;
+        private TableLayoutPanel tableLayoutPanelLeft;
+        private TableLayoutPanel tableLayoutPanelManagement;
+        private Panel panel1;
+        private Panel panel3;
+        private Panel panel4;
+        private Label labelMinCount;
+        private Label labelPress;
+        private Label labelValueOfChange;
+        private TableLayoutPanel tableLayoutPanelTopLine;
+        private TextBox textBoxImagePath;
     }
 }

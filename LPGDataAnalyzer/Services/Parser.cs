@@ -75,6 +75,62 @@ namespace LPGDataAnalyzer.Services
 
             return item;
         }
+        public static Dictionary<string, DataItem[]> LoadAllSavedData()
+        {
+            Dictionary<string, DataItem[]> result = [];
+            //open all saved files and parse the and use the data. 
+            List<string> txtFiles = new List<string>();
+            var directoryPath = "C:\\Users\\veselin.ivanov\\Documents\\MultipointInj\\Acquisition";
+            try
+            {
+                // Check if the directory exists
+                if (Directory.Exists(directoryPath))
+                {
+                    // Get all .txt files in the directory (including subdirectories)
+                    string[] files = Directory.GetFiles(directoryPath, "*.txt", SearchOption.AllDirectories);
+
+                    foreach (var file in files)
+                    {
+                        txtFiles.Add(file); // Add file path to the list
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("The directory does not exist.");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"An error occurred: {ex.Message}");
+            }
+
+            int i = 0;
+            foreach (var file in txtFiles)
+            {
+                var p = new Parser();
+                p.Load(file);
+                result.Add(new FileInfo(file).Name, p.Data);
+            }
+            return result;
+        }
+        public static void Do()
+        {
+            var data = LoadAllSavedData();
+            double mingastemp = 110d;
+            string fileName;
+
+            foreach (var item in data)
+            {
+                var values = data[item.Key];
+                var minVal = values.Min(x => x.Temp_GAS);
+                if(mingastemp > minVal)
+                {
+                    fileName = item.Key;
+                    mingastemp = minVal;
+                }
+            }
+            
+        }
         void openAllSavedFilesAndparsethem()
         {
             //open all saved files and parse the and use the data. 
