@@ -77,7 +77,7 @@ namespace LPGDataAnalyzer.Controls
             historySnapshots = checkBoxUseHistory.Checked ? historySnapshots : null;
             var referencePressure = double.Parse(textBoxRefPress.Text.Trim());
             var tableNew = FuelMapPrediction.BuildTable(Data, table, referencePressure, historySnapshots, textBoxMinCount.Text.Trim().ToInt(),
-                cbEnableSmooth.Checked, cbInterpolation.Checked, checkBoxOnlyChanges.Checked,
+                checkboxEnableSmooth.Checked, checkboxInterpolation.Checked, checkBoxOnlyChanges.Checked,
                 checkBoxRound.Checked, checkBoxShowOnlyMiplayerChange.Checked, textBoxMinValueOfChange.Text.Trim().ToDouble());
 
             if (checkBoxSaveSnapshot.Checked)

@@ -21,8 +21,8 @@
             textBoxMinCount = new TextBox();
             checkBoxRound = new CheckBox();
             checkBoxOnlyChanges = new CheckBox();
-            cbInterpolation = new CheckBox();
-            cbEnableSmooth = new CheckBox();
+            checkboxInterpolation = new CheckBox();
+            checkboxEnableSmooth = new CheckBox();
             textBoxLastPredictedFuelTable = new TextBox();
             textBoxParsedData = new TextBox();
             buttonValidate = new Button();
@@ -113,23 +113,23 @@
             checkBoxOnlyChanges.TabIndex = 5;
             checkBoxOnlyChanges.Text = "Only changes";
             // 
-            // cbInterpolation
+            // checkboxInterpolation
             // 
-            cbInterpolation.AutoSize = true;
-            cbInterpolation.Location = new Point(77, 6);
-            cbInterpolation.Name = "cbInterpolation";
-            cbInterpolation.Size = new Size(94, 19);
-            cbInterpolation.TabIndex = 6;
-            cbInterpolation.Text = "Interpolation";
+            checkboxInterpolation.AutoSize = true;
+            checkboxInterpolation.Location = new Point(77, 6);
+            checkboxInterpolation.Name = "checkboxInterpolation";
+            checkboxInterpolation.Size = new Size(94, 19);
+            checkboxInterpolation.TabIndex = 6;
+            checkboxInterpolation.Text = "Interpolation";
             // 
-            // cbEnableSmooth
+            // checkboxEnableSmooth
             // 
-            cbEnableSmooth.AutoSize = true;
-            cbEnableSmooth.Location = new Point(3, 6);
-            cbEnableSmooth.Name = "cbEnableSmooth";
-            cbEnableSmooth.Size = new Size(68, 19);
-            cbEnableSmooth.TabIndex = 7;
-            cbEnableSmooth.Text = "Smooth";
+            checkboxEnableSmooth.AutoSize = true;
+            checkboxEnableSmooth.Location = new Point(3, 6);
+            checkboxEnableSmooth.Name = "checkboxEnableSmooth";
+            checkboxEnableSmooth.Size = new Size(68, 19);
+            checkboxEnableSmooth.TabIndex = 7;
+            checkboxEnableSmooth.Text = "Smooth";
             // 
             // textBoxLastPredictedFuelTable
             // 
@@ -322,8 +322,8 @@
             // 
             // panel4
             // 
-            panel4.Controls.Add(cbEnableSmooth);
-            panel4.Controls.Add(cbInterpolation);
+            panel4.Controls.Add(checkboxEnableSmooth);
+            panel4.Controls.Add(checkboxInterpolation);
             panel4.Controls.Add(checkBoxOnlyChanges);
             panel4.Dock = DockStyle.Fill;
             panel4.Location = new Point(421, 180);
@@ -432,8 +432,8 @@
         private TextBox textBoxMinCount;
         private CheckBox checkBoxRound;
         private CheckBox checkBoxOnlyChanges;
-        private CheckBox cbInterpolation;
-        private CheckBox cbEnableSmooth;
+        private CheckBox checkboxInterpolation;
+        private CheckBox checkboxEnableSmooth;
         private TextBox textBoxLastPredictedFuelTable;
         private TextBox textBoxParsedData;
         private Button buttonValidate;
