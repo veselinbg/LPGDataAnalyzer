@@ -43,7 +43,7 @@ namespace LPGDataAnalyzer
 
             Parser.Load(AppSettings.LastSavedFilePath);
 
-            if (Parser.Data.Any())
+            if (Parser.Data.Length != 0)
             {
                 dataGridViewMainData.SetData(Parser.Data);
 
@@ -52,6 +52,7 @@ namespace LPGDataAnalyzer
                 temperatureAnalyzerui1.LoadData(Parser.Data);
                 reducerTempCorrection1.Data = Parser.Data;
 
+                mapAnalyzerUI.LoadData(Parser.Data);
 
                 toolStripSummary.Text = $"Total Rows: {Parser.Data.Length} " +
                     $"LPG: Min Temp: {Parser.Data.Min(x => x.Temp_GAS)} Max Temp: {Parser.Data.Max(x => x.Temp_GAS)}" +
@@ -60,39 +61,6 @@ namespace LPGDataAnalyzer
             }
             else MessageBox.Show("Invalid data.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
-
-       
-
-        public static void LoadDataSource(DataGridView dataGridView, object? dataSource)
-        {
-            dataGridView.DataSource = dataSource;
-        }
-        private void buttonAnalysisByMap_Click(object sender, EventArgs e)
-        {
-            var mapAnalysis = MapRpmAnalyzer.BuildTableByMap(Parser.Data);
-
-            LoadDataSource(dataGridViewMapAnalysis, mapAnalysis);
-
-            //var drivingModeAnalysis = Analyser.BuildTableByDrivingRange(Parser.Data);
-
-            //LoadDataSource(dataGridViewInjectionTimeAnalisys, drivingModeAnalysis.ToList());
-
-            var bankTobank = MapRpmAnalyzer.BuildBankToBankfuelBalance(Parser.Data);
-            LoadDataSource(dataGridView1, bankTobank);
-
-        }
-
-        private void button1_Click(object sender, EventArgs e)
-        {
-            var a2 = MapRpmAnalyzer.BuildABankAwareLPGBaseMap(Parser.Data);
-
-            LoadDataSource(dataGridViewInjectionTimeAnalisys, a2);
-
-            var a3 = MapRpmAnalyzer.LpgInjectorDeadTimeEstimation(Parser.Data);
-            LoadDataSource(dataGridView1, a3);
-        }
-
-        
 
 
         private void buttonExtraInjectionCalculator_Click(object sender, EventArgs e)

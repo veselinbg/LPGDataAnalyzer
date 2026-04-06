@@ -36,14 +36,34 @@
             labelReductor2 = new Label();
             labelAggregation = new Label();
             buttonTable = new TableLayoutPanel();
-            panel1 = new Panel();
-            comboBoxFieldsToShow = new ComboBox();
-            comboBoxAggregation = new ComboBox();
+            panelBank1 = new Panel { Dock = DockStyle.Fill };
+            panelBank2 = new Panel { Dock = DockStyle.Fill };
+
+            comboBoxFieldsToShowBank1 = new ComboBox();
+            comboBoxFieldsToShowBank2 = new ComboBox();
+            comboBoxAggregationBank1 = new ComboBox();
+            comboBoxAggregationBank2 = new ComboBox();
+            labelBank1 = new Label { Text = "Bank1", Dock = DockStyle.Fill };
+            labelBank2 = new Label { Text = "Bank2", Dock = DockStyle.Fill };
+
             tableLayoutPanelAnalyses.SuspendLayout();
             topPanel.SuspendLayout();
             topLayout.SuspendLayout();
             buttonTable.SuspendLayout();
-            panel1.SuspendLayout();
+            panelBank1.SuspendLayout();
+            panelBank2.SuspendLayout();
+
+            comboBoxAggregationBank1.Dock = DockStyle.Top;
+            comboBoxFieldsToShowBank1.Dock = DockStyle.Top;
+            panelBank1.Controls.Add(comboBoxFieldsToShowBank1);
+            panelBank1.Controls.Add(comboBoxAggregationBank1);
+
+            comboBoxAggregationBank2.Dock = DockStyle.Top;
+            comboBoxFieldsToShowBank2.Dock = DockStyle.Top;
+
+            panelBank2.Controls.Add(comboBoxFieldsToShowBank2);
+            panelBank2.Controls.Add(comboBoxAggregationBank2);
+
             SuspendLayout();
             // 
             // buttonShowSummary
@@ -88,7 +108,6 @@
             // 
             checkedListGasTemperatureb2.CheckOnClick = true;
             checkedListGasTemperatureb2.Dock = DockStyle.Fill;
-            checkedListGasTemperatureb2.Location = new Point(483, 26);
             checkedListGasTemperatureb2.Name = "checkedListGasTemperatureb2";
             checkedListGasTemperatureb2.Size = new Size(234, 91);
             checkedListGasTemperatureb2.TabIndex = 7;
@@ -98,7 +117,6 @@
             // 
             checkedListGasTemperatureb1.CheckOnClick = true;
             checkedListGasTemperatureb1.Dock = DockStyle.Fill;
-            checkedListGasTemperatureb1.Location = new Point(3, 26);
             checkedListGasTemperatureb1.Name = "checkedListGasTemperatureb1";
             checkedListGasTemperatureb1.Size = new Size(234, 91);
             checkedListGasTemperatureb1.TabIndex = 5;
@@ -181,24 +199,38 @@
             // 
             // topLayout
             // 
-            topLayout.ColumnCount = 6;
-            topLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 16F));
-            topLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 16F));
-            topLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 16F));
-            topLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 16F));
-            topLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 12F));
-            topLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 24F));
+            topLayout.ColumnCount = 7;
+            topLayout.ColumnStyles.Clear();
+
+            topLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 14F)); // GasTemp1
+            topLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 14F)); // Reductor1
+            topLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 18F)); // Bank1 controls 👈 NEW
+            topLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 14F)); // GasTemp2
+            topLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 14F)); // Reductor2
+            topLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 14F)); // Bank2 controls 👈 NEW
+            topLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 12F)); // Buttons
+
             topLayout.Controls.Add(labelGasTemp1, 0, 0);
             topLayout.Controls.Add(labelReductor1, 1, 0);
-            topLayout.Controls.Add(labelGasTemp2, 2, 0);
-            topLayout.Controls.Add(labelReductor2, 3, 0);
-            topLayout.Controls.Add(labelAggregation, 4, 0);
+            topLayout.Controls.Add(labelGasTemp2, 3, 0);
+            topLayout.Controls.Add(labelReductor2, 4, 0);
+
+            // Row 1 (controls)
             topLayout.Controls.Add(checkedListGasTemperatureb1, 0, 1);
             topLayout.Controls.Add(checkedListReductorTempGroup1, 1, 1);
-            topLayout.Controls.Add(checkedListGasTemperatureb2, 2, 1);
-            topLayout.Controls.Add(checkedListReductorTempGroup2, 3, 1);
-            topLayout.Controls.Add(buttonTable, 5, 1);
-            topLayout.Controls.Add(panel1, 4, 1);
+
+            topLayout.Controls.Add(panelBank1, 2, 1); // 👈 NEW POSITION (between groups)
+
+            topLayout.Controls.Add(checkedListGasTemperatureb2, 3, 1);
+            topLayout.Controls.Add(checkedListReductorTempGroup2, 4, 1);
+
+            topLayout.Controls.Add(panelBank2, 5, 1); // 👈 NEW (before buttons)
+
+            topLayout.Controls.Add(buttonTable, 6, 1);
+
+
+            topLayout.Controls.Add(labelBank1, 2, 0);
+            topLayout.Controls.Add(labelBank2, 5, 0);
             topLayout.Dock = DockStyle.Fill;
             topLayout.Location = new Point(0, 0);
             topLayout.Name = "topLayout";
@@ -258,34 +290,7 @@
             buttonTable.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
             buttonTable.Size = new Size(354, 91);
             buttonTable.TabIndex = 10;
-            // 
-            // panel1
-            // 
-            panel1.Controls.Add(comboBoxFieldsToShow);
-            panel1.Controls.Add(comboBoxAggregation);
-            panel1.Dock = DockStyle.Fill;
-            panel1.Location = new Point(963, 26);
-            panel1.Name = "panel1";
-            panel1.Size = new Size(174, 91);
-            panel1.TabIndex = 11;
-            // 
-            // comboBoxFieldsToShow
-            // 
-            comboBoxFieldsToShow.Dock = DockStyle.Fill;
-            comboBoxFieldsToShow.FormattingEnabled = true;
-            comboBoxFieldsToShow.Location = new Point(0, 23);
-            comboBoxFieldsToShow.Name = "comboBoxFieldsToShow";
-            comboBoxFieldsToShow.Size = new Size(174, 23);
-            comboBoxFieldsToShow.TabIndex = 11;
-            // 
-            // comboBoxAggregation
-            // 
-            comboBoxAggregation.Dock = DockStyle.Top;
-            comboBoxAggregation.Location = new Point(0, 0);
-            comboBoxAggregation.Name = "comboBoxAggregation";
-            comboBoxAggregation.Size = new Size(174, 23);
-            comboBoxAggregation.TabIndex = 10;
-            // 
+            //
             // AnalysisUC
             // 
             Controls.Add(tableLayoutPanelAnalyses);
@@ -297,7 +302,8 @@
             topPanel.ResumeLayout(false);
             topLayout.ResumeLayout(false);
             buttonTable.ResumeLayout(false);
-            panel1.ResumeLayout(false);
+            panelBank1.ResumeLayout(false);
+            panelBank2.ResumeLayout(false);
             ResumeLayout(false);
         }
 
@@ -316,14 +322,18 @@
         private Panel topPanel;
         private TableLayoutPanel topLayout;
         private TableLayoutPanel buttonTable;
-
+        private Label labelBank1;
+        private Label labelBank2;
         private Label labelGasTemp1;
         private Label labelGasTemp2;
         private Label labelReductor1;
         private Label labelReductor2;
         private Label labelAggregation;
-        private Panel panel1;
-        private ComboBox comboBoxFieldsToShow;
-        private ComboBox comboBoxAggregation;
+        private Panel panelBank1;
+        private Panel panelBank2;
+        private ComboBox comboBoxFieldsToShowBank1;
+        private ComboBox comboBoxFieldsToShowBank2;
+        private ComboBox comboBoxAggregationBank1;
+        private ComboBox comboBoxAggregationBank2;
     }
 }

@@ -332,7 +332,8 @@ namespace LPGDataAnalyzer.Controls
                 clearFiltersButton.Visible = true;
             }
 
-            UpdateTitleStyle();
+            titleLabel.Font = new Font(titleLabel.Font, columnSelections.Count > 0 ? System.Drawing.FontStyle.Bold : System.Drawing.FontStyle.Regular);
+
         }
         private async Task ClearAllFilters()
         {
@@ -344,9 +345,6 @@ namespace LPGDataAnalyzer.Controls
                 minBox.Clear();
                 maxBox.Clear();
             });
-
-            UpdateColumnHeaderStyles();
-            UpdateTitleStyle();
 
             await ApplyFiltersAsync();
         }
@@ -371,17 +369,18 @@ namespace LPGDataAnalyzer.Controls
             if (InvokeRequired)
             {
                 Invoke(() => UpdateUI(action));
-                return;
             }
-
-            isUpdatingUI = true;
-            try
+            else
             {
-                action();
-            }
-            finally
-            {
-                isUpdatingUI = false;
+                isUpdatingUI = true;
+                try
+                {
+                    action();
+                }
+                finally
+                {
+                    isUpdatingUI = false;
+                }
             }
         }
         private void ShowFilterPanel(string column, Point headerLocation)
@@ -421,10 +420,6 @@ namespace LPGDataAnalyzer.Controls
             filterPanel.Visible = true;
         }
 
-        private void UpdateTitleStyle()
-        {
-            titleLabel.Font = new System.Drawing.Font(titleLabel.Font, columnSelections.Count > 0 ? System.Drawing.FontStyle.Bold : System.Drawing.FontStyle.Regular);
-        }
 
         private void UpdateColumnHeaderStyles()
         {
@@ -556,6 +551,7 @@ namespace LPGDataAnalyzer.Controls
                 return;
 
             RefreshBindingListSafe(filtered);
+            UpdateColumnHeaderStyles();
             UpdateTitleInfo();
         }
         private void Grid_CellMouseDown(object sender, DataGridViewCellMouseEventArgs e)
@@ -709,8 +705,7 @@ namespace LPGDataAnalyzer.Controls
         {
             if (currentColumn == null) return;
 
-            if (!columnSelections.TryGetValue(currentColumn, out var sel))
-                sel = new ColumnFilterSelection();
+            columnSelections.TryGetValue(currentColumn, out var sel);
 
             // Apply all OTHER filters
             var data = ApplyFiltersExcept(currentColumn);
@@ -744,9 +739,7 @@ namespace LPGDataAnalyzer.Controls
             {
                 valueList.Items.Clear();
 
-                selectAllCheckBox.Checked =
-                        sel.SelectedValues.Count == 0 ||
-                        values.All(v => sel.SelectedValues.Contains(v));
+                selectAllCheckBox.Checked = sel is null || values.All(v => sel.SelectedValues.Contains(v));
 
                 foreach (var v in values)
                 {
@@ -756,8 +749,7 @@ namespace LPGDataAnalyzer.Controls
                         Count = counts[v]
                     };
 
-                    bool isChecked =
-                        sel.SelectedValues.Count == 0 || sel.SelectedValues.Contains(v);
+                    bool isChecked = sel is null || sel.SelectedValues.Contains(v);
 
                     valueList.Items.Add(item, isChecked);
                 }
@@ -880,9 +872,6 @@ namespace LPGDataAnalyzer.Controls
 
             columnSelections[currentColumn] = sel;
 
-            UpdateColumnHeaderStyles();
-            UpdateTitleStyle();
-
             await ApplyFiltersAsync();
         }
         private async Task ResetFilterPanel()
@@ -901,9 +890,6 @@ namespace LPGDataAnalyzer.Controls
             });
 
             FilterCheckboxList();
-
-            UpdateColumnHeaderStyles();
-            UpdateTitleStyle();
 
             await ApplyFiltersAsync();
         }

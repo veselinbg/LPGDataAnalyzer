@@ -82,14 +82,16 @@ namespace LPGDataAnalyzer.Controls
 
             if (checkBoxSaveSnapshot.Checked)
             {
-                historyControl1.AddSnapshot(Data, table, tableNew);
+                historyControl1.AddSnapshot(Data, table, tableNew.result);
             }
 
-            textBoxLastPredictedFuelTable.Text = tableNew.ToText();
+            textBoxLastPredictedFuelTable.Text = tableNew.result.ToText();
             AppSettings.LastPredictedFuelTable = textBoxLastPredictedFuelTable.Text;
             AppSettingManager.Save(AppSettings);
 
-            PreviewPrediction(table, tableNew);
+            PreviewPrediction(table, tableNew.result);
+
+            ReadOnlyDataGridView.ShowStatisticForm(this, tableNew.invalidItems, 0);
         }
 
         private void ButtonParceSelectedImage_Click(object sender, EventArgs e)

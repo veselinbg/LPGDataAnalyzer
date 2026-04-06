@@ -100,7 +100,7 @@ namespace LPGDataAnalyzer.Controls
         }
         private void DataGridView_CellFormatting(object? sender, DataGridViewCellFormattingEventArgs e)
         {
-            if (e.ColumnIndex == dataGridView.Columns["InjectionTime"].Index)
+            if (dataGridView.Columns.Contains("InjectionTime") && e.ColumnIndex == dataGridView.Columns["InjectionTime"].Index)
             {
                 dataGridView.ApplyLightHeaderStyle(e.CellStyle);
             }
@@ -119,12 +119,18 @@ namespace LPGDataAnalyzer.Controls
                      (x.BENZ_b2 > range.Min && x.BENZ_b2 <= range.Max)))
                     .ToList();
                 var cellValue = currentTable[e.ColumnIndex - 1, e.RowIndex];
-                var form = new Statsistics(dataItem, cellValue)
-                {
-                    Text = "Detailed Statistics"
-                };
-                form.ShowDialog(this);
+
+                ShowStatisticForm(this, dataItem, cellValue);
             }
+        }
+
+        public static void ShowStatisticForm(IWin32Window? owner, List<DataItem> data, double? value)
+        {
+            var form = new Statsistics(data, value)
+            {
+                Text = "Detailed Statistics"
+            };
+            form.ShowDialog(owner);
         }
         private void CreateColumns(IEnumerable<int> rpmColumns)
         {

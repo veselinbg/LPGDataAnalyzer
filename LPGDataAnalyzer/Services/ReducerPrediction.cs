@@ -41,26 +41,24 @@ namespace LPGDataAnalyzer.Services
                     g => g.Key,
                     g => g.Average(x => x.Error)
                 );
-
+            errorsByRange.TryGetValue("Temp_31_40", out var baseError);
+            //if you want this value alwayes to be 0. comment next row.
+            baseError = 0;
             // Compute new corrections
             var result = new Dictionary<string, double>();
 
             foreach (var (range, oldValue) in currentCorrections)
             {
-                if (!errorsByRange.TryGetValue(range, out var error))
+                if (errorsByRange.TryGetValue(range, out var error))
                 {
-                    result[range] = oldValue; // no data → freeze
-                    continue;
+                    result[range] = (oldValue + error - baseError).Round();
                 }
-
-                //int step = ComputeStep(error);
-                //int newValue = oldValue + step;
-
-                double newValue = oldValue + error;
-                result[range] = newValue.Round();
+                else
+                {
+                    result[range] = (oldValue - baseError).Round();
+                }
             }
             return result;
-            //return enableSmooth ? SmoothIntCorrections(result) : result;
         }
 
         private static bool IsValid(DataItem d) =>
@@ -74,36 +72,6 @@ namespace LPGDataAnalyzer.Services
                 .Label;
         }
 
-        private static int ComputeStep(double error)
-        {
-            if (Math.Abs(error) < 1.0) return 0;           // dead zone
-            if (Math.Abs(error) < 3.0) return Math.Sign(error) * 1;
-            if (Math.Abs(error) < 6.0) return Math.Sign(error) * 2;
-            return Math.Sign(error) * 3;                   // hard limit per update
-        }
-
-        private static Dictionary<string, int> SmoothIntCorrections(Dictionary<string, int> table)
-        {
-            var keys = Settings.ReductorTemperatureRanges
-                .Select(r => r.Label)
-                .Where(table.ContainsKey)
-                .ToList();
-
-            var smoothed = new Dictionary<string, int>();
-
-            for (int i = 0; i < keys.Count; i++)
-            {
-                int sum = table[keys[i]];
-                int count = 1;
-
-                if (i > 0) { sum += table[keys[i - 1]]; count++; }
-                if (i < keys.Count - 1) { sum += table[keys[i + 1]]; count++; }
-
-                smoothed[keys[i]] = (int)Math.Round(sum / (double)count);
-            }
-
-            return smoothed;
-        }
 
         // ---------------- Core Error Calculation ----------------
         private static double CalculateError(

@@ -84,10 +84,10 @@ namespace LPGDataAnalyzer.Services
 
         private static bool TryValidate(DataItem d)
         {
-            return !(d.MAP > 0.9 && (d.BENZ_b1 <= 4 || d.BENZ_b2 <= 4));
+            return !(d.MAP > 0.85 && (d.BENZ_b1 <= 4 || d.BENZ_b2 <= 4));
         }
 
-        public static double?[,] BuildTable(
+        public static (double?[,] result, List<DataItem> invalidItems) BuildTable(
             DataItem[] logs,
             double?[,] cellMap,
             double referencePressure,
@@ -98,8 +98,11 @@ namespace LPGDataAnalyzer.Services
             bool showOnlyChanges = false,
             bool round = true,
             bool showOnlyMultiplayer = false,
-            double minChangeValue = 0.5d)
+            double minChangeValue = 0.5d,
+            double benzDiffMax = 10d)
         {
+            Dictionary<int, DataItem> invalidItems = [];
+            Dictionary<int, (double Min, double Max)> MapRanges = [];
             int rpmLength = Settings.RpmColumns.Length;
             int injLength = Settings.InjectionRanges.Length;
 
@@ -119,13 +122,23 @@ namespace LPGDataAnalyzer.Services
                 logsByInjectionB2[injIndex] = logs
                     .Where(d => d.BENZ_b2 > inj.Min && d.BENZ_b2 <= inj.Max)
                     .ToArray();
-            }
 
+                if (logsByInjectionB1.Length != 0 || logsByInjectionB2.Length != 0)
+                {
+                    var logByInjection = logsByInjectionB1[injIndex].Concat(logsByInjectionB2[injIndex]).Where(x=>x.BENZ_Diff < benzDiffMax);
+                    var mapMin = logByInjection.Min(x => x.MAP);
+                    var mapMedian = logByInjection.Select(x => x.MAP).Median();
+                    var mapMax = mapMedian + mapMedian*25/100;
+
+                    MapRanges.Add(injIndex, (mapMin, mapMax.Round()));
+                }
+            }
             // 🔥 Main loop
             for (int injIndex = 0; injIndex < injLength; injIndex++)
             {
                 var injLogsB1 = logsByInjectionB1[injIndex];
                 var injLogsB2 = logsByInjectionB2[injIndex];
+                var mapRange = MapRanges[injIndex];
 
                 for (int rpmIndex = 0; rpmIndex < rpmLength; rpmIndex++)
                 {
@@ -133,15 +146,16 @@ namespace LPGDataAnalyzer.Services
 
                     int count = 0;
                     double[] buffer = new double[injLogsB1.Length + injLogsB2.Length];
-
+                    
                     // ✅ B1
                     for (int i = 0; i < injLogsB1.Length; i++)
                     {
                         var d = injLogsB1[i];
 
-                        if (!TryValidate(d))
+                        if (d.MAP < mapRange.Min || d.MAP > mapRange.Max)
                         {
-                            throw new InvalidDataException($"This dataitem is invalid {d.TEMPO}.");
+                            invalidItems.TryAdd(d.TEMPO, d);
+                            continue;
                         }
 
                         if (d.RPM > rpm.Min && d.RPM <= rpm.Max)
@@ -156,9 +170,10 @@ namespace LPGDataAnalyzer.Services
                     {
                         var d = injLogsB2[i];
 
-                        if (!TryValidate(d))
+                        if (d.MAP < mapRange.Min || d.MAP > mapRange.Max)
                         {
-                            throw new InvalidDataException($"This dataitem is invalid {d.TEMPO}.");
+                            invalidItems.TryAdd(d.TEMPO, d);
+                            continue;
                         }
 
                         if (d.RPM > rpm.Min && d.RPM <= rpm.Max)
@@ -227,7 +242,7 @@ namespace LPGDataAnalyzer.Services
 
             RoundFuelMap(result, round ? 0 : 2);
 
-            return result;
+            return (result, invalidItems.Values.ToList());
         }
         private static double GetTemperatureCoef(double value, (int Min, int Max, string Label)[] ranges, double[] coefs)
         {
@@ -241,9 +256,9 @@ namespace LPGDataAnalyzer.Services
         {
             double lpgCoef = GetTemperatureCoef(tempGas, Settings.GasTemperatureRanges, Settings.GasTemperatureCorrectionCoef);
             double ridCoef = GetTemperatureCoef(tempRid, Settings.ReductorTemperatureRanges, Settings.ReductorTemperatureCorrectionCoef);
-            double pressCoef = (press - referencePressure) / referencePressure;
+            double pressCoef = (referencePressure - press) / referencePressure;
 
-            return trim * (1 - pressCoef + lpgCoef / 100 + ridCoef / 100);
+            return trim * (1 + pressCoef + lpgCoef / 100 + ridCoef / 100);
         }
         public static double CalculatePressCoef(double referencePressure, double value)
         {

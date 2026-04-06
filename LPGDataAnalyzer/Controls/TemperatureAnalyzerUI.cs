@@ -9,12 +9,12 @@ namespace LPGDataAnalyzer.Controls
         // External data to analyze
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
 
-        private DataGridViewUC dataGridViewGasData;
-        private DataGridViewUC dataGridViewRIDData;
-        private DataGridViewUC dataGridViewReducerLag;
-        private DataGridViewUC dataGridViewInjectionVsTemp;
-        private DataGridViewUC dataGridViewSlowAndGetMinMax;
-        private DataGridViewUC dataGridViewAverageTrimByTempGas;
+        private ReadOnlyDataGridView dataGridViewGasData;
+        private ReadOnlyDataGridView dataGridViewRIDData;
+        private ReadOnlyDataGridView dataGridViewReducerLag;
+        private ReadOnlyDataGridView dataGridViewInjectionVsTemp;
+        private ReadOnlyDataGridView dataGridViewSlowAndGetMinMax;
+        private ReadOnlyDataGridView dataGridViewAverageTrimByTempGas;
 
         public TemperatureAnalyzerUI()
         {
@@ -40,18 +40,23 @@ namespace LPGDataAnalyzer.Controls
             var tabInjection = new TabPage("Injection");
             var tabDiag = new TabPage("Diagnostics");
 
-            tabControl.TabPages.AddRange(new[] { tabGas, tabReducer, tabInjection, tabDiag });
+            tabControl.TabPages.Add(tabGas);
+            tabControl.TabPages.Add(tabReducer);
+            tabControl.TabPages.Add(tabInjection);
+            tabControl.TabPages.Add(tabDiag);
 
             // GAS TAB
-            tabGas.Controls.Add(CreateVerticalSplit(
+            tabGas.Controls.Add(CreateSplit(
                 Wrap("Gas Temperature Summary", dataGridViewGasData),
-                Wrap("Average Trim by Gas Temperature", dataGridViewAverageTrimByTempGas)
+                Wrap("Average Trim by Gas Temperature", dataGridViewAverageTrimByTempGas),
+                Orientation.Vertical
             ));
 
             // REDUCER TAB
-            tabReducer.Controls.Add(CreateVerticalSplit(
+            tabReducer.Controls.Add(CreateSplit(
                 Wrap("Reducer Temperature Summary", dataGridViewRIDData),
-                Wrap("Reducer Thermal Lag Analysis", dataGridViewReducerLag)
+                Wrap("Reducer Thermal Lag Analysis", dataGridViewReducerLag),
+                Orientation.Vertical
             ));
 
             // INJECTION TAB
@@ -65,30 +70,34 @@ namespace LPGDataAnalyzer.Controls
             );
             Controls.Add(tabControl);
         }
-        private DataGridViewUC CreateGrid(string name)
+        private ReadOnlyDataGridView CreateGrid(string name)
         {
-            return new DataGridViewUC
+            return new ReadOnlyDataGridView
             {
-                Name = name,
+                Title = name,
                 Dock = DockStyle.Fill,
+                
                 Tag = name // useful for logging/debugging
             };
         }
-        private Control CreateVerticalSplit(Control top, Control bottom)
+        private Control CreateSplit(Control top, Control bottom, Orientation orientation = Orientation.Horizontal)
         {
             var split = new SplitContainer
             {
                 Dock = DockStyle.Fill,
-                Orientation = Orientation.Horizontal
+                Orientation = orientation
             };
 
             split.Panel1.Controls.Add(top);
             split.Panel2.Controls.Add(bottom);
 
-            // ✅ Make it equal AFTER layout is calculated
-            split.Resize += (s, e) =>
+            // Set once when control is first shown
+            split.HandleCreated += (s, e) =>
             {
-                split.SplitterDistance = (int)(split.Height * 0.65);
+                if (orientation == Orientation.Horizontal)
+                    split.SplitterDistance = (int)(split.Height * 0.35);
+                else
+                    split.SplitterDistance = (int)(split.Width * 0.75);
             };
 
             return split;
@@ -165,20 +174,20 @@ namespace LPGDataAnalyzer.Controls
             if (data == null || data.Length == 0) return;
 
             // Gas Temperature Analysis
-            dataGridViewGasData.DataSource = TempeatureAnalyzer.GasTemperatureRanges(data);
-            FormatGrid(dataGridViewGasData);
+            dataGridViewGasData.Grid.DataSource = TempeatureAnalyzer.GasTemperatureRanges(data);
+            FormatGrid(dataGridViewGasData.Grid);
             // Reductor Temperature Analysis
-            dataGridViewRIDData.DataSource = TempeatureAnalyzer.ReducerTemperatureRanges(data);
-            FormatGrid(dataGridViewRIDData);
-            dataGridViewReducerLag.DataSource = TempeatureAnalyzer.ReducerThermalLag(data);
-            FormatGrid(dataGridViewReducerLag);
+            dataGridViewRIDData.Grid.DataSource = TempeatureAnalyzer.ReducerTemperatureRanges(data);
+            FormatGrid(dataGridViewRIDData.Grid);
+            dataGridViewReducerLag.Grid.DataSource = TempeatureAnalyzer.ReducerThermalLag(data);
+            FormatGrid(dataGridViewReducerLag.Grid);
 
-            dataGridViewInjectionVsTemp.DataSource = TempeatureAnalyzer.InjectionTimeByGasTemperature(data);
-            FormatGrid(dataGridViewInjectionVsTemp);
-            dataGridViewSlowAndGetMinMax.DataSource = TempeatureAnalyzer.TemperatureExtremesBySlowTrim(data);
-            FormatGrid(dataGridViewSlowAndGetMinMax);
-            dataGridViewAverageTrimByTempGas.DataSource = TempeatureAnalyzer.AverageTrimByGasTemperature(data);
-            FormatGrid(dataGridViewAverageTrimByTempGas);
+            dataGridViewInjectionVsTemp.Grid.DataSource = TempeatureAnalyzer.InjectionTimeByGasTemperature(data);
+            FormatGrid(dataGridViewInjectionVsTemp.Grid);
+            dataGridViewSlowAndGetMinMax.Grid.DataSource = TempeatureAnalyzer.TemperatureExtremesBySlowTrim(data);
+            FormatGrid(dataGridViewSlowAndGetMinMax.Grid);
+            dataGridViewAverageTrimByTempGas.Grid.DataSource = TempeatureAnalyzer.AverageTrimByGasTemperature(data);
+            FormatGrid(dataGridViewAverageTrimByTempGas.Grid);
         }
     }
 }

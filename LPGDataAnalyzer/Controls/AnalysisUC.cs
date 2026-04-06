@@ -1,5 +1,6 @@
 ﻿using LPGDataAnalyzer.Models;
 using LPGDataAnalyzer.Services;
+using System.Reflection.Metadata.Ecma335;
 using static LPGDataAnalyzer.Models.Settings;
 
 namespace LPGDataAnalyzer.Controls
@@ -10,8 +11,10 @@ namespace LPGDataAnalyzer.Controls
         public AnalysisUC()
         {
             InitializeComponent();
-            comboBoxAggregation.DataSource = Enum.GetValues<Aggregation>();
-            comboBoxFieldsToShow.DataSource = Enum.GetValues<FieldsToShow>();
+            comboBoxAggregationBank1.DataSource = Enum.GetValues<Aggregation>();
+            comboBoxAggregationBank2.DataSource = Enum.GetValues<Aggregation>();
+            comboBoxFieldsToShowBank1.DataSource = Enum.GetValues<FieldsToShow>();
+            comboBoxFieldsToShowBank2.DataSource = Enum.GetValues<FieldsToShow>();
         }
         private bool _isUpdating = false;
 
@@ -76,10 +79,16 @@ namespace LPGDataAnalyzer.Controls
         public void LoadParcedData(DataItem[] data)
         {
             Data = data;
+            checkedListGasTemperatureb1.Items.Clear();
             checkedListGasTemperatureb1.Items.AddRange(GetExistGasTemperatureRanges(data));
+
+            checkedListGasTemperatureb2.Items.Clear(); 
             checkedListGasTemperatureb2.Items.AddRange(GetExistGasTemperatureRanges(data));
 
+            checkedListReductorTempGroup1.Items.Clear();
             checkedListReductorTempGroup1.Items.AddRange(GetExistReductorTempGroups(data));
+            
+            checkedListReductorTempGroup2.Items.Clear();
             checkedListReductorTempGroup2.Items.AddRange(GetExistReductorTempGroups(data));
 
             checkedListGasTemperatureb1.SetItemChecked(0, true);
@@ -87,56 +96,104 @@ namespace LPGDataAnalyzer.Controls
             checkedListReductorTempGroup1.SetItemChecked(0, true);
             checkedListReductorTempGroup2.SetItemChecked(0, true);
         }
-        
         private void ButtonFieldsToShow_Click(object sender, EventArgs e)
         {
-            var aggregator = (FieldsToShow)comboBoxFieldsToShow.SelectedItem;
+            var fieldBank1 = (FieldsToShow)comboBoxFieldsToShowBank1.SelectedItem;
+            var fieldBank2 = (FieldsToShow)comboBoxFieldsToShowBank2.SelectedItem;
 
+            var aggregationBank1 = (Aggregation)comboBoxAggregationBank1.SelectedItem;
+            var aggregationBank2 = (Aggregation)comboBoxAggregationBank2.SelectedItem;
 
-            BuildAnalises(Data, [item => item.BENZ_b1, item => item.BENZ_b2, item => item.BENZ_b1, item => item.BENZ_b2], [
-                            aggregator.GetFieldValue( Banks.B1),
-                            aggregator.GetFieldValue( Banks.B2),
-                            aggregator.GetFieldValue( Banks.B1),
-                            aggregator.GetFieldValue( Banks.B2),
-                                    ], [$"{aggregator}_b1", $"{aggregator}_b2", $"{aggregator}_b1", $"{aggregator}_b2"]);
+            BuildAnalises(
+                Data,
+                [
+                    item => item.BENZ_b1,
+                    item => item.BENZ_b2,
+                    item => item.BENZ_b1,
+                    item => item.BENZ_b2
+                ],
+                [
+                    fieldBank1.GetFieldValue(Banks.B1),
+                    fieldBank1.GetFieldValue(Banks.B2),
+                    fieldBank2.GetFieldValue(Banks.B1),
+                    fieldBank2.GetFieldValue(Banks.B2)
+                ],
+                [
+                    $"{fieldBank1}_b1",
+                    $"{fieldBank1}_b2",
+                    $"{fieldBank2}_b1",
+                    $"{fieldBank2}_b2"
+                ],
+                aggregationBank1,
+                aggregationBank2
+            );
         }
         
         private void buttonShowSummary_Click(object sender, EventArgs e)
         {
-            BuildAnalises(Data, [item => item.BENZ, item => item.BENZ, item => item.BENZ, item => item.BENZ], [
-                 item => item.BENZ_Diff,
-                item => item.MAP,
-                item => item.PRESS,
-                item => item.Trim
-             ], ["BENZ_Diff", "Map", "PRESS", "TRIM"]);
-        }
-        
-        void BuildAnalises(DataItem[] lpgdata, Func<DataItem, double>[] injectionBankSelectors, Func<DataItem, double?>[] valueSelectors, string[] titles)
-        {
-            // Get the selected value
-            var aggregator = (Aggregation)comboBoxAggregation.SelectedItem;
+            var aggregationBank1 = (Aggregation)comboBoxAggregationBank1.SelectedItem;
+            var aggregationBank2 = (Aggregation)comboBoxAggregationBank2.SelectedItem;
 
+            BuildAnalises(
+                Data,
+                [item => item.BENZ, item => item.BENZ, item => item.BENZ, item => item.BENZ],
+                [
+                    item => item.BENZ_Diff,
+                    item => item.MAP,
+                    item => item.PRESS,
+                    item => item.Trim
+                ],
+                ["BENZ_Diff", "Map", "PRESS", "TRIM"],
+                aggregationBank1,
+                aggregationBank2
+            );
+        }
+
+        private void BuildAnalises(
+                                DataItem[] lpgdata,
+                                Func<DataItem, double>[] injectionBankSelectors,
+                                Func<DataItem, double?>[] valueSelectors,
+                                string[] titles,
+                                Aggregation aggregationT1,
+                                Aggregation aggregationT2)
+        {
             var gasTemps1 = Helper.GetCheckedValues(checkedListGasTemperatureb1);
             var reductors1 = Helper.GetCheckedValues(checkedListReductorTempGroup1);
 
             var gasTemps2 = Helper.GetCheckedValues(checkedListGasTemperatureb2);
             var reductors2 = Helper.GetCheckedValues(checkedListReductorTempGroup2);
 
-            //temp1
-            DataItem[] filteredLPGDataByTemp1 = Analyzer.FilterByTemp(lpgdata, gasTemps1, reductors1);
+            // =========================
+            // 🔹 TEMP 1 (LEFT SIDE)
+            // =========================
+            var filteredT1 = Analyzer.FilterByTemp(lpgdata, gasTemps1, reductors1);
 
-            dataGridViewAnalyzeDataBank1t1.SetData(Analyzer.BuildTable(filteredLPGDataByTemp1, injectionBankSelectors[0], valueSelectors[0], aggregator), Data, titles[0]);
-            dataGridViewAnalyzeDataBank2t1.SetData(Analyzer.BuildTable(filteredLPGDataByTemp1, injectionBankSelectors[1], valueSelectors[1], aggregator), Data, titles[1]);
+            dataGridViewAnalyzeDataBank1t1.SetData(
+                Analyzer.BuildTable(filteredT1, injectionBankSelectors[0], valueSelectors[0], aggregationT1),
+                Data, titles[0]);
+
+            dataGridViewAnalyzeDataBank2t1.SetData(
+                Analyzer.BuildTable(filteredT1, injectionBankSelectors[1], valueSelectors[1], aggregationT1),
+                Data, titles[1]);
+
             DataGridViewColorization.HighlightDifferencesHeatmapWithValues(dataGridViewAnalyzeDataBank1t1.Grid);
             DataGridViewColorization.HighlightDifferencesHeatmapWithValues(dataGridViewAnalyzeDataBank2t1.Grid);
-            //temp2
-            DataItem[] filteredLPGDataByTemp2 = Analyzer.FilterByTemp(lpgdata, gasTemps2, reductors2);
 
-            dataGridViewAnalyzeDataBank1t2.SetData(Analyzer.BuildTable(filteredLPGDataByTemp2, injectionBankSelectors[2], valueSelectors[2], aggregator), Data, titles[2]);
-            dataGridViewAnalyzeDataBank2t2.SetData(Analyzer.BuildTable(filteredLPGDataByTemp2, injectionBankSelectors[3], valueSelectors[3], aggregator), Data, titles[3]);
+            // =========================
+            // 🔹 TEMP 2 (RIGHT SIDE)
+            // =========================
+            var filteredT2 = Analyzer.FilterByTemp(lpgdata, gasTemps2, reductors2);
+
+            dataGridViewAnalyzeDataBank1t2.SetData(
+                Analyzer.BuildTable(filteredT2, injectionBankSelectors[2], valueSelectors[2], aggregationT2),
+                Data, titles[2]);
+
+            dataGridViewAnalyzeDataBank2t2.SetData(
+                Analyzer.BuildTable(filteredT2, injectionBankSelectors[3], valueSelectors[3], aggregationT2),
+                Data, titles[3]);
+
             DataGridViewColorization.HighlightDifferencesHeatmapWithValues(dataGridViewAnalyzeDataBank1t2.Grid);
             DataGridViewColorization.HighlightDifferencesHeatmapWithValues(dataGridViewAnalyzeDataBank2t2.Grid);
         }
-
     }
 }
