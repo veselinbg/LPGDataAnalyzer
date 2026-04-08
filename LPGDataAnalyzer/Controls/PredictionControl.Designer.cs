@@ -37,6 +37,8 @@
             tableLayoutPanelManagement = new TableLayoutPanel();
             panel1 = new Panel();
             panel3 = new Panel();
+            labelMaxBenzDiff = new Label();
+            textBoxMaxBenzDiff = new TextBox();
             labelMinCount = new Label();
             labelPress = new Label();
             labelValueOfChange = new Label();
@@ -63,7 +65,7 @@
             // checkBoxSaveSnapshot
             // 
             checkBoxSaveSnapshot.AutoSize = true;
-            checkBoxSaveSnapshot.Location = new Point(7, 125);
+            checkBoxSaveSnapshot.Location = new Point(7, 150);
             checkBoxSaveSnapshot.Name = "checkBoxSaveSnapshot";
             checkBoxSaveSnapshot.Size = new Size(102, 19);
             checkBoxSaveSnapshot.TabIndex = 0;
@@ -200,7 +202,7 @@
             // checkBoxUseHistory
             // 
             checkBoxUseHistory.AutoSize = true;
-            checkBoxUseHistory.Location = new Point(7, 150);
+            checkBoxUseHistory.Location = new Point(3, 150);
             checkBoxUseHistory.Name = "checkBoxUseHistory";
             checkBoxUseHistory.Size = new Size(86, 19);
             checkBoxUseHistory.TabIndex = 21;
@@ -279,8 +281,9 @@
             // 
             // panel3
             // 
+            panel3.Controls.Add(labelMaxBenzDiff);
+            panel3.Controls.Add(textBoxMaxBenzDiff);
             panel3.Controls.Add(labelMinCount);
-            panel3.Controls.Add(checkBoxUseHistory);
             panel3.Controls.Add(checkBoxOnlyChanges);
             panel3.Controls.Add(labelPress);
             panel3.Controls.Add(labelValueOfChange);
@@ -298,37 +301,56 @@
             panel3.Size = new Size(412, 172);
             panel3.TabIndex = 9;
             // 
+            // labelMaxBenzDiff
+            // 
+            labelMaxBenzDiff.AutoSize = true;
+            labelMaxBenzDiff.Location = new Point(255, 141);
+            labelMaxBenzDiff.Name = "labelMaxBenzDiff";
+            labelMaxBenzDiff.Size = new Size(106, 15);
+            labelMaxBenzDiff.TabIndex = 27;
+            labelMaxBenzDiff.Text = "Max Benz Diff in %";
+            // 
+            // textBoxMaxBenzDiff
+            // 
+            textBoxMaxBenzDiff.Location = new Point(365, 136);
+            textBoxMaxBenzDiff.Name = "textBoxMaxBenzDiff";
+            textBoxMaxBenzDiff.RightToLeft = RightToLeft.Yes;
+            textBoxMaxBenzDiff.Size = new Size(44, 23);
+            textBoxMaxBenzDiff.TabIndex = 26;
+            textBoxMaxBenzDiff.Text = "10";
+            // 
             // labelMinCount
             // 
             labelMinCount.AutoSize = true;
-            labelMinCount.Location = new Point(273, 104);
+            labelMinCount.Location = new Point(253, 106);
             labelMinCount.Name = "labelMinCount";
-            labelMinCount.Size = new Size(64, 15);
+            labelMinCount.Size = new Size(105, 15);
             labelMinCount.TabIndex = 25;
-            labelMinCount.Text = "Min Count";
+            labelMinCount.Text = "Min Count for Cell";
             // 
             // labelPress
             // 
             labelPress.AutoSize = true;
-            labelPress.Location = new Point(273, 77);
+            labelPress.Location = new Point(273, 72);
             labelPress.Name = "labelPress";
-            labelPress.Size = new Size(34, 15);
+            labelPress.Size = new Size(89, 15);
             labelPress.TabIndex = 24;
-            labelPress.Text = "Press";
+            labelPress.Text = "Reference Press";
             // 
             // labelValueOfChange
             // 
             labelValueOfChange.AutoSize = true;
-            labelValueOfChange.Location = new Point(267, 47);
+            labelValueOfChange.Location = new Point(233, 52);
             labelValueOfChange.Name = "labelValueOfChange";
-            labelValueOfChange.Size = new Size(91, 15);
+            labelValueOfChange.Size = new Size(125, 15);
             labelValueOfChange.TabIndex = 23;
-            labelValueOfChange.Text = "Value of change";
+            labelValueOfChange.Text = "Min Valid % of change";
             // 
             // panel4
             // 
             panel4.Controls.Add(checkboxEnableSmooth);
             panel4.Controls.Add(checkboxInterpolation);
+            panel4.Controls.Add(checkBoxUseHistory);
             panel4.Dock = DockStyle.Fill;
             panel4.Location = new Point(421, 180);
             panel4.Name = "panel4";
@@ -475,5 +497,7 @@
         private TableLayoutPanel tableLayoutPanelTopLine;
         private TextBox textBoxImagePath;
         private DataGridView DataGridViewInvalidData;
+        private TextBox textBoxMaxBenzDiff;
+        private Label labelMaxBenzDiff;
     }
 }

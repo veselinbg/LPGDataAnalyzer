@@ -66,9 +66,9 @@ namespace LPGDataAnalyzer
             {
                 var text = new StringBuilder();
 
-                for (int inj = 0; inj < Settings.InjectionRanges.Length; inj++)
+                for (int inj = 0; inj < InjectionRanges.Length; inj++)
                 {
-                    for (int rpm = 0; rpm < Settings.RpmColumns.Length; rpm++)
+                    for (int rpm = 0; rpm < RpmColumns.Length; rpm++)
 
                     {
                         text.Append(table[rpm, inj]);
@@ -84,7 +84,7 @@ namespace LPGDataAnalyzer
         {
             return value.HasValue ? value.Value * factor : null;
         }
-        public static double AggregateValues(this IEnumerable<double> values, Settings.Aggregation aggregation)
+        public static double AggregateValues(this IEnumerable<double> values, Aggregation aggregation)
         {
             var clean = values.Where(v => !double.IsNaN(v)).ToList();
 
@@ -93,10 +93,10 @@ namespace LPGDataAnalyzer
 
             return aggregation switch
             {
-                Settings.Aggregation.Median => clean.Median(),
-                Settings.Aggregation.Min => clean.Min(),
-                Settings.Aggregation.Max => clean.Max(),
-                Settings.Aggregation.Average => clean.Average(),
+                Aggregation.Median => clean.Median(),
+                Aggregation.Min => clean.Min(),
+                Aggregation.Max => clean.Max(),
+                Aggregation.Average => clean.Average(),
                 _ => throw new ArgumentOutOfRangeException(nameof(aggregation), aggregation, null)
             };
         }
