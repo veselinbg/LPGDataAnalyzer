@@ -799,11 +799,11 @@ namespace LPGDataAnalyzer.Controls
                 {
                     foreach (var kv in columnSelections)
                     {
-                        if (kv.Key == currentColumn)
+                        if (kv.Key == currentColumn || kv.Value.UseOrLogic)
                             continue;
 
                         var val = getters[kv.Key](row);
-                        if (!columnFilterCache[kv.Key](val))
+                        if (columnFilterCache.ContainsKey(kv.Key) &&  !columnFilterCache[kv.Key](val))
                             return false;
                     }
                     return true;
