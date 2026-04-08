@@ -703,43 +703,70 @@ namespace LPGDataAnalyzer.Controls
         }
         private void FilterCheckboxList()
         {
-            if (currentColumn == null) return;
+            if (currentColumn == null)
+                return;
 
             columnSelections.TryGetValue(currentColumn, out var sel);
 
-            // Apply all OTHER filters
-            var data = ApplyFiltersExcept(currentColumn);
-
-            var counts = new Dictionary<object, int>();
-
+            // Parse Min/Max from UI (live typing)
             double? min = double.TryParse(minBox.Text, out var minVal) ? minVal : null;
             double? max = double.TryParse(maxBox.Text, out var maxVal) ? maxVal : null;
+
+            // Always rebuild from source filtered ONLY by other columns
+            var data = source.Where(row =>
+            {
+                foreach (var kv in columnSelections)
+                {
+                    if (kv.Key == currentColumn)
+                        continue;
+
+                    var val = getters[kv.Key](row);
+
+                    if (!EvaluateColumn(val, kv.Value))
+                        return false;
+                }
+
+                return true;
+            });
+
+            var counts = new Dictionary<object, int>();
 
             foreach (var item in data)
             {
                 var v = getters[currentColumn](item);
-                if (v == null) continue;
+                if (v == null)
+                    continue;
 
-                // Apply ONLY range filter from UI (live typing)
+                // Apply ONLY live Min/Max filter from UI
                 if (double.TryParse(v.ToString(), out var d))
                 {
-                    if (min.HasValue && d < min.Value) continue;
-                    if (max.HasValue && d > max.Value) continue;
+                    if (min.HasValue && d < min.Value)
+                        continue;
+
+                    if (max.HasValue && d > max.Value)
+                        continue;
                 }
 
-                if (counts.ContainsKey(v))
-                    counts[v]++;
+                if (counts.TryGetValue(v, out var c))
+                    counts[v] = c + 1;
                 else
                     counts[v] = 1;
             }
 
-            var values = counts.Keys.OrderBy(v => v?.ToString()).ToList();
+            var values = counts.Keys
+                .OrderBy(v => v is IComparable ? 0 : 1)
+                .ThenBy(v => v)
+                .ToList();
 
             UpdateUI(() =>
             {
                 valueList.Items.Clear();
 
-                selectAllCheckBox.Checked = sel is null || values.All(v => sel.SelectedValues.Contains(v));
+                // "Select All" logic:
+                // empty SelectedValues = all selected
+                bool isAllSelected = sel == null || sel.SelectedValues.Count == 0;
+
+                selectAllCheckBox.Checked = isAllSelected;
 
                 foreach (var v in values)
                 {
@@ -749,7 +776,7 @@ namespace LPGDataAnalyzer.Controls
                         Count = counts[v]
                     };
 
-                    bool isChecked = sel is null || sel.SelectedValues.Contains(v);
+                    bool isChecked = isAllSelected || sel.SelectedValues.Contains(v);
 
                     valueList.Items.Add(item, isChecked);
                 }
