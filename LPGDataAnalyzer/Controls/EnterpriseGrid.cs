@@ -1,6 +1,8 @@
 ﻿using System.ComponentModel;
 using System.Data.Common;
+using System.Diagnostics.Metrics;
 using System.Linq.Expressions;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace LPGDataAnalyzer.Controls
 {
@@ -41,8 +43,8 @@ namespace LPGDataAnalyzer.Controls
 
         private List<T> source = new();
         private List<T> filtered = new();
-
-        private Dictionary<string, ColumnFilterSelection> columnSelections = new();
+        Dictionary<string, ColumnFilterSelection> columnSelections = new();
+        private Dictionary<string, Func<object, bool>> columnFilterCache = new();
         private Dictionary<string, Func<T, object>> getters = new();
         // Floating filter panel
         private Panel filterPanel = new() { Visible = false, BorderStyle = BorderStyle.FixedSingle };
@@ -65,7 +67,64 @@ namespace LPGDataAnalyzer.Controls
             BuildGetterCache();
             BuildFilterPanel();
         }
+        private Func<object, bool> BuildColumnFilter(ColumnFilterSelection sel)
+        {
+            return val =>
+            {
+                bool hasValueFilter = sel.SelectedValues != null && sel.SelectedValues.Count > 0;
+                bool hasRangeFilter = sel.Min.HasValue || sel.Max.HasValue;
 
+                bool valueMatch;
+                bool rangeMatch = true;
+
+                // VALUE FILTER
+                if (!hasValueFilter)
+                {
+                    valueMatch = true;
+                }
+                else
+                {
+                    valueMatch = val != null && sel.SelectedValues.Contains(val);
+                }
+
+                // RANGE FILTER
+                if (hasRangeFilter)
+                {
+                    if (val == null || !double.TryParse(val.ToString(), out var d))
+                    {
+                        rangeMatch = false;
+                    }
+                    else
+                    {
+                        if (sel.Min.HasValue && d < sel.Min.Value)
+                            rangeMatch = false;
+
+                        if (sel.Max.HasValue && d > sel.Max.Value)
+                            rangeMatch = false;
+                    }
+                }
+
+                if (hasValueFilter && hasRangeFilter)
+                    return sel.UseOrLogic ? (valueMatch || rangeMatch) : (valueMatch && rangeMatch);
+
+                if (hasValueFilter)
+                    return valueMatch;
+
+                if (hasRangeFilter)
+                    return rangeMatch;
+
+                return true;
+            };
+        }
+        private void RebuildFilterCache()
+        {
+            columnFilterCache.Clear();
+
+            foreach (var kv in columnSelections)
+            {
+                columnFilterCache[kv.Key] = BuildColumnFilter(kv.Value);
+            }
+        }
         private void BuildLayout()
         {
             titleBar.Dock = DockStyle.Top;
@@ -280,11 +339,7 @@ namespace LPGDataAnalyzer.Controls
 
             if (currentColumn == null)
                 return;
-
-            if (!columnSelections.TryGetValue(currentColumn, out var sel))
-                sel = new ColumnFilterSelection();
-
-            PopulateValueList(sel);
+            FilterCheckboxList();
         }
         [Browsable(true)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
@@ -353,15 +408,21 @@ namespace LPGDataAnalyzer.Controls
             source = data.ToList();
             filtered = source;
             RefreshBindingList(filtered);
-
             UpdateTitleInfo();
         }
         private void MinMaxBox_TextChanged(object sender, EventArgs e)
         {
             if (isUpdatingUI)
                 return;
+            if (columnSelections.TryGetValue(currentColumn, out var set))
+            {
+                // Parse Min/Max from UI (live typing)
+                set.Min = double.TryParse(minBox.Text, out var minVal) ? minVal : null;
+                set.Max = double.TryParse(maxBox.Text, out var maxVal) ? maxVal : null;
+            }
+           
             // Update checkbox list filtered items
-            FilterCheckboxList();
+            FilterCheckboxList(false);
         }
         
         private void UpdateUI(Action action)
@@ -385,6 +446,10 @@ namespace LPGDataAnalyzer.Controls
         }
         private void ShowFilterPanel(string column, Point headerLocation)
         {
+            if (!columnSelections.ContainsKey(column))
+            {
+                columnSelections.Add(column, new ColumnFilterSelection());
+            }
             bool enable = columnSelections.Any(kv => kv.Key != column);
             andButton.Enabled = orButton.Enabled = enable;
             andButton.ForeColor = enable ? Color.Black : Color.Gray;
@@ -392,18 +457,7 @@ namespace LPGDataAnalyzer.Controls
 
             currentColumn = column;
 
-            if (!columnSelections.ContainsKey(column))
-                columnSelections[column] = new ColumnFilterSelection();
-
-            var sel = columnSelections[column];
-
-            UpdateUI(() =>
-            {
-                minBox.Text = sel.Min?.ToString() ?? "";
-                maxBox.Text = sel.Max?.ToString() ?? "";
-            });
-
-            PopulateValueList(columnSelections[column]);
+            FilterCheckboxList();
             // Convert grid coordinates → EnterpriseGrid coordinates
             var localPoint = this.PointToClient(grid.PointToScreen(headerLocation));
 
@@ -480,17 +534,18 @@ namespace LPGDataAnalyzer.Controls
         }
         private async Task ApplyFiltersAsync()
         {
+            RebuildFilterCache();
             string search = searchBox.Text.ToLower();
 
             var result = await Task.Run(() =>
             {
-                var andColumns = columnSelections
-                    .Where(x => !x.Value.UseOrLogic)
-                    .ToList();
+                var andColumns = columnFilterCache
+                                .Where(x => !columnSelections[x.Key].UseOrLogic)
+                                .ToList();
 
-                var orColumns = columnSelections
-                    .Where(x => x.Value.UseOrLogic)
-                    .ToList();
+                var orColumns = columnFilterCache
+                                .Where(x => columnSelections[x.Key].UseOrLogic)
+                                .ToList();
 
                 var andRows = source.Where(row =>
                 {
@@ -498,7 +553,7 @@ namespace LPGDataAnalyzer.Controls
                     {
                         var val = getters[kv.Key](row);
 
-                        if (!EvaluateColumn(val, kv.Value))
+                        if (!kv.Value(val))
                             return false;
                     }
 
@@ -515,7 +570,7 @@ namespace LPGDataAnalyzer.Controls
                         {
                             var val = getters[kv.Key](row);
 
-                            if (EvaluateColumn(val, kv.Value))
+                            if (!kv.Value(val))
                                 return true;
                         }
 
@@ -605,7 +660,7 @@ namespace LPGDataAnalyzer.Controls
                     .Select(x => x.Value)
                     .ToHashSet();
             }));
-        }
+        }   
         private void SelectAllCheckBox_CheckedChanged(object sender, EventArgs e)
         {
             if (isUpdatingUI || currentColumn == null)
@@ -701,17 +756,62 @@ namespace LPGDataAnalyzer.Controls
                     col.HeaderText += sortAsc ? " ↑" : " ↓";
             }
         }
-        private void FilterCheckboxList()
+        private static bool TryGetDouble(object v, out double result)
+        {
+            switch (v)
+            {
+                case int i: result = i; return true;
+                case long l: result = l; return true;
+                case float f: result = f; return true;
+                case double d: result = d; return true;
+                case decimal m: result = (double)m; return true;
+                case short s: result = s; return true;
+                case byte b: result = b; return true;
+                default:
+                    result = 0;
+                    return false;
+            }
+        }
+        private Dictionary<object, int> FoundFilterValues(IEnumerable<T> data, double? min, double? max)
+        {
+            var counts = new Dictionary<object, int>();
+
+            foreach (var item in data)
+            {
+                var v = getters[currentColumn](item);
+                if (v == null) continue;
+                if (min.HasValue || max.HasValue)
+                {
+                    if (TryGetDouble(v, out var d))
+                    {
+                        if (min.HasValue && d < min.Value) continue;
+                        if (max.HasValue && d > max.Value) continue;
+                    }
+                }
+                if (counts.TryGetValue(v, out var c))
+                    counts[v] = c + 1;
+                else
+                    counts[v] = 1;
+            }
+            return counts;
+        }
+        private void FilterCheckboxList(bool bUpdateMinMaxBox = true)
         {
             if (currentColumn == null)
                 return;
 
-            columnSelections.TryGetValue(currentColumn, out var sel);
-
-            // Parse Min/Max from UI (live typing)
-            double? min = double.TryParse(minBox.Text, out var minVal) ? minVal : null;
-            double? max = double.TryParse(maxBox.Text, out var maxVal) ? maxVal : null;
-
+            if(columnSelections.TryGetValue(currentColumn, out var sel))
+            {
+                if (bUpdateMinMaxBox)
+                {
+                    UpdateUI(() =>
+                    {
+                        minBox.Text = sel.Min?.ToString() ?? "";
+                        maxBox.Text = sel.Max?.ToString() ?? "";
+                    });
+                }
+            }
+            
             // Always rebuild from source filtered ONLY by other columns
             var data = source.Where(row =>
             {
@@ -729,29 +829,7 @@ namespace LPGDataAnalyzer.Controls
                 return true;
             });
 
-            var counts = new Dictionary<object, int>();
-
-            foreach (var item in data)
-            {
-                var v = getters[currentColumn](item);
-                if (v == null)
-                    continue;
-
-                // Apply ONLY live Min/Max filter from UI
-                if (double.TryParse(v.ToString(), out var d))
-                {
-                    if (min.HasValue && d < min.Value)
-                        continue;
-
-                    if (max.HasValue && d > max.Value)
-                        continue;
-                }
-
-                if (counts.TryGetValue(v, out var c))
-                    counts[v] = c + 1;
-                else
-                    counts[v] = 1;
-            }
+            var counts = FoundFilterValues(data, sel?.Min, sel?.Max);
 
             var values = counts.Keys
                 .OrderBy(v => v is IComparable ? 0 : 1)
@@ -782,102 +860,7 @@ namespace LPGDataAnalyzer.Controls
                 }
             });
         }
-        private IEnumerable<T> ApplyFiltersExcept(string excludeColumn)
-        {
-            return source.Where(row =>
-            {
-                foreach (var kv in columnSelections)
-                {
-                    if (kv.Key == excludeColumn)
-                        continue;
 
-                    var val = getters[kv.Key](row);
-
-                    if (!EvaluateColumn(val, kv.Value))
-                        return false;
-                }
-
-                return true;
-            });
-        }
-        private void PopulateValueList(ColumnFilterSelection sel)
-        {
-            if (currentColumn == null) return;
-
-            IEnumerable<T> data;
-
-            if (orButton.Checked)
-            {
-                var andFiltered = ApplyFiltersExcept(currentColumn);
-
-                IEnumerable<T> orFiltered = Enumerable.Empty<T>();
-
-                if (columnSelections.TryGetValue(currentColumn, out var currentSel))
-                {
-                    orFiltered = source.Where(row =>
-                    {
-                        var val = getters[currentColumn](row);
-                        return EvaluateColumn(val, currentSel);
-                    });
-                }
-
-                data = andFiltered.Concat(orFiltered).Distinct();
-            }
-            else
-            {
-                data = ApplyFiltersExcept(currentColumn);
-            }
-
-            var counts = new Dictionary<object, int>();
-
-            foreach (var item in data)
-            {
-                var v = getters[currentColumn](item);
-                if (v == null) continue;
-
-                if (double.TryParse(v.ToString(), out var d))
-                {
-                    if (sel.Min.HasValue && d < sel.Min.Value) continue;
-                    if (sel.Max.HasValue && d > sel.Max.Value) continue;
-                }
-
-                if (counts.TryGetValue(v, out var c))
-                    counts[v] = c + 1;
-                else
-                    counts[v] = 1;
-            }
-
-            var values = counts.Keys
-                .OrderBy(v => v is IComparable ? 0 : 1)
-                .ThenBy(v => v)
-                .ToList();
-
-            UpdateUI(() =>
-            {
-                valueList.Items.Clear();
-
-                selectAllCheckBox.Checked =
-                    sel.SelectedValues.Count == 0 ||
-                    sel.SelectedValues.Count == values.Count;
-
-                foreach (var v in values)
-                {
-                    var item = new ValueItem
-                    {
-                        Value = v,
-                        Count = counts[v]
-                    };
-
-                    bool isChecked =
-                        sel.SelectedValues.Count == 0 || sel.SelectedValues.Contains(v);
-
-                    valueList.Items.Add(item, isChecked);
-                }
-
-                minBox.Text = sel.Min?.ToString() ?? "";
-                maxBox.Text = sel.Max?.ToString() ?? "";
-            });
-        }
         private async Task ApplyFilterForColumn()
         {
             if (currentColumn == null) return;
@@ -891,14 +874,20 @@ namespace LPGDataAnalyzer.Controls
 
             var sel = new ColumnFilterSelection
             {
-                SelectedValues = selectedValues,
+                SelectedValues = selectedValues.Count == valueList.Items.Count
+                                ? new HashSet<object>() // treat as ALL
+                                : selectedValues,
                 Min = double.TryParse(minBox.Text, out var min) ? min : null,
                 Max = double.TryParse(maxBox.Text, out var max) ? max : null,
                 UseOrLogic = orButton.Checked
             };
 
             columnSelections[currentColumn] = sel;
-
+            UpdateUI(() =>
+            {
+                minBox.Text = "";
+                maxBox.Text = "";
+            });
             await ApplyFiltersAsync();
         }
         private async Task ResetFilterPanel()
