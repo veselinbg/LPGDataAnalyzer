@@ -144,7 +144,7 @@ namespace LPGDataAnalyzer
             => arr.Select(selector).DefaultIfEmpty(0).Max();
 
         public static double RelDiff(this double a, double b)
-            => (a == 0 && b == 0) ? 0d : ((Math.Abs(a - b) / ((a + b) / 2.0)) * 100).Round();
+            => (a == 0 && b == 0) ? 0d : (((a - b) / ((a + b) / 2.0)) * 100).Round();
         public static T[] Merge<T>(this T[] a, T[] b)
         {
             T[] result = new T[a.Length + b.Length];

@@ -120,7 +120,7 @@ namespace LPGDataAnalyzer.Services
 
                 if (logsByInjectionB1.Length != 0 || logsByInjectionB2.Length != 0)
                 {
-                    var logByInjection = logsByInjectionB1[injIndex].Concat(logsByInjectionB2[injIndex]).Where(x=>x.BENZ_Diff < benzDiffMax);
+                    var logByInjection = logsByInjectionB1[injIndex].Concat(logsByInjectionB2[injIndex]).Where(x=>Math.Abs(x.BENZ_Diff) < benzDiffMax);
                     var mapMin = logByInjection.Min(x => x.MAP);
                     var mapMedian = logByInjection.Max(x => x.MAP);
                     var mapMax = mapMedian;//mapMedian*25/100;

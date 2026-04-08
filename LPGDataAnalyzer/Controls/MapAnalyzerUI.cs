@@ -72,7 +72,7 @@ namespace LPGDataAnalyzer.Controls
             var injectionAnalysis = MapRpmAnalyzer.BuildABankAwareLPGBaseMap(data);
             LoadDataSource(dataGridViewInjectionTimeAnalysis, injectionAnalysis);
 
-            var deadTime = MapRpmAnalyzer.LpgInjectorDeadTimeEstimation(data);
+            var deadTime = MapRpmAnalyzer.LpgInjectorDeadTimeEstimation(data);//BuildEnhancedBankMap(data);// 
             LoadDataSource(dataGridViewDeadTime, deadTime);
         }
 
