@@ -74,7 +74,7 @@
             (60, 70, "Temp_61_70"),
             (70, int.MaxValue, "Temp_71_over"),
         };
-        public static readonly double[] ReductorTemperatureCorrectionCoef = { -9d,-4d,0d,0d,0d,0d,0d,0d,0d };
+        public static readonly double[] ReductorTemperatureCorrectionCoef = { -11d,-6d,-1d,0d,0d,0d,0d,0d,0d };
          
         public static readonly string[] ReductorTempGroups = [ALL, .. ReductorTemperatureRanges.Select(t => t.Label)];
         public static string[] GetExistReductorTempGroups(DataItem[] data)

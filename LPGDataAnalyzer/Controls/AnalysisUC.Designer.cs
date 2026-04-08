@@ -34,41 +34,27 @@
             labelReductor1 = new Label();
             labelGasTemp2 = new Label();
             labelReductor2 = new Label();
-            labelAggregation = new Label();
-            buttonTable = new TableLayoutPanel();
-            panelBank1 = new Panel { Dock = DockStyle.Fill };
-            panelBank2 = new Panel { Dock = DockStyle.Fill };
-
+            panelBank1 = new Panel();
             comboBoxFieldsToShowBank1 = new ComboBox();
-            comboBoxFieldsToShowBank2 = new ComboBox();
             comboBoxAggregationBank1 = new ComboBox();
+            panelBank2 = new Panel();
+            comboBoxFieldsToShowBank2 = new ComboBox();
             comboBoxAggregationBank2 = new ComboBox();
-            labelBank1 = new Label { Text = "Bank1", Dock = DockStyle.Fill };
-            labelBank2 = new Label { Text = "Bank2", Dock = DockStyle.Fill };
-
+            buttonTable = new TableLayoutPanel();
+            labelBank1 = new Label();
+            labelBank2 = new Label();
+            labelAggregation = new Label();
             tableLayoutPanelAnalyses.SuspendLayout();
             topPanel.SuspendLayout();
             topLayout.SuspendLayout();
-            buttonTable.SuspendLayout();
             panelBank1.SuspendLayout();
             panelBank2.SuspendLayout();
-
-            comboBoxAggregationBank1.Dock = DockStyle.Top;
-            comboBoxFieldsToShowBank1.Dock = DockStyle.Top;
-            panelBank1.Controls.Add(comboBoxFieldsToShowBank1);
-            panelBank1.Controls.Add(comboBoxAggregationBank1);
-
-            comboBoxAggregationBank2.Dock = DockStyle.Top;
-            comboBoxFieldsToShowBank2.Dock = DockStyle.Top;
-
-            panelBank2.Controls.Add(comboBoxFieldsToShowBank2);
-            panelBank2.Controls.Add(comboBoxAggregationBank2);
-
+            buttonTable.SuspendLayout();
             SuspendLayout();
             // 
             // buttonShowSummary
             // 
-            buttonShowSummary.Location = new Point(180, 3);
+            buttonShowSummary.Location = new Point(3, 48);
             buttonShowSummary.Name = "buttonShowSummary";
             buttonShowSummary.Size = new Size(134, 23);
             buttonShowSummary.TabIndex = 3;
@@ -88,9 +74,9 @@
             // 
             checkedListReductorTempGroup2.CheckOnClick = true;
             checkedListReductorTempGroup2.Dock = DockStyle.Fill;
-            checkedListReductorTempGroup2.Location = new Point(723, 26);
+            checkedListReductorTempGroup2.Location = new Point(903, 26);
             checkedListReductorTempGroup2.Name = "checkedListReductorTempGroup2";
-            checkedListReductorTempGroup2.Size = new Size(234, 91);
+            checkedListReductorTempGroup2.Size = new Size(204, 91);
             checkedListReductorTempGroup2.TabIndex = 8;
             checkedListReductorTempGroup2.ItemCheck += CheckedListBox_ItemCheck;
             // 
@@ -98,9 +84,9 @@
             // 
             checkedListReductorTempGroup1.CheckOnClick = true;
             checkedListReductorTempGroup1.Dock = DockStyle.Fill;
-            checkedListReductorTempGroup1.Location = new Point(243, 26);
+            checkedListReductorTempGroup1.Location = new Point(213, 26);
             checkedListReductorTempGroup1.Name = "checkedListReductorTempGroup1";
-            checkedListReductorTempGroup1.Size = new Size(234, 91);
+            checkedListReductorTempGroup1.Size = new Size(204, 91);
             checkedListReductorTempGroup1.TabIndex = 6;
             checkedListReductorTempGroup1.ItemCheck += CheckedListBox_ItemCheck;
             // 
@@ -108,8 +94,9 @@
             // 
             checkedListGasTemperatureb2.CheckOnClick = true;
             checkedListGasTemperatureb2.Dock = DockStyle.Fill;
+            checkedListGasTemperatureb2.Location = new Point(693, 26);
             checkedListGasTemperatureb2.Name = "checkedListGasTemperatureb2";
-            checkedListGasTemperatureb2.Size = new Size(234, 91);
+            checkedListGasTemperatureb2.Size = new Size(204, 91);
             checkedListGasTemperatureb2.TabIndex = 7;
             checkedListGasTemperatureb2.ItemCheck += CheckedListBox_ItemCheck;
             // 
@@ -117,8 +104,9 @@
             // 
             checkedListGasTemperatureb1.CheckOnClick = true;
             checkedListGasTemperatureb1.Dock = DockStyle.Fill;
+            checkedListGasTemperatureb1.Location = new Point(3, 26);
             checkedListGasTemperatureb1.Name = "checkedListGasTemperatureb1";
-            checkedListGasTemperatureb1.Size = new Size(234, 91);
+            checkedListGasTemperatureb1.Size = new Size(204, 91);
             checkedListGasTemperatureb1.TabIndex = 5;
             checkedListGasTemperatureb1.ItemCheck += CheckedListBox_ItemCheck;
             // 
@@ -200,35 +188,24 @@
             // topLayout
             // 
             topLayout.ColumnCount = 7;
-            topLayout.ColumnStyles.Clear();
-
-            topLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 14F)); // GasTemp1
-            topLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 14F)); // Reductor1
-            topLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 18F)); // Bank1 controls 👈 NEW
-            topLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 14F)); // GasTemp2
-            topLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 14F)); // Reductor2
-            topLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 14F)); // Bank2 controls 👈 NEW
-            topLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 12F)); // Buttons
-
+            topLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 14F));
+            topLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 14F));
+            topLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 18F));
+            topLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 14F));
+            topLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 14F));
+            topLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 14F));
+            topLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 12F));
             topLayout.Controls.Add(labelGasTemp1, 0, 0);
             topLayout.Controls.Add(labelReductor1, 1, 0);
             topLayout.Controls.Add(labelGasTemp2, 3, 0);
             topLayout.Controls.Add(labelReductor2, 4, 0);
-
-            // Row 1 (controls)
             topLayout.Controls.Add(checkedListGasTemperatureb1, 0, 1);
             topLayout.Controls.Add(checkedListReductorTempGroup1, 1, 1);
-
-            topLayout.Controls.Add(panelBank1, 2, 1); // 👈 NEW POSITION (between groups)
-
+            topLayout.Controls.Add(panelBank1, 2, 1);
             topLayout.Controls.Add(checkedListGasTemperatureb2, 3, 1);
             topLayout.Controls.Add(checkedListReductorTempGroup2, 4, 1);
-
-            topLayout.Controls.Add(panelBank2, 5, 1); // 👈 NEW (before buttons)
-
+            topLayout.Controls.Add(panelBank2, 5, 1);
             topLayout.Controls.Add(buttonTable, 6, 1);
-
-
             topLayout.Controls.Add(labelBank1, 2, 0);
             topLayout.Controls.Add(labelBank2, 5, 0);
             topLayout.Dock = DockStyle.Fill;
@@ -249,24 +226,104 @@
             // 
             // labelReductor1
             // 
-            labelReductor1.Location = new Point(243, 0);
+            labelReductor1.Location = new Point(213, 0);
             labelReductor1.Name = "labelReductor1";
             labelReductor1.Size = new Size(100, 23);
             labelReductor1.TabIndex = 1;
             // 
             // labelGasTemp2
             // 
-            labelGasTemp2.Location = new Point(483, 0);
+            labelGasTemp2.Location = new Point(693, 0);
             labelGasTemp2.Name = "labelGasTemp2";
             labelGasTemp2.Size = new Size(100, 23);
             labelGasTemp2.TabIndex = 2;
             // 
             // labelReductor2
             // 
-            labelReductor2.Location = new Point(723, 0);
+            labelReductor2.Location = new Point(903, 0);
             labelReductor2.Name = "labelReductor2";
             labelReductor2.Size = new Size(100, 23);
             labelReductor2.TabIndex = 3;
+            // 
+            // panelBank1
+            // 
+            panelBank1.Controls.Add(comboBoxFieldsToShowBank1);
+            panelBank1.Controls.Add(comboBoxAggregationBank1);
+            panelBank1.Location = new Point(423, 26);
+            panelBank1.Name = "panelBank1";
+            panelBank1.Size = new Size(200, 91);
+            panelBank1.TabIndex = 7;
+            // 
+            // comboBoxFieldsToShowBank1
+            // 
+            comboBoxFieldsToShowBank1.Dock = DockStyle.Top;
+            comboBoxFieldsToShowBank1.Location = new Point(0, 23);
+            comboBoxFieldsToShowBank1.Name = "comboBoxFieldsToShowBank1";
+            comboBoxFieldsToShowBank1.Size = new Size(200, 23);
+            comboBoxFieldsToShowBank1.TabIndex = 0;
+            // 
+            // comboBoxAggregationBank1
+            // 
+            comboBoxAggregationBank1.Dock = DockStyle.Top;
+            comboBoxAggregationBank1.Location = new Point(0, 0);
+            comboBoxAggregationBank1.Name = "comboBoxAggregationBank1";
+            comboBoxAggregationBank1.Size = new Size(200, 23);
+            comboBoxAggregationBank1.TabIndex = 1;
+            // 
+            // panelBank2
+            // 
+            panelBank2.Controls.Add(comboBoxFieldsToShowBank2);
+            panelBank2.Controls.Add(comboBoxAggregationBank2);
+            panelBank2.Location = new Point(1113, 26);
+            panelBank2.Name = "panelBank2";
+            panelBank2.Size = new Size(200, 91);
+            panelBank2.TabIndex = 9;
+            // 
+            // comboBoxFieldsToShowBank2
+            // 
+            comboBoxFieldsToShowBank2.Dock = DockStyle.Top;
+            comboBoxFieldsToShowBank2.Location = new Point(0, 23);
+            comboBoxFieldsToShowBank2.Name = "comboBoxFieldsToShowBank2";
+            comboBoxFieldsToShowBank2.Size = new Size(200, 23);
+            comboBoxFieldsToShowBank2.TabIndex = 0;
+            // 
+            // comboBoxAggregationBank2
+            // 
+            comboBoxAggregationBank2.Dock = DockStyle.Top;
+            comboBoxAggregationBank2.Location = new Point(0, 0);
+            comboBoxAggregationBank2.Name = "comboBoxAggregationBank2";
+            comboBoxAggregationBank2.Size = new Size(200, 23);
+            comboBoxAggregationBank2.TabIndex = 1;
+            // 
+            // buttonTable
+            // 
+            buttonTable.ColumnCount = 1;
+            buttonTable.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            buttonTable.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 20F));
+            buttonTable.Controls.Add(buttonFieldsToShow, 0, 0);
+            buttonTable.Controls.Add(buttonShowSummary, 0, 1);
+            buttonTable.Dock = DockStyle.Fill;
+            buttonTable.Location = new Point(1323, 26);
+            buttonTable.Name = "buttonTable";
+            buttonTable.RowCount = 2;
+            buttonTable.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
+            buttonTable.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
+            buttonTable.Size = new Size(174, 91);
+            buttonTable.TabIndex = 10;
+            // 
+            // labelBank1
+            // 
+            labelBank1.Location = new Point(423, 0);
+            labelBank1.Name = "labelBank1";
+            labelBank1.Size = new Size(100, 23);
+            labelBank1.TabIndex = 11;
+            // 
+            // labelBank2
+            // 
+            labelBank2.Location = new Point(1113, 0);
+            labelBank2.Name = "labelBank2";
+            labelBank2.Size = new Size(100, 23);
+            labelBank2.TabIndex = 12;
             // 
             // labelAggregation
             // 
@@ -275,22 +332,6 @@
             labelAggregation.Size = new Size(100, 23);
             labelAggregation.TabIndex = 4;
             // 
-            // buttonTable
-            // 
-            buttonTable.ColumnCount = 2;
-            buttonTable.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
-            buttonTable.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
-            buttonTable.Controls.Add(buttonFieldsToShow, 0, 0);
-            buttonTable.Controls.Add(buttonShowSummary, 1, 0);
-            buttonTable.Dock = DockStyle.Fill;
-            buttonTable.Location = new Point(1143, 26);
-            buttonTable.Name = "buttonTable";
-            buttonTable.RowCount = 2;
-            buttonTable.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
-            buttonTable.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
-            buttonTable.Size = new Size(354, 91);
-            buttonTable.TabIndex = 10;
-            //
             // AnalysisUC
             // 
             Controls.Add(tableLayoutPanelAnalyses);
@@ -301,9 +342,9 @@
             tableLayoutPanelAnalyses.PerformLayout();
             topPanel.ResumeLayout(false);
             topLayout.ResumeLayout(false);
-            buttonTable.ResumeLayout(false);
             panelBank1.ResumeLayout(false);
             panelBank2.ResumeLayout(false);
+            buttonTable.ResumeLayout(false);
             ResumeLayout(false);
         }
 

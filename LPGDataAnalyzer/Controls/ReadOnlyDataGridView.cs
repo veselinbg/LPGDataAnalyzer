@@ -108,7 +108,7 @@ namespace LPGDataAnalyzer.Controls
         
         private void DataGridView_CellClick(object? sender, DataGridViewCellEventArgs e)
         {
-            if (e.ColumnIndex != 0 && e.RowIndex >=0)
+            if (data is not null && e.ColumnIndex != 0 && e.RowIndex >= 0)
             {
                 var range = Settings.InjectionRanges[e.RowIndex];
                 var rpm = Settings.RpmColumns[e.ColumnIndex - 1];

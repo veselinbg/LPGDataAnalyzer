@@ -82,11 +82,6 @@ namespace LPGDataAnalyzer.Services
             }
         }
 
-        private static bool TryValidate(DataItem d)
-        {
-            return !(d.MAP > 0.85 && (d.BENZ_b1 <= 4 || d.BENZ_b2 <= 4));
-        }
-
         public static (double?[,] result, List<DataItem> invalidItems) BuildTable(
             DataItem[] logs,
             double?[,] cellMap,
@@ -127,8 +122,8 @@ namespace LPGDataAnalyzer.Services
                 {
                     var logByInjection = logsByInjectionB1[injIndex].Concat(logsByInjectionB2[injIndex]).Where(x=>x.BENZ_Diff < benzDiffMax);
                     var mapMin = logByInjection.Min(x => x.MAP);
-                    var mapMedian = logByInjection.Select(x => x.MAP).Median();
-                    var mapMax = mapMedian + mapMedian*25/100;
+                    var mapMedian = logByInjection.Max(x => x.MAP);
+                    var mapMax = mapMedian;//mapMedian*25/100;
 
                     MapRanges.Add(injIndex, (mapMin, mapMax.Round()));
                 }

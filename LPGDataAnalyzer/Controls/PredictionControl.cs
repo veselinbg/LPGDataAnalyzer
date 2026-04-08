@@ -91,7 +91,8 @@ namespace LPGDataAnalyzer.Controls
 
             PreviewPrediction(table, tableNew.result);
 
-            ReadOnlyDataGridView.ShowStatisticForm(this, tableNew.invalidItems, 0);
+            DataGridViewInvalidData.DataSource = null;
+            DataGridViewInvalidData.DataSource = tableNew.invalidItems;
         }
 
         private void ButtonParceSelectedImage_Click(object sender, EventArgs e)

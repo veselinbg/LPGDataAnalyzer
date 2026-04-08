@@ -33,7 +33,7 @@
             checkBoxUseHistory = new CheckBox();
             textBoxRefPress = new TextBox();
             tableLayoutPanelMain = new TableLayoutPanel();
-            tableLayoutPanelLeft = new TableLayoutPanel();
+            tableLayoutPanelRight = new TableLayoutPanel();
             tableLayoutPanelManagement = new TableLayoutPanel();
             panel1 = new Panel();
             panel3 = new Panel();
@@ -43,19 +43,21 @@
             panel4 = new Panel();
             tableLayoutPanelTopLine = new TableLayoutPanel();
             textBoxImagePath = new TextBox();
-            tableLayoutPanelRight = new TableLayoutPanel();
+            tableLayoutPanelLeft = new TableLayoutPanel();
             dataGridViewPrediction = new ReadOnlyDataGridView();
             dataGridViewOrig = new ReadOnlyDataGridView();
             panelLegend = new Panel();
+            DataGridViewInvalidData = new DataGridView();
             panelHistory.SuspendLayout();
             tableLayoutPanelMain.SuspendLayout();
-            tableLayoutPanelLeft.SuspendLayout();
+            tableLayoutPanelRight.SuspendLayout();
             tableLayoutPanelManagement.SuspendLayout();
             panel1.SuspendLayout();
             panel3.SuspendLayout();
             panel4.SuspendLayout();
             tableLayoutPanelTopLine.SuspendLayout();
-            tableLayoutPanelRight.SuspendLayout();
+            tableLayoutPanelLeft.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)DataGridViewInvalidData).BeginInit();
             SuspendLayout();
             // 
             // checkBoxSaveSnapshot
@@ -107,7 +109,7 @@
             // checkBoxOnlyChanges
             // 
             checkBoxOnlyChanges.AutoSize = true;
-            checkBoxOnlyChanges.Location = new Point(3, 48);
+            checkBoxOnlyChanges.Location = new Point(7, 23);
             checkBoxOnlyChanges.Name = "checkBoxOnlyChanges";
             checkBoxOnlyChanges.Size = new Size(98, 19);
             checkBoxOnlyChanges.TabIndex = 5;
@@ -219,8 +221,8 @@
             tableLayoutPanelMain.ColumnCount = 2;
             tableLayoutPanelMain.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 40F));
             tableLayoutPanelMain.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 60F));
-            tableLayoutPanelMain.Controls.Add(tableLayoutPanelLeft, 1, 0);
-            tableLayoutPanelMain.Controls.Add(tableLayoutPanelRight, 0, 0);
+            tableLayoutPanelMain.Controls.Add(tableLayoutPanelRight, 1, 0);
+            tableLayoutPanelMain.Controls.Add(tableLayoutPanelLeft, 0, 0);
             tableLayoutPanelMain.Dock = DockStyle.Fill;
             tableLayoutPanelMain.Location = new Point(0, 0);
             tableLayoutPanelMain.Name = "tableLayoutPanelMain";
@@ -229,22 +231,24 @@
             tableLayoutPanelMain.Size = new Size(1413, 763);
             tableLayoutPanelMain.TabIndex = 24;
             // 
-            // tableLayoutPanelLeft
+            // tableLayoutPanelRight
             // 
-            tableLayoutPanelLeft.ColumnCount = 1;
-            tableLayoutPanelLeft.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-            tableLayoutPanelLeft.Controls.Add(panelHistory, 0, 2);
-            tableLayoutPanelLeft.Controls.Add(tableLayoutPanelManagement, 0, 1);
-            tableLayoutPanelLeft.Controls.Add(tableLayoutPanelTopLine, 0, 0);
-            tableLayoutPanelLeft.Dock = DockStyle.Fill;
-            tableLayoutPanelLeft.Location = new Point(568, 3);
-            tableLayoutPanelLeft.Name = "tableLayoutPanelLeft";
-            tableLayoutPanelLeft.RowCount = 3;
-            tableLayoutPanelLeft.RowStyles.Add(new RowStyle(SizeType.Absolute, 35F));
-            tableLayoutPanelLeft.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
-            tableLayoutPanelLeft.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
-            tableLayoutPanelLeft.Size = new Size(842, 757);
-            tableLayoutPanelLeft.TabIndex = 25;
+            tableLayoutPanelRight.ColumnCount = 1;
+            tableLayoutPanelRight.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            tableLayoutPanelRight.Controls.Add(panelHistory, 0, 2);
+            tableLayoutPanelRight.Controls.Add(tableLayoutPanelManagement, 0, 1);
+            tableLayoutPanelRight.Controls.Add(tableLayoutPanelTopLine, 0, 0);
+            tableLayoutPanelRight.Dock = DockStyle.Fill;
+            tableLayoutPanelRight.ForeColor = SystemColors.ActiveCaptionText;
+            tableLayoutPanelRight.Location = new Point(568, 3);
+            tableLayoutPanelRight.Name = "tableLayoutPanelRight";
+            tableLayoutPanelRight.RowCount = 3;
+            tableLayoutPanelRight.RowStyles.Add(new RowStyle(SizeType.Absolute, 35F));
+            tableLayoutPanelRight.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
+            tableLayoutPanelRight.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
+            tableLayoutPanelRight.RowStyles.Add(new RowStyle(SizeType.Absolute, 20F));
+            tableLayoutPanelRight.Size = new Size(842, 757);
+            tableLayoutPanelRight.TabIndex = 25;
             // 
             // tableLayoutPanelManagement
             // 
@@ -277,6 +281,7 @@
             // 
             panel3.Controls.Add(labelMinCount);
             panel3.Controls.Add(checkBoxUseHistory);
+            panel3.Controls.Add(checkBoxOnlyChanges);
             panel3.Controls.Add(labelPress);
             panel3.Controls.Add(labelValueOfChange);
             panel3.Controls.Add(checkBoxSaveSnapshot);
@@ -324,7 +329,6 @@
             // 
             panel4.Controls.Add(checkboxEnableSmooth);
             panel4.Controls.Add(checkboxInterpolation);
-            panel4.Controls.Add(checkBoxOnlyChanges);
             panel4.Dock = DockStyle.Fill;
             panel4.Location = new Point(421, 180);
             panel4.Name = "panel4";
@@ -355,22 +359,24 @@
             textBoxImagePath.Size = new Size(662, 23);
             textBoxImagePath.TabIndex = 15;
             // 
-            // tableLayoutPanelRight
+            // tableLayoutPanelLeft
             // 
-            tableLayoutPanelRight.ColumnCount = 1;
-            tableLayoutPanelRight.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-            tableLayoutPanelRight.Controls.Add(dataGridViewPrediction, 0, 2);
-            tableLayoutPanelRight.Controls.Add(dataGridViewOrig, 0, 0);
-            tableLayoutPanelRight.Controls.Add(panelLegend, 0, 1);
-            tableLayoutPanelRight.Dock = DockStyle.Fill;
-            tableLayoutPanelRight.Location = new Point(3, 3);
-            tableLayoutPanelRight.Name = "tableLayoutPanelRight";
-            tableLayoutPanelRight.RowCount = 3;
-            tableLayoutPanelRight.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
-            tableLayoutPanelRight.RowStyles.Add(new RowStyle(SizeType.Absolute, 50F));
-            tableLayoutPanelRight.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
-            tableLayoutPanelRight.Size = new Size(559, 757);
-            tableLayoutPanelRight.TabIndex = 23;
+            tableLayoutPanelLeft.ColumnCount = 1;
+            tableLayoutPanelLeft.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            tableLayoutPanelLeft.Controls.Add(dataGridViewPrediction, 0, 2);
+            tableLayoutPanelLeft.Controls.Add(dataGridViewOrig, 0, 0);
+            tableLayoutPanelLeft.Controls.Add(panelLegend, 0, 1);
+            tableLayoutPanelLeft.Controls.Add(DataGridViewInvalidData, 0, 3);
+            tableLayoutPanelLeft.Dock = DockStyle.Fill;
+            tableLayoutPanelLeft.Location = new Point(3, 3);
+            tableLayoutPanelLeft.Name = "tableLayoutPanelLeft";
+            tableLayoutPanelLeft.RowCount = 4;
+            tableLayoutPanelLeft.RowStyles.Add(new RowStyle(SizeType.Percent, 35F));
+            tableLayoutPanelLeft.RowStyles.Add(new RowStyle(SizeType.Absolute, 50F));
+            tableLayoutPanelLeft.RowStyles.Add(new RowStyle(SizeType.Percent, 35F));
+            tableLayoutPanelLeft.RowStyles.Add(new RowStyle(SizeType.Percent, 30F));
+            tableLayoutPanelLeft.Size = new Size(559, 757);
+            tableLayoutPanelLeft.TabIndex = 23;
             // 
             // dataGridViewPrediction
             // 
@@ -378,9 +384,9 @@
             dataGridViewPrediction.AutoSizeMode = AutoSizeMode.GrowAndShrink;
             dataGridViewPrediction.Dock = DockStyle.Fill;
             dataGridViewPrediction.EnableTitle = false;
-            dataGridViewPrediction.Location = new Point(3, 406);
+            dataGridViewPrediction.Location = new Point(3, 300);
             dataGridViewPrediction.Name = "dataGridViewPrediction";
-            dataGridViewPrediction.Size = new Size(553, 348);
+            dataGridViewPrediction.Size = new Size(553, 241);
             dataGridViewPrediction.TabIndex = 18;
             dataGridViewPrediction.Title = "";
             // 
@@ -392,17 +398,25 @@
             dataGridViewOrig.EnableTitle = false;
             dataGridViewOrig.Location = new Point(3, 3);
             dataGridViewOrig.Name = "dataGridViewOrig";
-            dataGridViewOrig.Size = new Size(553, 347);
+            dataGridViewOrig.Size = new Size(553, 241);
             dataGridViewOrig.TabIndex = 17;
             dataGridViewOrig.Title = "";
             // 
             // panelLegend
             // 
             panelLegend.Dock = DockStyle.Fill;
-            panelLegend.Location = new Point(3, 356);
+            panelLegend.Location = new Point(3, 250);
             panelLegend.Name = "panelLegend";
             panelLegend.Size = new Size(553, 44);
             panelLegend.TabIndex = 9;
+            // 
+            // DataGridViewInvalidData
+            // 
+            DataGridViewInvalidData.Dock = DockStyle.Fill;
+            DataGridViewInvalidData.Location = new Point(3, 547);
+            DataGridViewInvalidData.Name = "DataGridViewInvalidData";
+            DataGridViewInvalidData.Size = new Size(553, 207);
+            DataGridViewInvalidData.TabIndex = 19;
             // 
             // PredictionControl
             // 
@@ -411,7 +425,7 @@
             Size = new Size(1413, 763);
             panelHistory.ResumeLayout(false);
             tableLayoutPanelMain.ResumeLayout(false);
-            tableLayoutPanelLeft.ResumeLayout(false);
+            tableLayoutPanelRight.ResumeLayout(false);
             tableLayoutPanelManagement.ResumeLayout(false);
             tableLayoutPanelManagement.PerformLayout();
             panel1.ResumeLayout(false);
@@ -422,8 +436,9 @@
             panel4.PerformLayout();
             tableLayoutPanelTopLine.ResumeLayout(false);
             tableLayoutPanelTopLine.PerformLayout();
-            tableLayoutPanelRight.ResumeLayout(false);
-            tableLayoutPanelRight.PerformLayout();
+            tableLayoutPanelLeft.ResumeLayout(false);
+            tableLayoutPanelLeft.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)DataGridViewInvalidData).EndInit();
             ResumeLayout(false);
         }
 
@@ -447,9 +462,9 @@
         private Panel panelLegend;
         private ReadOnlyDataGridView dataGridViewOrig;
         private ReadOnlyDataGridView dataGridViewPrediction;
-        private TableLayoutPanel tableLayoutPanelRight;
-        private HistoryControl historyControl1;
         private TableLayoutPanel tableLayoutPanelLeft;
+        private HistoryControl historyControl1;
+        private TableLayoutPanel tableLayoutPanelRight;
         private TableLayoutPanel tableLayoutPanelManagement;
         private Panel panel1;
         private Panel panel3;
@@ -459,5 +474,6 @@
         private Label labelValueOfChange;
         private TableLayoutPanel tableLayoutPanelTopLine;
         private TextBox textBoxImagePath;
+        private DataGridView DataGridViewInvalidData;
     }
 }
