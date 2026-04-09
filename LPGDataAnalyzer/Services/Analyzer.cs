@@ -108,8 +108,8 @@ namespace LPGDataAnalyzer.Services
                                 {
                                     Temp = g.Key,
                                     AvgLpg1Ms = g.Average(x => x.GAS_b1).Round(),
-                                    StdDev1 = (g.Select(x => x.GAS_b1)).StdDev().Round(),
                                     AvgLpg2Ms = g.Average(x => x.GAS_b2).Round(),
+                                    StdDev1 = (g.Select(x => x.GAS_b1)).StdDev().Round(),
                                     StdDev2 = (g.Select(x => x.GAS_b2)).StdDev().Round()
                                 })
                                 .OrderBy(x => x.Temp).ToArray();
