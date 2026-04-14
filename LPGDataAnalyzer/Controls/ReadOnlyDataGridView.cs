@@ -42,6 +42,69 @@ namespace LPGDataAnalyzer.Controls
             style.BackColor = Color.Gainsboro;
             style.ForeColor = Color.Black;
         }
+        public void FormatGrid()
+        {
+            this.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.DisplayedCells;
+
+            foreach (DataGridViewColumn col in this.Columns)
+            {
+                if (col.Name.Contains("Avg"))
+                {
+                    col.DefaultCellStyle.BackColor = Color.FromArgb(230, 240, 255);
+                    col.DefaultCellStyle.ForeColor = Color.Black;
+                }
+
+                if (col.Name.Contains("Min") || col.Name.Contains("Max"))
+                {
+                    col.DefaultCellStyle.BackColor = Color.FromArgb(245, 245, 245);
+                    col.DefaultCellStyle.ForeColor = Color.Black;
+                }
+
+                if (col.Name.Contains("Count"))
+                {
+                    col.DefaultCellStyle.ForeColor = Color.DimGray;
+                }
+
+                if (col.Name.Contains("Temp"))
+                {
+                    col.DefaultCellStyle.ForeColor = Color.DarkOrange;
+                }
+            }
+            this.CellFormatting += (s, e) =>
+            {
+                var col = this.Columns[e.ColumnIndex].Name;
+
+                if (col.Contains("Trim") && e.Value is double val)
+                {
+                    if (val > 10)
+                    {
+                        e.CellStyle.BackColor = Color.LightCoral;
+                        e.CellStyle.ForeColor = Color.Black;
+                    }
+                    else if (val < -10)
+                    {
+                        e.CellStyle.BackColor = Color.LightBlue;
+                        e.CellStyle.ForeColor = Color.Black;
+                    }
+                    else
+                    {
+                        e.CellStyle.BackColor = Color.LightGreen;
+                        e.CellStyle.ForeColor = Color.Black;
+                    }
+                }
+                if (e.Value != null && e.CellStyle.ForeColor == e.CellStyle.BackColor)
+                {
+                    e.CellStyle.BackColor = Color.Magenta; // obvious bug marker
+                    e.CellStyle.ForeColor = Color.Black;
+                }
+            };
+        }
+
+        public void LoadData(object data)
+        {
+            this.DataSource = data;
+            FormatGrid();
+        }
     }
     public class ReadOnlyDataGridView : UserControl
     {

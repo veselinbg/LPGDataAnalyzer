@@ -47,7 +47,7 @@
             (60, 70, "Temp_61_70"),
             (70, int.MaxValue, "Temp_71_Over")
         };
-        public static readonly double[] GasTemperatureCorrectionCoef = {-7d,-5d,-3d,-1d,0d,2d,4d,6d,8d };
+        public static readonly double[] GasTemperatureCorrectionCoef = {-7d,-5d,-4d,0d,0d,2d,4d,5d,6d };
         public static readonly string[] LPGTempGroups = [ALL, .. GasTemperatureRanges.Select(t => t.Label)];
 
         public static string[] GetExistGasTemperatureRanges(DataItem[] data)

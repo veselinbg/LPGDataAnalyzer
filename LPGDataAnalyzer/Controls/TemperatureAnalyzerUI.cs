@@ -102,63 +102,7 @@ namespace LPGDataAnalyzer.Controls
 
             return split;
         }
-        private void FormatGrid(DataGridView grid)
-        {
-            grid.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.DisplayedCells;
-
-            foreach (DataGridViewColumn col in grid.Columns)
-            {
-                if (col.Name.Contains("Average"))
-                {
-                    col.DefaultCellStyle.BackColor = Color.FromArgb(230, 240, 255);
-                    col.DefaultCellStyle.ForeColor = Color.Black;
-                }
-
-                if (col.Name.Contains("Min") || col.Name.Contains("Max"))
-                {
-                    col.DefaultCellStyle.BackColor = Color.FromArgb(245, 245, 245);
-                    col.DefaultCellStyle.ForeColor = Color.Black;
-                }
-
-                if (col.Name.Contains("Count"))
-                {
-                    col.DefaultCellStyle.ForeColor = Color.DimGray;
-                }
-
-                if (col.Name.Contains("Temp"))
-                {
-                    col.DefaultCellStyle.ForeColor = Color.DarkOrange;
-                }
-            }
-            grid.CellFormatting += (s, e) =>
-            {
-                var col = grid.Columns[e.ColumnIndex].Name;
-
-                if (col.Contains("Trim") && e.Value is double val)
-                {
-                    if (val > 10)
-                    {
-                        e.CellStyle.BackColor = Color.LightCoral;    
-                        e.CellStyle.ForeColor = Color.Black;
-                    }
-                    else if (val < -10)
-                    {
-                        e.CellStyle.BackColor = Color.LightBlue;     
-                        e.CellStyle.ForeColor = Color.Black;
-                    }
-                    else
-                    {
-                        e.CellStyle.BackColor = Color.LightGreen;    
-                        e.CellStyle.ForeColor = Color.Black;
-                    }
-                }
-                if (e.Value != null && e.CellStyle.ForeColor == e.CellStyle.BackColor)
-                {
-                    e.CellStyle.BackColor = Color.Magenta; // obvious bug marker
-                    e.CellStyle.ForeColor = Color.Black;
-                }
-            };
-        }
+        
         private Control Wrap(string title, Control grid)
         {
             return new GroupBox
@@ -174,20 +118,18 @@ namespace LPGDataAnalyzer.Controls
             if (data == null || data.Length == 0) return;
 
             // Gas Temperature Analysis
-            dataGridViewGasData.Grid.DataSource = TempeatureAnalyzer.GasTemperatureRanges(data);
-            FormatGrid(dataGridViewGasData.Grid);
+            dataGridViewGasData.Grid.LoadData(TempeatureAnalyzer.GasTemperatureRanges(data));
+             
             // Reductor Temperature Analysis
-            dataGridViewRIDData.Grid.DataSource = TempeatureAnalyzer.ReducerTemperatureRanges(data);
-            FormatGrid(dataGridViewRIDData.Grid);
-            dataGridViewReducerLag.Grid.DataSource = TempeatureAnalyzer.ReducerThermalLag(data);
-            FormatGrid(dataGridViewReducerLag.Grid);
+            dataGridViewRIDData.Grid.LoadData(TempeatureAnalyzer.ReducerTemperatureRanges(data));
+             
+            dataGridViewReducerLag.Grid.LoadData(TempeatureAnalyzer.ReducerThermalLag(data));
 
-            dataGridViewInjectionVsTemp.Grid.DataSource = TempeatureAnalyzer.InjectionTimeByGasTemperature(data);
-            FormatGrid(dataGridViewInjectionVsTemp.Grid);
-            dataGridViewSlowAndGetMinMax.Grid.DataSource = TempeatureAnalyzer.TemperatureExtremesBySlowTrim(data);
-            FormatGrid(dataGridViewSlowAndGetMinMax.Grid);
-            dataGridViewAverageTrimByTempGas.Grid.DataSource = TempeatureAnalyzer.AverageTrimByGasTemperature(data);
-            FormatGrid(dataGridViewAverageTrimByTempGas.Grid);
+            dataGridViewInjectionVsTemp.Grid.LoadData(TempeatureAnalyzer.InjectionTimeByGasTemperature(data));
+
+            dataGridViewSlowAndGetMinMax.Grid.LoadData(TempeatureAnalyzer.TemperatureExtremesBySlowTrim(data));
+
+            dataGridViewAverageTrimByTempGas.Grid.LoadData(TempeatureAnalyzer.AverageTrimByGasTemperature(data));
         }
     }
 }

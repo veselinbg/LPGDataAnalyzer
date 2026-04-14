@@ -6,6 +6,10 @@ namespace LPGDataAnalyzer
 {
     public class Helper
     {
+        public static double PercentageChange(double baseValue, double newValue)
+        {
+            return ((newValue - baseValue) / baseValue) * 100;
+        }
         public static int FindIndex<T, TValue>(
               TValue value,
               T[] ranges,

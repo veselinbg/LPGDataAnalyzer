@@ -18,7 +18,6 @@ namespace LPGDataAnalyzer
 
             txtFilePath.Text = AppSettings.LastSavedFilePath;
 
-
             LoadParsedData();
         }
 
@@ -57,7 +56,7 @@ namespace LPGDataAnalyzer
                 toolStripSummary.Text = $"Total Rows: {Parser.Data.Length} " +
                     $"LPG: Min Temp: {Parser.Data.Min(x => x.Temp_GAS)} Max Temp: {Parser.Data.Max(x => x.Temp_GAS)}" +
                     $" Min PRESS: {Parser.Data.Min(x => x.PRESS)} Max PRESS: {Parser.Data.Max(x => x.PRESS)} Avarige PRESS: {(Parser.Data.Average(x => x.PRESS)).Round()}" +
-                    $" % of change Min {Filter.PercentageChange(Parser.Data.Average(x => x.PRESS), Parser.Data.Min(x => x.PRESS)).Round()} Max{Filter.PercentageChange(Parser.Data.Average(x => x.PRESS), Parser.Data.Max(x => x.PRESS)).Round()}";
+                    $" % of change Min {Helper.PercentageChange(Parser.Data.Average(x => x.PRESS), Parser.Data.Min(x => x.PRESS)).Round()} Max{Helper.PercentageChange(Parser.Data.Average(x => x.PRESS), Parser.Data.Max(x => x.PRESS)).Round()}";
             }
             else MessageBox.Show("Invalid data.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }

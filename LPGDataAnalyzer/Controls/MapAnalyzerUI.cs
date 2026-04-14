@@ -54,8 +54,6 @@ namespace LPGDataAnalyzer.Controls
             {
                 Title = name,
                 Dock = DockStyle.Fill,
-
-                Tag = name // useful for logging/debugging
             };
         }
 
@@ -64,22 +62,16 @@ namespace LPGDataAnalyzer.Controls
             if (data == null || data.Length == 0) return;
 
             var mapAnalysis = MapRpmAnalyzer.BuildTableByMap(data);
-            LoadDataSource(dataGridViewMapAnalysis, mapAnalysis);
+            dataGridViewMapAnalysis.Grid.LoadData(mapAnalysis);
 
             var bankToBank = MapRpmAnalyzer.BuildBankToBankfuelBalance(data);
-            LoadDataSource(dataGridViewBankToBank, bankToBank);
+            dataGridViewBankToBank.Grid.LoadData(bankToBank);
 
             var injectionAnalysis = MapRpmAnalyzer.BuildABankAwareLPGBaseMap(data);
-            LoadDataSource(dataGridViewInjectionTimeAnalysis, injectionAnalysis);
+            dataGridViewInjectionTimeAnalysis.Grid.LoadData(injectionAnalysis);
 
             var deadTime = MapRpmAnalyzer.LpgInjectorDeadTimeEstimation(data);//BuildEnhancedBankMap(data);// 
-            LoadDataSource(dataGridViewDeadTime, deadTime);
-        }
-
-        public static void LoadDataSource(ReadOnlyDataGridView dataGridView, object? dataSource)
-        {
-            dataGridView.Grid.DataSource = null; // reset to avoid binding glitches
-            dataGridView.Grid.DataSource = dataSource;
+            dataGridViewDeadTime.Grid.LoadData(deadTime);
         }
     }
 }
