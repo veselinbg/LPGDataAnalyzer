@@ -154,5 +154,21 @@ namespace LPGDataAnalyzer
 
             return result;
         }
+        public static bool TryGetDouble(this object v, out double result)
+        {
+            switch (v)
+            {
+                case int i: result = i; return true;
+                case long l: result = l; return true;
+                case float f: result = f; return true;
+                case double d: result = d; return true;
+                case decimal m: result = (double)m; return true;
+                case short s: result = s; return true;
+                case byte b: result = b; return true;
+                default:
+                    result = 0;
+                    return false;
+            }
+        }
     }
 }

@@ -36,10 +36,5 @@ namespace LPGDataAnalyzer.Models.Common
 
             this.OnListChanged(new ListChangedEventArgs(ListChangedType.Reset, -1));
         }
-
-        protected override void RemoveSortCore()
-        {
-            _isSorted = false;
-        }
     }
 }

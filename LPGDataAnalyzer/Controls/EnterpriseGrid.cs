@@ -75,7 +75,7 @@ namespace LPGDataAnalyzer.Controls
             if (!min.HasValue && !max.HasValue)
                 return true;
 
-            if (val == null || !TryGetDouble(val, out var d))
+            if (val == null || !val.TryGetDouble(out var d))
                 return false;
 
             if (min.HasValue && d < min.Value) return false;
@@ -727,22 +727,7 @@ namespace LPGDataAnalyzer.Controls
                     col.HeaderText += sortAsc ? " ↑" : " ↓";
             }
         }
-        private static bool TryGetDouble(object v, out double result)
-        {
-            switch (v)
-            {
-                case int i: result = i; return true;
-                case long l: result = l; return true;
-                case float f: result = f; return true;
-                case double d: result = d; return true;
-                case decimal m: result = (double)m; return true;
-                case short s: result = s; return true;
-                case byte b: result = b; return true;
-                default:
-                    result = 0;
-                    return false;
-            }
-        }
+        
         private Dictionary<object, int> FoundFilterValues(IEnumerable<T> data, double? min, double? max)
         {
             var counts = new Dictionary<object, int>();
@@ -753,7 +738,7 @@ namespace LPGDataAnalyzer.Controls
                 if (v == null) continue;
                 if (min.HasValue || max.HasValue)
                 {
-                    if (TryGetDouble(v, out var d))
+                    if (v.TryGetDouble(out var d))
                     {
                         if (min.HasValue && d < min.Value) continue;
                         if (max.HasValue && d > max.Value) continue;

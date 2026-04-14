@@ -67,7 +67,7 @@ namespace LPGDataAnalyzer.Controls
             if (!_columnRanges.ContainsKey(name))
                 return;
 
-            if (e.Value == null || !double.TryParse(e.Value.ToString(), out double val))
+            if (e.Value == null || !e.Value.TryGetDouble( out double val))
                 return;
 
             var (min, max) = _columnRanges[name];

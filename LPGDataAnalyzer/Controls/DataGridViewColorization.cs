@@ -1,7 +1,4 @@
 ﻿using LPGDataAnalyzer.Models.Common;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace LPGDataAnalyzer.Controls
 {
@@ -66,7 +63,7 @@ namespace LPGDataAnalyzer.Controls
             if (val == null || val == DBNull.Value)
                 return null;
 
-            if (double.TryParse(val.ToString(), out double result))
+            if (val.TryGetDouble(out double result))
                 return result;
 
             return null;
