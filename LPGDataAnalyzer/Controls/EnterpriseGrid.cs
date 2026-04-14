@@ -502,24 +502,27 @@ namespace LPGDataAnalyzer.Controls
         private async Task ApplyFiltersAsync()
         {
             string search = searchBox.Text;
+            bool hasSearch = !string.IsNullOrWhiteSpace(search);
 
-            // Rebuild the per-column filters
             RebuildFilterCache();
 
-            // Prepare getters once
+            // Pre-bind everything once
             var getterList = getters.Values.ToList();
-
-            // Split columns by OR/AND
 
             var orColumns = new List<ColumnFilter>();
             var andColumns = new List<ColumnFilter>();
 
             foreach (var kv in columnSelections)
             {
+                if (!getters.TryGetValue(kv.Key, out var getter) ||
+                    !columnFilterCache.TryGetValue(kv.Key, out var filter) ||
+                    filter == null)
+                    continue;
+
                 var item = new ColumnFilter
                 {
-                    Getter = getters[kv.Key],
-                    Filter = columnFilterCache[kv.Key]
+                    Getter = getter,
+                    Filter = filter
                 };
 
                 if (kv.Value.UseOrLogic)
@@ -528,16 +531,20 @@ namespace LPGDataAnalyzer.Controls
                     andColumns.Add(item);
             }
 
+            int andCount = andColumns.Count;
+            int orCount = orColumns.Count;
+
             var result = await Task.Run(() =>
             {
                 var output = new List<T>(source.Count);
 
                 foreach (var row in source)
                 {
-                    // --- AND filters: must all pass
+                    // --- AND filters
                     bool passesAnd = true;
-                    foreach (var f in andColumns)
+                    for (int i = 0; i < andCount; i++)
                     {
+                        var f = andColumns[i];
                         if (!f.Filter(f.Getter(row)))
                         {
                             passesAnd = false;
@@ -545,45 +552,38 @@ namespace LPGDataAnalyzer.Controls
                         }
                     }
 
-                    // --- OR filters: passes if any OR filter matches
-                    bool passesOr = orColumns.Count == 0 ? true : false;
-                    foreach (var f in orColumns)
+                    // --- OR filters
+                    bool passesOr = orCount == 0;
+                    if (!passesOr)
                     {
-                        if (f.Filter(f.Getter(row)))
+                        for (int i = 0; i < orCount; i++)
                         {
-                            passesOr = true;
-                            break;
+                            var f = orColumns[i];
+                            if (f.Filter(f.Getter(row)))
+                            {
+                                passesOr = true;
+                                break;
+                            }
                         }
                     }
 
-                    // --- Combine AND + OR logic correctly
-                    bool include;
-                    if (andColumns.Count > 0 && orColumns.Count > 0)
-                    {
-                        include = passesAnd || passesOr;
-                    }
-                    else if (andColumns.Count > 0)
-                    {
-                        include = passesAnd;
-                    }
-                    else if (orColumns.Count > 0)
-                    {
-                        include = passesOr;
-                    }
-                    else
-                    {
-                        include = true; // no filters at all
-                    }
+                    // --- Combine logic (unchanged behavior)
+                    bool include =
+                        (andCount > 0 && orCount > 0) ? (passesAnd || passesOr) :
+                        (andCount > 0) ? passesAnd :
+                        (orCount > 0) ? passesOr :
+                        true;
 
                     if (!include) continue;
 
                     // --- Global search
-                    if (!string.IsNullOrWhiteSpace(search))
+                    if (hasSearch)
                     {
                         bool found = false;
-                        foreach (var getter in getterList)
+
+                        for (int i = 0; i < getterList.Count; i++)
                         {
-                            var val = getter(row)?.ToString();
+                            var val = getterList[i](row)?.ToString();
                             if (!string.IsNullOrEmpty(val) &&
                                 val.IndexOf(search, StringComparison.OrdinalIgnoreCase) >= 0)
                             {
@@ -591,6 +591,7 @@ namespace LPGDataAnalyzer.Controls
                                 break;
                             }
                         }
+
                         if (!found) continue;
                     }
 
