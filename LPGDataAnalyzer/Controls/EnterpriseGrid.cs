@@ -13,6 +13,11 @@ namespace LPGDataAnalyzer.Controls
 
     public class EnterpriseGrid<T> : UserControl
     {
+        class ColumnFilter
+        {
+            public Func<T, object> Getter { get; set; }
+            public Func<object, bool> Filter { get; set; }
+        }
         class ValueItem
         {
             public object Value { get; set; }
@@ -505,13 +510,23 @@ namespace LPGDataAnalyzer.Controls
             var getterList = getters.Values.ToList();
 
             // Split columns by OR/AND
-            var orColumns = columnSelections.Where(kv => kv.Value.UseOrLogic)
-                                            .Select(kv => new { Name = kv.Key, Filter = columnFilterCache[kv.Key] })
-                                            .ToList();
 
-            var andColumns = columnSelections.Where(kv => !kv.Value.UseOrLogic)
-                                             .Select(kv => new { Name = kv.Key, Filter = columnFilterCache[kv.Key] })
-                                             .ToList();
+            var orColumns = new List<ColumnFilter>();
+            var andColumns = new List<ColumnFilter>();
+
+            foreach (var kv in columnSelections)
+            {
+                var item = new ColumnFilter
+                {
+                    Getter = getters[kv.Key],
+                    Filter = columnFilterCache[kv.Key]
+                };
+
+                if (kv.Value.UseOrLogic)
+                    orColumns.Add(item);
+                else
+                    andColumns.Add(item);
+            }
 
             var result = await Task.Run(() =>
             {
@@ -523,7 +538,7 @@ namespace LPGDataAnalyzer.Controls
                     bool passesAnd = true;
                     foreach (var f in andColumns)
                     {
-                        if (!f.Filter(getters[f.Name](row)))
+                        if (!f.Filter(f.Getter(row)))
                         {
                             passesAnd = false;
                             break;
@@ -534,7 +549,7 @@ namespace LPGDataAnalyzer.Controls
                     bool passesOr = orColumns.Count == 0 ? true : false;
                     foreach (var f in orColumns)
                     {
-                        if (f.Filter(getters[f.Name](row)))
+                        if (f.Filter(f.Getter(row)))
                         {
                             passesOr = true;
                             break;
