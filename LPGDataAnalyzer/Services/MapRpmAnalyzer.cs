@@ -138,7 +138,7 @@ namespace LPGDataAnalyzer.Services
                                            Map = s.Key,
                                            Avg_BENZ_b1 = BENZ_b1,
                                            Avg_BENZ_b2 = BENZ_b2,
-                                           Diff = ((BENZ_b1 - BENZ_b2) / ((BENZ_b1 + BENZ_b2) / 2.0)).ToString("P")
+                                           P_Diff = ((BENZ_b1 - BENZ_b2) / ((BENZ_b1 + BENZ_b2) / 2.0)).ToString("P")
                                        };
                                    }).OrderBy(x => x.Map).ToArray();
         }

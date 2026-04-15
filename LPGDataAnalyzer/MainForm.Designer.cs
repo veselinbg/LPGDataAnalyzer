@@ -48,7 +48,9 @@ namespace LPGDataAnalyzer
             predictionControl1 = new PredictionControl();
             tabPageReducerPred = new TabPage();
             reducerTempCorrection1 = new ReducerTempCorrection();
+            tabPageAllData = new TabPage();
             buttonExtraInjectionCalculator = new Button();
+            showAllFileDataui1 = new ShowAllFileDataUI();
             statusBar.SuspendLayout();
             tabControlMain.SuspendLayout();
             tabPageMainData.SuspendLayout();
@@ -57,6 +59,7 @@ namespace LPGDataAnalyzer
             tabPageMapAnalysis.SuspendLayout();
             tabPagePredictions.SuspendLayout();
             tabPageReducerPred.SuspendLayout();
+            tabPageAllData.SuspendLayout();
             SuspendLayout();
             // 
             // mapAnalyzerUI
@@ -113,6 +116,7 @@ namespace LPGDataAnalyzer
             tabControlMain.Controls.Add(tabPageMapAnalysis);
             tabControlMain.Controls.Add(tabPagePredictions);
             tabControlMain.Controls.Add(tabPageReducerPred);
+            tabControlMain.Controls.Add(tabPageAllData);
             tabControlMain.Location = new Point(0, 40);
             tabControlMain.Name = "tabControlMain";
             tabControlMain.SelectedIndex = 0;
@@ -223,6 +227,16 @@ namespace LPGDataAnalyzer
             reducerTempCorrection1.Size = new Size(631, 240);
             reducerTempCorrection1.TabIndex = 0;
             // 
+            // tabPageAllData
+            // 
+            tabPageAllData.Controls.Add(showAllFileDataui1);
+            tabPageAllData.Location = new Point(4, 24);
+            tabPageAllData.Name = "tabPageAllData";
+            tabPageAllData.Size = new Size(1408, 775);
+            tabPageAllData.TabIndex = 6;
+            tabPageAllData.Text = "All Data";
+            tabPageAllData.UseVisualStyleBackColor = true;
+            // 
             // buttonExtraInjectionCalculator
             // 
             buttonExtraInjectionCalculator.Location = new Point(1216, 11);
@@ -232,6 +246,14 @@ namespace LPGDataAnalyzer
             buttonExtraInjectionCalculator.Text = "Extra Injection Calculator";
             buttonExtraInjectionCalculator.UseVisualStyleBackColor = true;
             buttonExtraInjectionCalculator.Click += buttonExtraInjectionCalculator_Click;
+            // 
+            // showAllFileDataui1
+            // 
+            showAllFileDataui1.Dock = DockStyle.Fill;
+            showAllFileDataui1.Location = new Point(0, 0);
+            showAllFileDataui1.Name = "showAllFileDataui1";
+            showAllFileDataui1.Size = new Size(1408, 775);
+            showAllFileDataui1.TabIndex = 0;
             // 
             // MainForm
             // 
@@ -256,6 +278,7 @@ namespace LPGDataAnalyzer
             tabPagePredictions.ResumeLayout(false);
             tabPageReducerPred.ResumeLayout(false);
             tabPageReducerPred.PerformLayout();
+            tabPageAllData.ResumeLayout(false);
             ResumeLayout(false);
             PerformLayout();
         }
@@ -280,5 +303,7 @@ namespace LPGDataAnalyzer
         private TabPage tabPageAnalyses;
         private AnalysisUC analysisUC;
         private TemperatureAnalyzerUI temperatureAnalyzerui1;
+        private TabPage tabPageAllData;
+        private ShowAllFileDataUI showAllFileDataui1;
     }
 }

@@ -104,5 +104,34 @@ namespace LPGDataAnalyzer.Services
 
             return table;
         }
+        public static double?[,] Subtract(double?[,] a, double?[,] b)
+        {
+            if (a == null || b == null)
+                throw new ArgumentNullException("Input arrays cannot be null.");
+
+            int rowsA = a.GetLength(0);
+            int colsA = a.GetLength(1);
+
+            int rowsB = b.GetLength(0);
+            int colsB = b.GetLength(1);
+
+            if (rowsA != rowsB || colsA != colsB)
+                throw new ArgumentException("Arrays must have the same dimensions.");
+
+            var result = new double?[rowsA, colsA];
+
+            for (int i = 0; i < rowsA; i++)
+            {
+                for (int j = 0; j < colsA; j++)
+                {
+                    if (a[i, j].HasValue && b[i, j].HasValue)
+                        result[i, j] = (a[i, j].Value - b[i, j].Value).Round();
+                    else
+                        result[i, j] = null; // preserve missing data
+                }
+            }
+
+            return result;
+        }
     }
 }
