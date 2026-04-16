@@ -1,4 +1,6 @@
 ﻿using LPGDataAnalyzer.Models;
+using System.Drawing.Drawing2D;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace LPGDataAnalyzer.Services
 {
@@ -9,12 +11,25 @@ namespace LPGDataAnalyzer.Services
 
         public virtual void Load(string _datapath)
         {
-            Data = [..File.ReadLines(_datapath)
+            Data = File.ReadLines(_datapath)
             .Skip(2) // skip header row and file data info
-            .Where(line => !string.IsNullOrWhiteSpace(line) )
+            .Where(line => !string.IsNullOrWhiteSpace(line))
             .Select(ParseLine)
-            //remove data when the engine is workin on petrol 
-            .Where(x => x.GAS_b1 > 0 && x.GAS_b2 > 0 )];//&& x.BENZ_Diff < 0.1d
+            .Where(x => x.RPM > 0).ToArray();
+
+
+            Data = Data.Where(x => x.GAS_b1 > 0 && x.GAS_b2 > 0 && x.FAST_b1 != 0 && x.FAST_b2 != 0).ToArray();
+
+            //var firstGasEntry = Data.FirstOrDefault(x => x.GAS_b1 > 0 || x.GAS_b2 > 0);
+
+            //if (firstGasEntry != null)
+            //{
+            //    var minTempo = firstGasEntry.TEMPO;
+
+            //    Data = Data
+            //        .Where(x => x.TEMPO >= minTempo)
+            //        .ToArray();
+            //}
         }
         private static DataItem ParseLine(string line)
         {

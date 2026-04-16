@@ -6,7 +6,7 @@
 
         public static readonly (int Min, int Max, int Label)[] RpmColumns =
                                                                                     [
-                                                                                        (0, 700, 700),
+                                                                                        (-1, 700, 700),
                                                                                         (700, 1000, 1000),
                                                                                         (1000, 1400, 1400),
                                                                                         (1400, 1800, 1800),
@@ -22,7 +22,7 @@
 
         public static readonly (double Min, double Max, double Label)[] InjectionRanges =
                                                                                         [
-                                                                                            (0.0, 1.9, 1.9),
+                                                                                            (-1.0, 1.9, 1.9),
                                                                                             (1.9, 2.4, 2.4),
                                                                                             (2.4, 2.9, 2.9),
                                                                                             (2.9, 3.4, 3.4),
@@ -33,7 +33,8 @@
                                                                                             (7.0, 8.5, 8.5),
                                                                                             (8.5, 10.0, 10.0),
                                                                                             (10.0, 11.5, 11.5),
-                                                                                            (11.5, 15, 13.5)//small buffer. 
+                                                                                            (11.5, 13.5, 13.5),
+                                                                                            (13.5, 20, 20)
                                                                                         ];
         public static readonly (int Min, int Max, string Label)[] GasTemperatureRanges =
         {

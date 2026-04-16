@@ -29,7 +29,7 @@ namespace LPGDataAnalyzer
 
             var sorted = numbers.ToArray();
             if (sorted.Length == 0)
-                throw new ArgumentException("Median of empty sequence is not defined.", nameof(numbers));
+                return 0;// throw new ArgumentException("Median of empty sequence is not defined.", nameof(numbers));
 
             Array.Sort(sorted);
 
