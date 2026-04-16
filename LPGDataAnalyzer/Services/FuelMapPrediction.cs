@@ -1,6 +1,5 @@
 ﻿using LPGDataAnalyzer.Controls;
 using LPGDataAnalyzer.Models;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace LPGDataAnalyzer.Services
 {
@@ -254,10 +253,6 @@ namespace LPGDataAnalyzer.Services
             double pressCoef = (referencePressure - press) / referencePressure;
 
             return trim * (1 + pressCoef + lpgCoef / 100 + ridCoef / 100);
-        }
-        public static double CalculatePressCoef(double referencePressure, double value)
-        {
-            return (value - referencePressure) / referencePressure * 100.0;
         }
         public static double TrimCalulation(double trim, double minChangeValue)
         {

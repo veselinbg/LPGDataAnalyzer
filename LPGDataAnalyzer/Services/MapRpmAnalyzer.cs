@@ -51,7 +51,7 @@ namespace LPGDataAnalyzer.Services
                     Diff_Gas = avgGasB1.RelDiff(avgGasB2),
                     Diff_Trim = (avgTrimB1 - avgTrimB2).ToString("0.##'%'"),
 
-                    PRESS = mapArray.Avg(x => x.PRESS).Round(),
+                    Press = mapArray.Avg(x => x.PRESS).Round(),
                     Press_Min = mapArray.Min(x => x.PRESS).Round(),
                     Press_Max = mapArray.Max(x => x.PRESS).Round(),
 
@@ -138,7 +138,7 @@ namespace LPGDataAnalyzer.Services
                                            Map = s.Key,
                                            Avg_BENZ_b1 = BENZ_b1,
                                            Avg_BENZ_b2 = BENZ_b2,
-                                           P_Diff = ((BENZ_b1 - BENZ_b2) / ((BENZ_b1 + BENZ_b2) / 2.0)).ToString("P")
+                                           Diff_P = ((BENZ_b1 - BENZ_b2) / ((BENZ_b1 + BENZ_b2) / 2.0)).ToString("P")
                                        };
                                    }).OrderBy(x => x.Map).ToArray();
         }
@@ -182,7 +182,7 @@ namespace LPGDataAnalyzer.Services
                         Bank1Ms = 0.0,
                         Bank2Ms = 0.0,
                         Diff = 0.0,
-                        P_Diff = "0%",
+                        Diff_P = "0%",
                         DeltaPct = "0%"
                     };
 
@@ -196,7 +196,7 @@ namespace LPGDataAnalyzer.Services
                     Bank1Ms = avgBenzB1.Round(),
                     Bank2Ms = avgBenzB2.Round(),
                     Diff = (avgBenzB1 - avgBenzB2).Round(),
-                    P_Diff = ((avgBenzB1 - avgBenzB2) / ((avgBenzB1 + avgBenzB2) / 2.0)).ToString("P"),
+                    Diff_P = ((avgBenzB1 - avgBenzB2) / ((avgBenzB1 + avgBenzB2) / 2.0)).ToString("P"),
                     DeltaPct = (100.0 * (avgBenzB1 - avgBenzB2) / avgBenzB1).Round() + "%"
                 };
             }).ToArray();

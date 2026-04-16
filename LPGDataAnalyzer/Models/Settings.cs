@@ -130,7 +130,8 @@
             Trim,
             FastTrim,
             Ratio,
-            GasTime
+            GasTime,
+            Press
         }
         public enum Banks
         {

@@ -14,7 +14,7 @@ namespace LPGDataAnalyzer.Services
             .Where(line => !string.IsNullOrWhiteSpace(line) )
             .Select(ParseLine)
             //remove data when the engine is workin on petrol 
-            .Where(x => x.GAS_b1 > 0 && x.GAS_b2 > 0)];
+            .Where(x => x.GAS_b1 > 0 && x.GAS_b2 > 0 )];//&& x.BENZ_Diff < 0.1d
         }
         private static DataItem ParseLine(string line)
         {

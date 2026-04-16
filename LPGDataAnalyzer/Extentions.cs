@@ -111,6 +111,7 @@ namespace LPGDataAnalyzer
                     FieldsToShow.Ratio => item=> item.RatioDifference,
                     FieldsToShow.AFR => item => item.AFR,
                     FieldsToShow.GasTime => item => item.GAS,
+                    FieldsToShow.Press => item => item.PRESS,
                     _ => throw new ArgumentOutOfRangeException(nameof(field), field, null)
                 },
                 Banks.B1 => field switch
@@ -120,6 +121,7 @@ namespace LPGDataAnalyzer
                     FieldsToShow.Ratio => item => item.Ratio_b1,
                     FieldsToShow.AFR => item => item.AFR_b1,
                     FieldsToShow.GasTime => item => item.GAS_b1,
+                    FieldsToShow.Press => item => item.PRESS,
                     _ => throw new ArgumentOutOfRangeException(nameof(field), field, null)
                 },
                 Banks.B2 => field switch
@@ -129,6 +131,7 @@ namespace LPGDataAnalyzer
                     FieldsToShow.Ratio => item => item.Ratio_b2,
                     FieldsToShow.AFR => item => item.AFR_b2,
                     FieldsToShow.GasTime => item => item.GAS_b2,
+                    FieldsToShow.Press => item => item.PRESS,
                     _ => throw new ArgumentOutOfRangeException(nameof(field), field, null)
                 },
             };

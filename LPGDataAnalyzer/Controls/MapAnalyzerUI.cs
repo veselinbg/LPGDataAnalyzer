@@ -9,6 +9,7 @@ namespace LPGDataAnalyzer.Controls
         private ReadOnlyDataGridView dataGridViewBankToBank;
         private ReadOnlyDataGridView dataGridViewInjectionTimeAnalysis;
         private ReadOnlyDataGridView dataGridViewDeadTime;
+        private ReadOnlyDataGridView dataGridViewEnhancedBank;
 
         private TableLayoutPanel layout;
 
@@ -16,38 +17,68 @@ namespace LPGDataAnalyzer.Controls
         {
             InitializeComponent();
         }
-
         private void InitializeComponent()
         {
-            // Initialize layout
+            // MAIN layout (explicit structure)
             layout = new TableLayoutPanel
             {
                 Dock = DockStyle.Fill,
                 ColumnCount = 2,
+                RowCount = 1
+            };
+
+            // Define structure properly
+            layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+            layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+            layout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F)); // IMPORTANT
+
+            // LEFT layout (3 rows)
+            var leftLayout = new TableLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                ColumnCount = 1,
+                RowCount = 3
+            };
+
+            leftLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            leftLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 33.33F));
+            leftLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 33.33F));
+            leftLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 33.33F));
+
+            // RIGHT layout (2 rows)
+            var rightLayout = new TableLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                ColumnCount = 1,
                 RowCount = 2
             };
 
-            layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
-            layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
-            layout.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
-            layout.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
+            rightLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            rightLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
+            rightLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
 
-            // Initialize DataGridViews with meaningful titles
+            // Grids
             dataGridViewMapAnalysis = CreateGrid("MAP vs RPM Analysis");
             dataGridViewBankToBank = CreateGrid("Bank-to-Bank Fuel Balance");
             dataGridViewInjectionTimeAnalysis = CreateGrid("Injection Time Analysis (LPG Base Map)");
             dataGridViewDeadTime = CreateGrid("Injector Dead Time Estimation");
+            dataGridViewEnhancedBank = CreateGrid("Enhanced Bank Map");
 
-            // Add to layout
-            layout.Controls.Add(dataGridViewMapAnalysis, 0, 0);
-            layout.Controls.Add(dataGridViewBankToBank, 1, 0);
-            layout.Controls.Add(dataGridViewInjectionTimeAnalysis, 0, 1);
-            layout.Controls.Add(dataGridViewDeadTime, 1, 1);
+            // LEFT side
+            leftLayout.Controls.Add(dataGridViewMapAnalysis, 0, 0);
+            leftLayout.Controls.Add(dataGridViewBankToBank, 0, 1);
+            leftLayout.Controls.Add(dataGridViewInjectionTimeAnalysis, 0, 2);
 
-            // Add layout to control
+            // RIGHT side
+            rightLayout.Controls.Add(dataGridViewDeadTime, 0, 0);
+            rightLayout.Controls.Add(dataGridViewEnhancedBank, 0, 1);
+
+            // THIS is the key part you emphasized:
+            layout.Controls.Add(leftLayout, 0, 0);
+            layout.Controls.Add(rightLayout, 1, 0);
+
             Controls.Add(layout);
         }
-
         private ReadOnlyDataGridView CreateGrid(string name)
         {
             return new ReadOnlyDataGridView
@@ -70,8 +101,13 @@ namespace LPGDataAnalyzer.Controls
             var injectionAnalysis = MapRpmAnalyzer.BuildABankAwareLPGBaseMap(data);
             dataGridViewInjectionTimeAnalysis.Grid.LoadData(injectionAnalysis);
 
-            var deadTime = MapRpmAnalyzer.BuildEnhancedBankMap(data);// LpgInjectorDeadTimeEstimation(data);//
+            // RIGHT SIDE
+
+            var deadTime = MapRpmAnalyzer.LpgInjectorDeadTimeEstimation(data);
             dataGridViewDeadTime.Grid.LoadData(deadTime);
+
+            var enhancedBank = MapRpmAnalyzer.BuildEnhancedBankMap(data);
+            dataGridViewEnhancedBank.Grid.LoadData(enhancedBank);
         }
     }
 }
