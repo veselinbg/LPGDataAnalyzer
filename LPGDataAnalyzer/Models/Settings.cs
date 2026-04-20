@@ -127,12 +127,12 @@
         }
         public enum FieldsToShow
         {
-            AFR,
             Trim,
             FastTrim,
             Ratio,
             GasTime,
-            Press
+            Press,
+            AFR
         }
         public enum Banks
         {
