@@ -53,6 +53,8 @@ namespace LPGDataAnalyzer
 
                 mapAnalyzerUI.LoadData(Parser.Data);
 
+                dataItemLineChartControl1.SetData(Parser.Data);
+
                 toolStripSummary.Text = $"Total Rows: {Parser.Data.Length} " +
                     $"LPG: Min Temp: {Parser.Data.Min(x => x.Temp_GAS)} Max Temp: {Parser.Data.Max(x => x.Temp_GAS)}" +
                     $" Min PRESS: {Parser.Data.Min(x => x.PRESS)} Max PRESS: {Parser.Data.Max(x => x.PRESS)} Avarige PRESS: {(Parser.Data.Average(x => x.PRESS)).Round()}" +

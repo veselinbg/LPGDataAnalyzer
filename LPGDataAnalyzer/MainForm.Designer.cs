@@ -49,8 +49,10 @@ namespace LPGDataAnalyzer
             tabPageReducerPred = new TabPage();
             reducerTempCorrection1 = new ReducerTempCorrection();
             tabPageAllData = new TabPage();
-            buttonExtraInjectionCalculator = new Button();
             showAllFileDataui1 = new ShowAllFileDataUI();
+            buttonExtraInjectionCalculator = new Button();
+            tabPageChart = new TabPage();
+            dataItemLineChartControl1 = new DataItemLineChartControl();
             statusBar.SuspendLayout();
             tabControlMain.SuspendLayout();
             tabPageMainData.SuspendLayout();
@@ -60,6 +62,7 @@ namespace LPGDataAnalyzer
             tabPagePredictions.SuspendLayout();
             tabPageReducerPred.SuspendLayout();
             tabPageAllData.SuspendLayout();
+            tabPageChart.SuspendLayout();
             SuspendLayout();
             // 
             // mapAnalyzerUI
@@ -117,6 +120,7 @@ namespace LPGDataAnalyzer
             tabControlMain.Controls.Add(tabPagePredictions);
             tabControlMain.Controls.Add(tabPageReducerPred);
             tabControlMain.Controls.Add(tabPageAllData);
+            tabControlMain.Controls.Add(tabPageChart);
             tabControlMain.Location = new Point(0, 40);
             tabControlMain.Name = "tabControlMain";
             tabControlMain.SelectedIndex = 0;
@@ -237,6 +241,14 @@ namespace LPGDataAnalyzer
             tabPageAllData.Text = "All Data";
             tabPageAllData.UseVisualStyleBackColor = true;
             // 
+            // showAllFileDataui1
+            // 
+            showAllFileDataui1.Dock = DockStyle.Fill;
+            showAllFileDataui1.Location = new Point(0, 0);
+            showAllFileDataui1.Name = "showAllFileDataui1";
+            showAllFileDataui1.Size = new Size(1408, 775);
+            showAllFileDataui1.TabIndex = 0;
+            // 
             // buttonExtraInjectionCalculator
             // 
             buttonExtraInjectionCalculator.Location = new Point(1216, 11);
@@ -247,13 +259,23 @@ namespace LPGDataAnalyzer
             buttonExtraInjectionCalculator.UseVisualStyleBackColor = true;
             buttonExtraInjectionCalculator.Click += buttonExtraInjectionCalculator_Click;
             // 
-            // showAllFileDataui1
+            // tabPageChart
             // 
-            showAllFileDataui1.Dock = DockStyle.Fill;
-            showAllFileDataui1.Location = new Point(0, 0);
-            showAllFileDataui1.Name = "showAllFileDataui1";
-            showAllFileDataui1.Size = new Size(1408, 775);
-            showAllFileDataui1.TabIndex = 0;
+            tabPageChart.Controls.Add(dataItemLineChartControl1);
+            tabPageChart.Location = new Point(4, 24);
+            tabPageChart.Name = "tabPageChart";
+            tabPageChart.Size = new Size(1408, 775);
+            tabPageChart.TabIndex = 7;
+            tabPageChart.Text = "Chart";
+            tabPageChart.UseVisualStyleBackColor = true;
+            // 
+            // dataItemLineChartControl1
+            // 
+            dataItemLineChartControl1.Dock = DockStyle.Fill;
+            dataItemLineChartControl1.Location = new Point(0, 0);
+            dataItemLineChartControl1.Name = "dataItemLineChartControl1";
+            dataItemLineChartControl1.Size = new Size(1408, 775);
+            dataItemLineChartControl1.TabIndex = 0;
             // 
             // MainForm
             // 
@@ -279,6 +301,7 @@ namespace LPGDataAnalyzer
             tabPageReducerPred.ResumeLayout(false);
             tabPageReducerPred.PerformLayout();
             tabPageAllData.ResumeLayout(false);
+            tabPageChart.ResumeLayout(false);
             ResumeLayout(false);
             PerformLayout();
         }
@@ -305,5 +328,7 @@ namespace LPGDataAnalyzer
         private TemperatureAnalyzerUI temperatureAnalyzerui1;
         private TabPage tabPageAllData;
         private ShowAllFileDataUI showAllFileDataui1;
+        private TabPage tabPageChart;
+        private DataItemLineChartControl dataItemLineChartControl1;
     }
 }
