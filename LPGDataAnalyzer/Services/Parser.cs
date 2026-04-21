@@ -8,7 +8,7 @@ namespace LPGDataAnalyzer.Services
     {
         const int ExpectedColumns = 22;
         public DataItem[] Data { get; protected set; } = [];
-
+        private int maxTempo = 0;
         public virtual void Load(string _datapath)
         {
             var query = File.ReadLines(_datapath)
@@ -32,7 +32,7 @@ namespace LPGDataAnalyzer.Services
             //        .ToArray();
             //}
         }
-        private static DataItem ParseLine(string line)
+        private DataItem ParseLine(string line)
         {
             Span<Range> ranges = stackalloc Range[32];
             var span = line.AsSpan();
@@ -88,6 +88,12 @@ namespace LPGDataAnalyzer.Services
             item.BENZ = (item.BENZ_b1 + item.BENZ_b2) / 2;
 
             item.BENZ_Diff = item.BENZ_b1.RelDiff(item.BENZ_b2);
+            //if more then one file has merged.
+            //if(maxTempo > item.TEMPO)
+            //{
+            //    item.TEMPO = maxTempo + item.TEMPO;
+            //}
+            //maxTempo = item.TEMPO;
 
             return item;
         }

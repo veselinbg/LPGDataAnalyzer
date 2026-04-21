@@ -27,9 +27,6 @@ namespace LPGDataAnalyzer.Controls
         public ShowAllFileDataUI()
         {
             InitUI();
-
-            var path = @"C:\Users\veselin.ivanov\Documents\MultipointInj\Acquisition";
-            _ = LoadAsync(path);
         }
 
         // =====================================================
@@ -105,7 +102,7 @@ namespace LPGDataAnalyzer.Controls
         // =====================================================
         // LOAD DATA
         // =====================================================
-        private async Task LoadAsync(string path)
+        public async Task LoadAsync(string path)
         {
             var files = new DirectoryInfo(path)
                 .GetFiles("*.txt", SearchOption.AllDirectories)

@@ -256,7 +256,8 @@ namespace LPGDataAnalyzer.Services
         }
         public static double TrimCalulation(double trim, double minChangeValue)
         {
-            return 1 + (Math.Abs(trim) > minChangeValue ? trim/ 100 : 0);
+            return 1 + (Math.Abs(trim) > minChangeValue || trim < 0 ? trim / 100 : 0); //Always apply negative trims to save fuel.
+
         }
     }
 }

@@ -48,7 +48,7 @@
             (60, 70, "Temp_61_70"),
             (70, int.MaxValue, "Temp_71_Over")
         };
-        public static readonly double[] GasTemperatureCorrectionCoef = {-7d,-5d,-4d,0d,0d,2d,4d,5d,6d };
+        public static readonly double[] GasTemperatureCorrectionCoef = {-7d,-5d,-4d,-1d,0d,2d,3d,4d,5d };
 
         public static readonly string[] LPGTempGroups = [ALL, .. GasTemperatureRanges.Select(t => t.Label)];
 
@@ -64,7 +64,7 @@
             (60, 70, "Temp_61_70"),
             (70, int.MaxValue, "Temp_71_over"),
         };
-        public static readonly double[] ReductorTemperatureCorrectionCoef = { -8d,-4d,-1d,0d,0d,0d,0d,0d,0d };
+        public static readonly double[] ReductorTemperatureCorrectionCoef = { -7d,-3d,-1d,0d,0d,0d,0d,0d,0d };
          
         public static readonly string[] ReductorTempGroups = [ALL, .. ReductorTemperatureRanges.Select(t => t.Label)];
         
