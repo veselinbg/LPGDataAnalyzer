@@ -3,7 +3,7 @@
     public class Settings
     {
         public const string ALL = "All";
-
+        private const int MIN_RPM_IDLE = 650;
         public static readonly (int Min, int Max, int Label)[] RpmColumns =
                                                                                     [
                                                                                         (-1, 700, 700),
@@ -49,19 +49,8 @@
             (70, int.MaxValue, "Temp_71_Over")
         };
         public static readonly double[] GasTemperatureCorrectionCoef = {-7d,-5d,-4d,0d,0d,2d,4d,5d,6d };
+
         public static readonly string[] LPGTempGroups = [ALL, .. GasTemperatureRanges.Select(t => t.Label)];
-
-        public static string[] GetExistGasTemperatureRanges(DataItem[] data)
-        {
-            // Guard against null or empty
-            if (data == null || data.Length == 0)
-                return [];
-
-            var usedRanges = GasTemperatureRanges
-                .Where(range => data.Any(item => item.Temp_GAS >= range.Min && item.Temp_GAS <= range.Max)).Select(t => t.Label);
-
-            return [ALL, .. usedRanges];
-        }
 
         public static readonly (int Min, int Max, string Label)[] ReductorTemperatureRanges =
         {
@@ -75,20 +64,10 @@
             (60, 70, "Temp_61_70"),
             (70, int.MaxValue, "Temp_71_over"),
         };
-        public static readonly double[] ReductorTemperatureCorrectionCoef = { -11d,-6d,-1d,0d,0d,0d,0d,0d,0d };
+        public static readonly double[] ReductorTemperatureCorrectionCoef = { -8d,-4d,-1d,0d,0d,0d,0d,0d,0d };
          
         public static readonly string[] ReductorTempGroups = [ALL, .. ReductorTemperatureRanges.Select(t => t.Label)];
-        public static string[] GetExistReductorTempGroups(DataItem[] data)
-        {
-            // Guard against null or empty
-            if (data == null || data.Length == 0)
-                return [];
-
-            var usedRanges = ReductorTemperatureRanges
-                .Where(range => data.Any(item => item.Temp_RID >= range.Min && item.Temp_RID <= range.Max)).Select(t => t.Label);
-
-            return [ALL, .. usedRanges];
-        }
+        
         public static readonly (double Min, double Max, string Label)[] DrivingRanges =
         {
             (0, 2.8,  "Idle"),
@@ -108,7 +87,7 @@
             (0.6, 0.8,  "Acceleration"),
             (0.8, int.MaxValue,  "High load"),
         };
-        const double MIN_RPM_IDLE = 650;
+        
         public static readonly (double Min, double Max, string Label)[] RpmRanges =
         {
             (0, MIN_RPM_IDLE,  "Idle"),

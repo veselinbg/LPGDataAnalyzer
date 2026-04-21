@@ -1,4 +1,3 @@
-using LPGDataAnalyzer.Controls;
 using LPGDataAnalyzer.Models;
 using LPGDataAnalyzer.Services;
 
@@ -25,7 +24,7 @@ namespace LPGDataAnalyzer
         {
             using OpenFileDialog ofd = new OpenFileDialog();
             ofd.Filter = "Text files (*.txt)|*.txt|All files (*.*)|*.*";
-            ofd.InitialDirectory = "C:\\Users\\veselin.ivanov\\Documents\\MultipointInj\\Acquisition";
+            ofd.InitialDirectory = AppSettings.DataFilesFolder; 
             if (ofd.ShowDialog() == DialogResult.OK)
             {
                 txtFilePath.Text = ofd.FileName;

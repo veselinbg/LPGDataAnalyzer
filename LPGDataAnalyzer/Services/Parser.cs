@@ -11,15 +11,16 @@ namespace LPGDataAnalyzer.Services
 
         public virtual void Load(string _datapath)
         {
-            Data = File.ReadLines(_datapath)
+            var query = File.ReadLines(_datapath)
             .Skip(2) // skip header row and file data info
             .Where(line => !string.IsNullOrWhiteSpace(line))
             .Select(ParseLine)
-            .Where(x => x.RPM > 0).ToArray();
+            .Where(x => x.RPM > 0);
 
 
-            Data = Data.Where(x => x.GAS_b1 > 0 && x.GAS_b2 > 0 && x.FAST_b1 != 0 && x.FAST_b2 != 0).ToArray();
-
+            //Data = query.Where(x => x.GAS_b1 > 0 && x.GAS_b2 > 0).ToArray();
+            Data = query.Where(x => x.GAS_b1 > 0 && x.GAS_b2 > 0 && x.Temp_RID> 25).ToArray();
+            //Data = query.Where(x => x.GAS_b1 > 0 && x.GAS_b2 > 0 && x.FAST_b1 != 0 && x.FAST_b2 != 0).ToArray();
             //var firstGasEntry = Data.FirstOrDefault(x => x.GAS_b1 > 0 || x.GAS_b2 > 0);
 
             //if (firstGasEntry != null)

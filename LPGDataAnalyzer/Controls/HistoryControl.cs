@@ -1,8 +1,5 @@
 ﻿using LPGDataAnalyzer.Models;
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Text.Json;
+using System.ComponentModel;
 
 namespace LPGDataAnalyzer.Controls
 {
@@ -11,6 +8,9 @@ namespace LPGDataAnalyzer.Controls
         public HistoryManager Manager { get; } = new();
 
         public event Action<HistorySnapshot> HistorySelected;
+
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public AppSettings AppSettings { get; set; }
 
         ListBox listHistory = new();
         Button btnSave = new();
@@ -89,30 +89,32 @@ namespace LPGDataAnalyzer.Controls
 
             var snapshot = Manager.Get(listHistory.SelectedIndex);
 
-            SaveFileDialog dlg = new();
+            using SaveFileDialog dlg = new();
+            dlg.InitialDirectory = AppSettings.HistoryFolder;
             dlg.FileName = $"snapshot_{DateTime.Now:yyyyMMdd_HHmmss}.json";
             dlg.Filter = "History|*.json";
 
-            if (dlg.ShowDialog() != DialogResult.OK)
-                return;
-
-            HistoryStorage.Save(dlg.FileName, snapshot);
+            if (dlg.ShowDialog() == DialogResult.OK)
+            {
+                HistoryStorage.Save(dlg.FileName, snapshot);
+            }
         }
 
         private void BtnLoad_Click(object sender, EventArgs e)
         {
-            OpenFileDialog dlg = new();
-            dlg.InitialDirectory = "C:\\Users\\veselin.ivanov\\Downloads\\LPGDataAnalyzer\\LPGDataAnalyzer\\History";
+            using OpenFileDialog dlg = new();
+            dlg.InitialDirectory = AppSettings.HistoryFolder;
             dlg.Filter = "History|*.json";
 
-            if (dlg.ShowDialog() != DialogResult.OK)
-                return;
-            
-            var snapshot = HistoryStorage.Load(dlg.FileName);
+            if (dlg.ShowDialog() == DialogResult.OK)
+            {
 
-            Manager.Add(snapshot);
+                var snapshot = HistoryStorage.Load(dlg.FileName);
 
-            listHistory.Items.Add(snapshot.Name);
+                Manager.Add(snapshot);
+
+                listHistory.Items.Add(snapshot.Name);
+            }
         }
     }
 }

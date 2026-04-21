@@ -33,6 +33,7 @@ namespace LPGDataAnalyzer.Controls
             textBoxLastPredictedFuelTable.Text = AppSettings.LastPredictedFuelTable;
             Data = data;
             historyControl1.HistorySelected += HistoryControl1_HistorySelected;
+            historyControl1.AppSettings = AppSettings;
         }
 
         private void HistoryControl1_HistorySelected(HistorySnapshot snapshot)

@@ -16,6 +16,6 @@ namespace LPGDataAnalyzer.Models
         ///  Point to the folder where your JSON snapshots are stored.
         /// </summary>
         public string HistoryFolder { get; set; } = @"C:\Users\veselin.ivanov\Downloads\LPGDataAnalyzer\LPGDataAnalyzer\History";
-
+        public string DataFilesFolder { get; set; } = @"C:\Users\veselin.ivanov\Documents\MultipointInj\Acquisition";
     }
 }

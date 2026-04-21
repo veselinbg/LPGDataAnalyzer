@@ -4,6 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Windows.Forms;
 using System.Windows.Forms.DataVisualization.Charting;
+using System.Drawing;
 using LPGDataAnalyzer.Models;
 
 namespace LPGDataAnalyzer.Controls
@@ -11,64 +12,93 @@ namespace LPGDataAnalyzer.Controls
     public class DataItemLineChartControl : UserControl
     {
         private readonly ComboBox cmbX = new();
-        private readonly ComboBox cmbY1 = new();
-        private readonly ComboBox cmbY2 = new();
-
-        private readonly Button btnBuild = new();
-        private readonly Button btnZoomIn = new();
-        private readonly Button btnZoomOut = new();
-        private readonly Button btnResetZoom = new();
-
+        private readonly FlowLayoutPanel pnlY = new();
         private readonly Chart chart = new();
 
-        private DataItem[] _data = [];
+        private readonly Button btnBuild = new() { Text = "Build" };
+        private readonly Button btnZoomIn = new() { Text = "+" };
+        private readonly Button btnZoomOut = new() { Text = "-" };
+        private readonly Button btnReset = new() { Text = "Reset" };
 
         private readonly Dictionary<string, Func<DataItem, double>> _cache = new();
+        private DataItem[] _data = Array.Empty<DataItem>();
+
+        // cached transformed dataset (IMPORTANT optimization)
+        private (double x, double[] y)[] _cacheData = Array.Empty<(double, double[])>();
+        private string[] _yFields = Array.Empty<string>();
 
         public DataItemLineChartControl()
         {
-            InitUI();
-            LoadFields();
+            BuildLayout();
             InitChart();
+            LoadFields();
         }
 
         public void SetData(DataItem[] data)
         {
-            _data = data ?? [];
+            _data = data ?? Array.Empty<DataItem>();
+            _cacheData = Array.Empty<(double, double[])>();
         }
 
-        // ---------------- UI ----------------
+        // ---------------- LAYOUT ----------------
 
-        private void InitUI()
+        private void BuildLayout()
         {
-            cmbX.SetBounds(10, 10, 160, 25);
-            cmbY1.SetBounds(180, 10, 160, 25);
-            cmbY2.SetBounds(350, 10, 160, 25);
+            Dock = DockStyle.Fill;
 
-            btnBuild.SetBounds(520, 8, 100, 28);
-            btnBuild.Text = "Build";
+            var root = new TableLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                RowCount = 2
+            };
+
+            root.RowStyles.Add(new RowStyle(SizeType.Absolute, 70));
+            root.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+
+            Controls.Add(root);
+
+            var top = new TableLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                ColumnCount = 3
+            };
+
+            top.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 110));
+            top.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+            top.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 200));
+
+            cmbX.Dock = DockStyle.Fill;
+
+            pnlY.Dock = DockStyle.Fill;
+            pnlY.WrapContents = true;
+            pnlY.AutoScroll = true;
+
+            var btnPanel = new FlowLayoutPanel
+            {
+                Dock = DockStyle.Fill
+            };
+
+            btnPanel.Controls.AddRange(new Control[]
+            {
+                btnBuild, btnZoomIn, btnZoomOut, btnReset
+            });
+
             btnBuild.Click += (_, _) => BuildChart();
-
-            btnZoomIn.SetBounds(630, 8, 80, 28);
-            btnZoomOut.SetBounds(720, 8, 80, 28);
-            btnResetZoom.SetBounds(810, 8, 110, 28);
-
-            btnZoomIn.Text = "+";
-            btnZoomOut.Text = "-";
-            btnResetZoom.Text = "Reset";
-
             btnZoomIn.Click += (_, _) => Zoom(0.7);
             btnZoomOut.Click += (_, _) => Zoom(1.3);
-            btnResetZoom.Click += (_, _) => ResetZoom();
+            btnReset.Click += (_, _) => ResetZoom();
 
-            chart.SetBounds(10, 50, 1900, 500);
+            top.Controls.Add(cmbX, 0, 0);
+            top.Controls.Add(pnlY, 1, 0);
+            top.Controls.Add(btnPanel, 2, 0);
 
-            Controls.AddRange([
-                cmbX, cmbY1, cmbY2,
-                btnBuild, btnZoomIn, btnZoomOut, btnResetZoom,
-                chart
-            ]);
+            chart.Dock = DockStyle.Fill;
+
+            root.Controls.Add(top, 0, 0);
+            root.Controls.Add(chart, 0, 1);
         }
+
+        // ---------------- CHART ----------------
 
         private void InitChart()
         {
@@ -80,11 +110,17 @@ namespace LPGDataAnalyzer.Controls
             area.CursorX.IsUserEnabled = true;
             area.CursorX.IsUserSelectionEnabled = true;
 
-            area.CursorY.IsUserEnabled = true;
-            area.CursorY.IsUserSelectionEnabled = true;
-
             chart.ChartAreas.Add(area);
+
+            chart.Legends.Add(new Legend("Legend")
+            {
+                Docking = Docking.Right
+            });
+
+            chart.AxisViewChanged += (_, __) => RecalculateYScale();
         }
+
+        // ---------------- FIELD UI ----------------
 
         private void LoadFields()
         {
@@ -95,121 +131,212 @@ namespace LPGDataAnalyzer.Controls
                 .ToArray();
 
             cmbX.Items.AddRange(fields);
-            cmbY1.Items.AddRange(fields);
-            cmbY2.Items.AddRange(fields);
 
             if (fields.Length > 0)
-            {
                 cmbX.SelectedIndex = 0;
-                cmbY1.SelectedIndex = Math.Min(1, fields.Length - 1);
-                cmbY2.SelectedIndex = Math.Min(2, fields.Length - 1);
+
+            pnlY.Controls.Clear();
+
+            foreach (var f in fields)
+            {
+                var b = new CheckBox
+                {
+                    Text = f,
+                    Appearance = Appearance.Button,
+                    AutoSize = true,
+                    Checked = false,
+                    Margin = new Padding(3)
+                };
+
+                b.CheckedChanged += (_, _) =>
+                {
+                    b.BackColor = b.Checked
+                        ? Color.LightSteelBlue
+                        : SystemColors.Control;
+                };
+
+                pnlY.Controls.Add(b);
             }
         }
 
-        // ---------------- Reflection cache ----------------
+        // ---------------- REFLECTION ----------------
 
         private Func<DataItem, double> Get(string name)
         {
             if (_cache.TryGetValue(name, out var fn))
                 return fn;
 
-            var p = Expression.Parameter(typeof(DataItem), "x");
+            var p = Expression.Parameter(typeof(DataItem));
             var body = Expression.Convert(Expression.Property(p, name), typeof(double));
 
             fn = Expression.Lambda<Func<DataItem, double>>(body, p).Compile();
-
             _cache[name] = fn;
+
             return fn;
         }
 
-        // ---------------- Chart ----------------
+        // ---------------- BUILD ----------------
 
         private void BuildChart()
         {
-            if (_data.Length == 0)
+            if (_data.Length == 0 || cmbX.SelectedItem == null)
                 return;
 
-            if (cmbX.SelectedItem == null || cmbY1.SelectedItem == null)
+            _yFields = pnlY.Controls
+                .OfType<CheckBox>()
+                .Where(b => b.Checked)
+                .Select(b => b.Text)
+                .ToArray();
+
+            if (_yFields.Length == 0)
                 return;
 
             string xName = cmbX.SelectedItem.ToString()!;
-            string y1Name = cmbY1.SelectedItem.ToString()!;
-            string? y2Name = cmbY2.SelectedItem?.ToString();
-
             var getX = Get(xName);
-            var getY1 = Get(y1Name);
+
+            var getYs = _yFields.Select(Get).ToArray();
 
             chart.Series.Clear();
 
-            // prepare base dataset once
-            var baseData = _data
-                .Select(d => new { X = getX(d), Y1 = getY1(d) })
-                .OrderBy(p => p.X)
-                .ToArray();
+            _cacheData = new (double, double[])[_data.Length];
 
-            chart.Series.Add(CreateSeries(y1Name, baseData.Select(p => (p.X, p.Y1)), System.Drawing.Color.Blue));
+            double minY = double.MaxValue;
+            double maxY = double.MinValue;
 
-            // optional second line
-            if (!string.IsNullOrWhiteSpace(y2Name) && y2Name != y1Name)
+            for (int i = 0; i < _data.Length; i++)
             {
-                var getY2 = Get(y2Name);
+                var d = _data[i];
+                double x = getX(d);
 
-                var data2 = _data
-                    .Select(d => new { X = getX(d), Y = getY2(d) })
-                    .OrderBy(p => p.X)
-                    .ToArray();
+                double[] yvals = new double[_yFields.Length];
 
-                chart.Series.Add(CreateSeries(y2Name, data2.Select(p => (p.X, p.Y)), System.Drawing.Color.Red));
+                for (int j = 0; j < getYs.Length; j++)
+                {
+                    double y = getYs[j](d);
+                    yvals[j] = y;
+
+                    if (y < minY) minY = y;
+                    if (y > maxY) maxY = y;
+                }
+
+                _cacheData[i] = (x, yvals);
+            }
+
+            var colors = new[]
+            {
+                Color.Blue, Color.Red, Color.Green,
+                Color.Orange, Color.Purple, Color.Brown
+            };
+
+            for (int i = 0; i < _yFields.Length; i++)
+            {
+                var s = new Series(_yFields[i])
+                {
+                    ChartType = SeriesChartType.Line,
+                    BorderWidth = 2,
+                    Color = colors[i % colors.Length],
+                    Legend = "Legend"
+                };
+
+                foreach (var p in _cacheData)
+                    s.Points.AddXY(p.x, p.y[i]);
+
+                chart.Series.Add(s);
             }
 
             var area = chart.ChartAreas[0];
+
+            ApplyYScale(minY, maxY);
+
             area.AxisX.Title = xName;
             area.AxisY.Title = "Value";
+
             area.RecalculateAxesScale();
+
+            area.AxisX.ScaleView.Zoom(
+                _cacheData.First().x,
+                _cacheData.Last().x
+            );
         }
 
-        private static Series CreateSeries(string name, IEnumerable<(double x, double y)> data, System.Drawing.Color color)
+        // ---------------- Y SCALE ----------------
+
+        private void RecalculateYScale()
         {
-            var s = new Series(name)
+            if (_cacheData.Length == 0)
+                return;
+
+            var area = chart.ChartAreas[0];
+
+            double minX = area.AxisX.ScaleView.ViewMinimum;
+            double maxX = area.AxisX.ScaleView.ViewMaximum;
+
+            if (double.IsNaN(minX) || double.IsNaN(maxX))
+                return;
+
+            double minY = double.MaxValue;
+            double maxY = double.MinValue;
+
+            foreach (var p in _cacheData)
             {
-                ChartType = SeriesChartType.Line,
-                BorderWidth = 2,
-                Color = color
-            };
+                if (p.x < minX || p.x > maxX)
+                    continue;
 
-            foreach (var (x, y) in data)
-                s.Points.AddXY(x, y);
+                foreach (var y in p.y)
+                {
+                    if (y < minY) minY = y;
+                    if (y > maxY) maxY = y;
+                }
+            }
 
-            return s;
+            ApplyYScale(minY, maxY);
         }
 
-        // ---------------- Zoom ----------------
+        private void ApplyYScale(double minY, double maxY)
+        {
+            var area = chart.ChartAreas[0];
+
+            double range = maxY - minY;
+            double pad = range * 0.005;
+
+            if (pad == 0)
+                pad = 0.1;
+
+            area.AxisY.Minimum = minY - pad;
+            area.AxisY.Maximum = maxY + pad;
+
+            area.AxisY.Interval = range / 25;
+            area.AxisY.LabelStyle.Format = "0.#####";
+        }
+
+        // ---------------- ZOOM ----------------
 
         private void Zoom(double factor)
         {
-            var area = chart.ChartAreas[0];
+            var axis = chart.ChartAreas[0].AxisX;
 
-            try
-            {
-                double min = area.AxisX.ScaleView.ViewMinimum;
-                double max = area.AxisX.ScaleView.ViewMaximum;
+            double min = axis.ScaleView.ViewMinimum;
+            double max = axis.ScaleView.ViewMaximum;
 
-                double center = (min + max) / 2;
-                double size = (max - min) * factor;
+            if (double.IsNaN(min) || double.IsNaN(max))
+                return;
 
-                area.AxisX.ScaleView.Zoom(center - size / 2, center + size / 2);
-            }
-            catch
-            {
-                // ignore if not zoomed yet
-            }
+            double center = (min + max) / 2;
+            double size = (max - min) * factor;
+
+            axis.ScaleView.Zoom(center - size / 2, center + size / 2);
+
+            RecalculateYScale();
         }
 
         private void ResetZoom()
         {
             var area = chart.ChartAreas[0];
+
             area.AxisX.ScaleView.ZoomReset();
             area.AxisY.ScaleView.ZoomReset();
+
+            RecalculateYScale();
         }
     }
 }

@@ -1,6 +1,5 @@
 ﻿using LPGDataAnalyzer.Models;
 using LPGDataAnalyzer.Services;
-using System.Reflection.Metadata.Ecma335;
 using static LPGDataAnalyzer.Models.Settings;
 
 namespace LPGDataAnalyzer.Controls
@@ -80,16 +79,16 @@ namespace LPGDataAnalyzer.Controls
         {
             Data = data;
             checkedListGasTemperatureb1.Items.Clear();
-            checkedListGasTemperatureb1.Items.AddRange(GetExistGasTemperatureRanges(data));
+            checkedListGasTemperatureb1.Items.AddRange(data.GetExistGasTemperatureRanges());
 
             checkedListGasTemperatureb2.Items.Clear(); 
-            checkedListGasTemperatureb2.Items.AddRange(GetExistGasTemperatureRanges(data));
+            checkedListGasTemperatureb2.Items.AddRange(data.GetExistGasTemperatureRanges());
 
             checkedListReductorTempGroup1.Items.Clear();
-            checkedListReductorTempGroup1.Items.AddRange(GetExistReductorTempGroups(data));
+            checkedListReductorTempGroup1.Items.AddRange(data.GetExistReductorTempGroups());
             
             checkedListReductorTempGroup2.Items.Clear();
-            checkedListReductorTempGroup2.Items.AddRange(GetExistReductorTempGroups(data));
+            checkedListReductorTempGroup2.Items.AddRange(data.GetExistReductorTempGroups());
 
             checkedListGasTemperatureb1.SetItemChecked(0, true);
             checkedListGasTemperatureb2.SetItemChecked(0, true);
