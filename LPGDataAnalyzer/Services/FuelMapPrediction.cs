@@ -93,7 +93,8 @@ namespace LPGDataAnalyzer.Services
             bool round = true,
             bool showOnlyMultiplayer = false,
             double minChangeValue = 0.5d,
-            double benzDiffMax = 10d)
+            double benzDiffMax = 10d,
+            bool allwaysApplyNegativeTrim = true)
         {
             Dictionary<int, DataItem> invalidItems = [];
             Dictionary<int, (double Min, double Max)> MapRanges = [];
@@ -186,7 +187,7 @@ namespace LPGDataAnalyzer.Services
                         multiplayer = buffer.AsSpan(0, count).Median();
 
                     if (hasEnoughLogs && !showOnlyMultiplayer)
-                        trim = TrimCalulation(multiplayer, minChangeValue);
+                        trim = TrimCalulation(multiplayer, minChangeValue, allwaysApplyNegativeTrim);
 
                     bool shouldUpdate = !showOnlyChanges || trim != 1;
 
@@ -246,17 +247,17 @@ namespace LPGDataAnalyzer.Services
             return 0;
         }
 
-        private static double ApplyCorrections(double trim, double tempGas, double tempRid, double press, double referencePressure)
+        private static double ApplyCorrections(double trim, double tempGas, double tempRid, double pressure, double referencePressure)
         {
             double lpgCoef = GetTemperatureCoef(tempGas, Settings.GasTemperatureRanges, Settings.GasTemperatureCorrectionCoef);
             double ridCoef = GetTemperatureCoef(tempRid, Settings.ReductorTemperatureRanges, Settings.ReductorTemperatureCorrectionCoef);
-            double pressCoef = (referencePressure - press) / referencePressure;
+            double pressCoef = Math.Sqrt(pressure / referencePressure);
 
-            return trim * (1 + pressCoef + lpgCoef / 100 + ridCoef / 100);
+            return trim * pressCoef * (1 + lpgCoef / 100) * (1 + ridCoef / 100);
         }
-        public static double TrimCalulation(double trim, double minChangeValue)
+        public static double TrimCalulation(double trim, double minChangeValue, bool allwaysApplyNegativeTrim)
         {
-            return 1 + (Math.Abs(trim) > minChangeValue || trim < 0 ? trim / 100 : 0); //Always apply negative trims to save fuel.
+            return 1 + (Math.Abs(trim) > minChangeValue || (trim < 0 && allwaysApplyNegativeTrim) ? trim / 100 : 0); //Always apply negative trims to save fuel.
 
         }
     }

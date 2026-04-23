@@ -50,6 +50,7 @@
             dataGridViewOrig = new ReadOnlyDataGridView();
             panelLegend = new Panel();
             DataGridViewInvalidData = new DataGridView();
+            checkBoxAllwaysApplyNegativeTrim = new CheckBox();
             panelHistory.SuspendLayout();
             tableLayoutPanelMain.SuspendLayout();
             tableLayoutPanelRight.SuspendLayout();
@@ -281,6 +282,7 @@
             // 
             // panel3
             // 
+            panel3.Controls.Add(checkBoxAllwaysApplyNegativeTrim);
             panel3.Controls.Add(labelMaxBenzDiff);
             panel3.Controls.Add(textBoxMaxBenzDiff);
             panel3.Controls.Add(labelMinCount);
@@ -440,6 +442,16 @@
             DataGridViewInvalidData.Size = new Size(553, 207);
             DataGridViewInvalidData.TabIndex = 19;
             // 
+            // checkBoxAllwaysApplyNegativeTrim
+            // 
+            checkBoxAllwaysApplyNegativeTrim.AutoSize = true;
+            checkBoxAllwaysApplyNegativeTrim.Location = new Point(6, 97);
+            checkBoxAllwaysApplyNegativeTrim.Name = "checkBoxAllwaysApplyNegativeTrim";
+            checkBoxAllwaysApplyNegativeTrim.Size = new Size(176, 19);
+            checkBoxAllwaysApplyNegativeTrim.TabIndex = 28;
+            checkBoxAllwaysApplyNegativeTrim.Text = "Allways Apply Negative Trim";
+            checkBoxAllwaysApplyNegativeTrim.UseVisualStyleBackColor = true;
+            // 
             // PredictionControl
             // 
             Controls.Add(tableLayoutPanelMain);
@@ -499,5 +511,6 @@
         private DataGridView DataGridViewInvalidData;
         private TextBox textBoxMaxBenzDiff;
         private Label labelMaxBenzDiff;
+        private CheckBox checkBoxAllwaysApplyNegativeTrim;
     }
 }
