@@ -118,12 +118,12 @@ namespace LPGDataAnalyzer.Services
                     .Where(d => d.BENZ_b2 > inj.Min && d.BENZ_b2 <= inj.Max)
                     .ToArray();
 
-                if (logsByInjectionB1.Length != 0 || logsByInjectionB2.Length != 0)
+                if (logsByInjectionB1[injIndex].Length != 0 || logsByInjectionB2[injIndex].Length != 0)
                 {
                     var logByInjection = logsByInjectionB1[injIndex].Concat(logsByInjectionB2[injIndex]).Where(x=>Math.Abs(x.BENZ_Diff) < benzDiffMax);
+
                     var mapMin = logByInjection.Min(x => x.MAP);
-                    var mapMedian = logByInjection.Max(x => x.MAP);
-                    var mapMax = mapMedian;//mapMedian*25/100;
+                    var mapMax = logByInjection.Max(x => x.MAP);
 
                     MapRanges.Add(injIndex, (mapMin, mapMax.Round()));
                 }
@@ -131,9 +131,11 @@ namespace LPGDataAnalyzer.Services
             // 🔥 Main loop
             for (int injIndex = 0; injIndex < injLength; injIndex++)
             {
+                if (!MapRanges.TryGetValue(injIndex, out var mapRange))
+                    continue;
+
                 var injLogsB1 = logsByInjectionB1[injIndex];
                 var injLogsB2 = logsByInjectionB2[injIndex];
-                var mapRange = MapRanges[injIndex];
 
                 for (int rpmIndex = 0; rpmIndex < rpmLength; rpmIndex++)
                 {
@@ -141,7 +143,6 @@ namespace LPGDataAnalyzer.Services
 
                     int count = 0;
                     double[] buffer = new double[injLogsB1.Length + injLogsB2.Length];
-                    
                     // ✅ B1
                     for (int i = 0; i < injLogsB1.Length; i++)
                     {
@@ -156,7 +157,7 @@ namespace LPGDataAnalyzer.Services
                         if (d.RPM > rpm.Min && d.RPM <= rpm.Max)
                         {
                             buffer[count++] = ApplyCorrections(
-                                d.Trim_b1, d.Temp_GAS, d.Temp_RID, d.PRESS, referencePressure);
+                            d.Trim_b1, d.Temp_GAS, d.Temp_RID, d.PRESS, referencePressure);
                         }
                     }
 
@@ -174,7 +175,7 @@ namespace LPGDataAnalyzer.Services
                         if (d.RPM > rpm.Min && d.RPM <= rpm.Max)
                         {
                             buffer[count++] = ApplyCorrections(
-                                d.Trim_b2, d.Temp_GAS, d.Temp_RID, d.PRESS, referencePressure);
+                            d.Trim_b2, d.Temp_GAS, d.Temp_RID, d.PRESS, referencePressure);
                         }
                     }
 

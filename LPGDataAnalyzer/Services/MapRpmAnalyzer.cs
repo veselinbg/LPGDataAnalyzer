@@ -252,6 +252,8 @@ namespace LPGDataAnalyzer.Services
                             DeltaLpgPct = "0%",
                             AvgTrim = 0.0,
                             MedianTrim = 0.0,
+                            MinTrim = 0d,
+                            MaxTrim = 0d,
                             PRESS = 0.0,
                             Press_Min = 0.0,
                             Press_Max = 0.0
@@ -268,6 +270,8 @@ namespace LPGDataAnalyzer.Services
                     // Trim and pressure
                     var avgTrim = mapArray.Average(x => x.Trim);
                     var medianTrim = mapArray.Select(x => x.Trim).Median();
+                    var minTrim = mapArray.Min(x => x.Trim);
+                    var maxTrim = mapArray.Max(x => x.Trim);
                     var avgPress = mapArray.Average(x => x.PRESS);
                     var minPress = mapArray.Min(x => x.PRESS);
                     var maxPress = mapArray.Max(x => x.PRESS);
@@ -290,6 +294,8 @@ namespace LPGDataAnalyzer.Services
                         // Trim / Pressure
                         AvgTrim = avgTrim.Round(),
                         MedianTrim = medianTrim.Round(),
+                        MinTrim = minTrim.Round(),
+                        MaxTrim = maxTrim.Round(),
                         PRESS = avgPress.Round(),
                         Press_Min = minPress.Round(),
                         Press_Max = maxPress.Round()
