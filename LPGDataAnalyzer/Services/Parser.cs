@@ -102,7 +102,7 @@ namespace LPGDataAnalyzer.Services
                 Fast = fast.Round(),
                 Slow = slow.Round(),
                 Trim = ((fast + slow) / 2).Round(),
-
+                TrimDiff = ((avgSlow1 - avgSlow2 + avgFast1 - avgFast2)/2).Round(),
                 AFR_b1 = (15.6 / ((1 + avgFast1 / 100) * (1 + avgSlow1 / 100))).Round(),
                 AFR_b2 = (15.6 / ((1 + avgFast2 / 100) * (1 + avgSlow2 / 100))).Round(),
                 AFR = (15.6 / ((1 + fast / 100) * (1 + slow / 100))).Round(),
@@ -165,7 +165,7 @@ namespace LPGDataAnalyzer.Services
 
                 Trim_b1 = (slow1 + fast1) / 2,
                 Trim_b2 = (slow2 + fast2) / 2,
-
+                TrimDiff = (slow1 - slow2 + fast1 - fast2) / 2,
                 AFR_b1 = 15.6 / ((1 + fast1 / 100) * (1 + slow1 / 100)),
                 AFR_b2 = 15.6 / ((1 + fast2 / 100) * (1 + slow2 / 100)),
                 AFR = 15.6 / ((1 + fast / 100) * (1 + slow / 100)),

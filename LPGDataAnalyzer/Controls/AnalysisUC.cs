@@ -140,9 +140,9 @@ namespace LPGDataAnalyzer.Controls
                     item => item.BENZ_Diff,
                     item => item.MAP,
                     item => item.PRESS,
-                    item => item.Trim
+                    item => item.TrimDiff
                 ],
-                ["BENZ_Diff", "Map", "PRESS", "TRIM"],
+                ["BENZ_Diff", "Map", "PRESS", "TrimDiff"],
                 aggregationBank1,
                 aggregationBank2
             );

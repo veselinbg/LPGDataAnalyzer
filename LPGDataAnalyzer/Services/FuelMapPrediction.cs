@@ -80,7 +80,41 @@ namespace LPGDataAnalyzer.Services
                 return newValue;
             }
         }
+        private static int ProcessLogs(
+                                    DataItem[] logs,
+                                    Func<DataItem, double> trimSelector,
+                                    (double Min, double Max) mapRange,
+                                    (int Min, int Max, int Label) rpmRange,
+                                    double referencePressure,
+                                    double[] buffer,
+                                    int startIndex,
+                                    Dictionary<int, DataItem> invalidItems)
+        {
+            int count = startIndex;
 
+            for (int i = 0; i < logs.Length; i++)
+            {
+                var d = logs[i];
+
+                if (d.MAP < mapRange.Min || d.MAP > mapRange.Max)
+                {
+                    invalidItems.TryAdd(d.TEMPO, d);
+                    continue;
+                }
+
+                if (d.RPM > rpmRange.Min && d.RPM <= rpmRange.Max)
+                {
+                    buffer[count++] = ApplyCorrections(
+                        trimSelector(d),
+                        d.Temp_GAS,
+                        d.Temp_RID,
+                        d.PRESS,
+                        referencePressure);
+                }
+            }
+
+            return count;
+        }
         public static (double?[,] result, List<DataItem> invalidItems) BuildTable(
             DataItem[] logs,
             double?[,] cellMap,
@@ -132,7 +166,13 @@ namespace LPGDataAnalyzer.Services
             for (int injIndex = 0; injIndex < injLength; injIndex++)
             {
                 if (!MapRanges.TryGetValue(injIndex, out var mapRange))
+                {
+                    for (int rpmIndex = 0; rpmIndex < rpmLength; rpmIndex++)
+                    {
+                        result[rpmIndex, injIndex] = cellMap[rpmIndex, injIndex];
+                    }
                     continue;
+                }
 
                 var injLogsB1 = logsByInjectionB1[injIndex];
                 var injLogsB2 = logsByInjectionB2[injIndex];
@@ -144,40 +184,26 @@ namespace LPGDataAnalyzer.Services
                     int count = 0;
                     double[] buffer = new double[injLogsB1.Length + injLogsB2.Length];
                     // ✅ B1
-                    for (int i = 0; i < injLogsB1.Length; i++)
-                    {
-                        var d = injLogsB1[i];
-
-                        if (d.MAP < mapRange.Min || d.MAP > mapRange.Max)
-                        {
-                            invalidItems.TryAdd(d.TEMPO, d);
-                            continue;
-                        }
-
-                        if (d.RPM > rpm.Min && d.RPM <= rpm.Max)
-                        {
-                            buffer[count++] = ApplyCorrections(
-                            d.Trim_b1, d.Temp_GAS, d.Temp_RID, d.PRESS, referencePressure);
-                        }
-                    }
+                    count = ProcessLogs(
+                        injLogsB1,
+                        d => d.Trim_b1,
+                        mapRange,
+                        rpm,
+                        referencePressure,
+                        buffer,
+                        count,
+                        invalidItems);
 
                     // ✅ B2
-                    for (int i = 0; i < injLogsB2.Length; i++)
-                    {
-                        var d = injLogsB2[i];
-
-                        if (d.MAP < mapRange.Min || d.MAP > mapRange.Max)
-                        {
-                            invalidItems.TryAdd(d.TEMPO, d);
-                            continue;
-                        }
-
-                        if (d.RPM > rpm.Min && d.RPM <= rpm.Max)
-                        {
-                            buffer[count++] = ApplyCorrections(
-                            d.Trim_b2, d.Temp_GAS, d.Temp_RID, d.PRESS, referencePressure);
-                        }
-                    }
+                    count = ProcessLogs(
+                        injLogsB2,
+                        d => d.Trim_b2,
+                        mapRange,
+                        rpm,
+                        referencePressure,
+                        buffer,
+                        count,
+                        invalidItems);
 
                     bool hasEnoughLogs = count > minCount;
 
