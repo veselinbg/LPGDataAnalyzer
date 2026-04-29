@@ -167,9 +167,12 @@ namespace LPGDataAnalyzer.Services
             {
                 if (!MapRanges.TryGetValue(injIndex, out var mapRange))
                 {
-                    for (int rpmIndex = 0; rpmIndex < rpmLength; rpmIndex++)
+                    if (!showOnlyChanges)
                     {
-                        result[rpmIndex, injIndex] = cellMap[rpmIndex, injIndex];
+                        for (int rpmIndex = 0; rpmIndex < rpmLength; rpmIndex++)
+                        {
+                            result[rpmIndex, injIndex] = cellMap[rpmIndex, injIndex];
+                        }
                     }
                     continue;
                 }

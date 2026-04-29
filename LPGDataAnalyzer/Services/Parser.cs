@@ -5,6 +5,7 @@ namespace LPGDataAnalyzer.Services
     public class Parser
     {
         private const int ExpectedColumns = 22;
+        private const double TrimTolerance = 0.1; // 🔥 prevents float fragmentation
 
         public DataItem[] Data { get; private set; } = [];
 
@@ -22,8 +23,8 @@ namespace LPGDataAnalyzer.Services
             {
                 bool isNewGroup =
                     buffer.Count == 0 ||
-                    item.Trim_b1 != lastTrimB1 ||
-                    item.Trim_b2 != lastTrimB2;
+                    Math.Abs(item.Trim_b1 - lastTrimB1) > TrimTolerance ||
+                    Math.Abs(item.Trim_b2 - lastTrimB2) > TrimTolerance;
 
                 if (isNewGroup && buffer.Count > 0)
                 {
@@ -55,12 +56,18 @@ namespace LPGDataAnalyzer.Services
                 .Skip(2)
                 .Where(line => !string.IsNullOrWhiteSpace(line))
                 .Select(ParseLine)
-                .Where(x => x.RPM > 0 && x.GAS_b1 > 0 && x.GAS_b2 > 0 && x.Temp_RID > 25);
+                .Where(x =>
+                    x.RPM > 0 &&
+                    x.GAS_b1 > 0 &&
+                    x.GAS_b2 > 0 &&
+                    x.FAST_b1 != 0 &&
+                    x.FAST_b2 != 0);
         }
 
         private static DataItem AverageGroup(List<DataItem> items)
         {
             double avgRPM = items.Average(x => x.RPM);
+
             double avgGas1 = items.Average(x => x.GAS_b1);
             double avgGas2 = items.Average(x => x.GAS_b2);
             double avgBenz1 = items.Average(x => x.BENZ_b1);
@@ -71,14 +78,15 @@ namespace LPGDataAnalyzer.Services
             double avgSlow2 = items.Average(x => x.SLOW_b2);
             double avgFast2 = items.Average(x => x.FAST_b2);
 
-            double fast = (avgFast1 + avgFast2) / 2;
-            double slow = (avgSlow1 + avgSlow2) / 2;
+            // 🔥 unified trims per bank
+            double trim_b1 = avgSlow1 * 0.7 + avgFast1 * 0.3;
+            double trim_b2 = avgSlow2 * 0.7 + avgFast2 * 0.3;
+
+            // 🔥 global trim
+            double trim = (trim_b1 + trim_b2) / 2;
 
             return new DataItem
             {
-                Trim_b1 = items[0].Trim_b1,
-                Trim_b2 = items[0].Trim_b2,
-
                 RPM = (int)avgRPM.Round(),
 
                 GAS_b1 = avgGas1.Round(),
@@ -96,19 +104,27 @@ namespace LPGDataAnalyzer.Services
                 SLOW_b2 = avgSlow2.Round(),
                 FAST_b2 = avgFast2.Round(),
 
-                OX_b1 = items.Average(x => x.OX_b1).Round(),
-                OX_b2 = items.Average(x => x.OX_b2).Round(),
+                // 🔥 trims (correct!)
+                Trim_b1 = trim_b1.Round(),
+                Trim_b2 = trim_b2.Round(),
+                Trim = trim.Round(),
 
-                Fast = fast.Round(),
-                Slow = slow.Round(),
-                Trim = ((fast + slow) / 2).Round(),
-                TrimDiff = ((avgSlow1 - avgSlow2 + avgFast1 - avgFast2)/2).Round(),
-                AFR_b1 = (15.6 / ((1 + avgFast1 / 100) * (1 + avgSlow1 / 100))).Round(),
-                AFR_b2 = (15.6 / ((1 + avgFast2 / 100) * (1 + avgSlow2 / 100))).Round(),
-                AFR = (15.6 / ((1 + fast / 100) * (1 + slow / 100))).Round(),
+                TrimDiff = (trim_b1 - trim_b2).Round(),
+
+                // 🔥 AFR (correct model)
+                AFR_b1 = (15.6 / (1 + trim_b1 / 100)).Round(),
+                AFR_b2 = (15.6 / (1 + trim_b2 / 100)).Round(),
+                AFR = (15.6 / (1 + trim / 100)).Round(),
 
                 GAS = ((avgGas1 + avgGas2) / 2).Round(),
                 BENZ = ((avgBenz1 + avgBenz2) / 2).Round(),
+
+                OX_b1 = items.Average(x => x.OX_b1).Round(),
+                OX_b2 = items.Average(x => x.OX_b2).Round(),
+
+                Ratio_b1 = items.Average(x => x.Ratio_b1).Round(),
+                Ratio_b2 = items.Average(x => x.Ratio_b2).Round(),
+                RatioDifference = items.Average(x => x.RatioDifference).Round(),
 
                 BENZ_Diff = avgBenz1.RelDiff(avgBenz2).Round()
             };
@@ -133,8 +149,9 @@ namespace LPGDataAnalyzer.Services
             double slow2 = span[ranges[16]].ToDouble();
             double fast2 = span[ranges[17]].ToDouble();
 
-            double fast = (fast1 + fast2) / 2;
-            double slow = (slow1 + slow2) / 2;
+            double trim_b1 = slow1 * 0.7 + fast1 * 0.3;
+            double trim_b2 = slow2 * 0.7 + fast2 * 0.3;
+            double trim = (trim_b1 + trim_b2) / 2;
 
             return new DataItem
             {
@@ -156,29 +173,25 @@ namespace LPGDataAnalyzer.Services
                 SLOW_b2 = slow2,
                 FAST_b2 = fast2,
 
-                OX_b1 = span[ranges[12]].ToDouble(),
-                OX_b2 = span[ranges[18]].ToDouble(),
+                Trim_b1 = trim_b1,
+                Trim_b2 = trim_b2,
+                Trim = trim,
 
-                Fast = fast,
-                Slow = slow,
-                Trim = (fast + slow) / 2,
+                TrimDiff = (trim_b1 - trim_b2),
 
-                Trim_b1 = (slow1 + fast1) / 2,
-                Trim_b2 = (slow2 + fast2) / 2,
-                TrimDiff = (slow1 - slow2 + fast1 - fast2) / 2,
-                AFR_b1 = 15.6 / ((1 + fast1 / 100) * (1 + slow1 / 100)),
-                AFR_b2 = 15.6 / ((1 + fast2 / 100) * (1 + slow2 / 100)),
-                AFR = 15.6 / ((1 + fast / 100) * (1 + slow / 100)),
+                AFR_b1 = 15.6 / (1 + trim_b1 / 100),
+                AFR_b2 = 15.6 / (1 + trim_b2 / 100),
+                AFR = 15.6 / (1 + trim / 100),
 
                 GAS = (gas1 + gas2) / 2,
                 BENZ = (benz1 + benz2) / 2,
 
                 BENZ_Diff = benz1.RelDiff(benz2),
 
-                Ratio_b1 = benz1 != 0 ? (gas1 / benz1).Round() : 0,
-                Ratio_b2 = benz2 != 0 ? (gas2 / benz2).Round() : 0,
+                Ratio_b1 = benz1 != 0 ? gas1 / benz1 : 0,
+                Ratio_b2 = benz2 != 0 ? gas2 / benz2 : 0,
                 RatioDifference = (benz1 != 0 && benz2 != 0)
-                    ? ((gas1 / benz1) - (gas2 / benz2)).Round(1)
+                    ? (gas1 / benz1) - (gas2 / benz2)
                     : 0
             };
         }
