@@ -321,7 +321,7 @@ namespace LPGDataAnalyzer.Controls
             if (_xValues.Length == 0) return;
 
             var axis = chart.ChartAreas[0].AxisX;
-
+            axis.IntervalAutoMode = IntervalAutoMode.VariableCount;
             axis.Minimum = _xValues[0];
             axis.Maximum = _xValues[^1];
         }
@@ -332,7 +332,7 @@ namespace LPGDataAnalyzer.Controls
 
             double pad = (maxY - minY) * 0.01;
             if (pad == 0) pad = 1;
-
+            axis.IntervalAutoMode = IntervalAutoMode.VariableCount;
             axis.Minimum = minY - pad;
             axis.Maximum = maxY + pad;
         }
