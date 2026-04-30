@@ -128,7 +128,8 @@ namespace LPGDataAnalyzer.Services
             bool showOnlyMultiplayer = false,
             double minChangeValue = 0.5d,
             double benzDiffMax = 10d,
-            bool allwaysApplyNegativeTrim = true)
+            bool allwaysApplyNegativeTrim = true,
+            bool showOnlyCount = false)
         {
             Dictionary<int, DataItem> invalidItems = [];
             Dictionary<int, (double Min, double Max)> MapRanges = [];
@@ -220,8 +221,11 @@ namespace LPGDataAnalyzer.Services
                         trim = TrimCalulation(multiplayer, minChangeValue, allwaysApplyNegativeTrim);
 
                     bool shouldUpdate = !showOnlyChanges || trim != 1;
-
-                    if (hasEnoughLogs)
+                    if(showOnlyCount)
+                    {
+                        result[rpmIndex, injIndex] = count>0 ? count:  null;
+                    }
+                    else if (hasEnoughLogs)
                     {
                         if (showOnlyMultiplayer)
                         {

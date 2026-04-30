@@ -37,6 +37,8 @@
             tableLayoutPanelManagement = new TableLayoutPanel();
             panel1 = new Panel();
             panel3 = new Panel();
+            checkBoxShowOnlyCount = new CheckBox();
+            checkBoxAllwaysApplyNegativeTrim = new CheckBox();
             labelMaxBenzDiff = new Label();
             textBoxMaxBenzDiff = new TextBox();
             labelMinCount = new Label();
@@ -50,7 +52,6 @@
             dataGridViewOrig = new ReadOnlyDataGridView();
             panelLegend = new Panel();
             DataGridViewInvalidData = new DataGridView();
-            checkBoxAllwaysApplyNegativeTrim = new CheckBox();
             panelHistory.SuspendLayout();
             tableLayoutPanelMain.SuspendLayout();
             tableLayoutPanelRight.SuspendLayout();
@@ -96,7 +97,7 @@
             textBoxMinCount.RightToLeft = RightToLeft.Yes;
             textBoxMinCount.Size = new Size(45, 23);
             textBoxMinCount.TabIndex = 2;
-            textBoxMinCount.Text = "0";
+            textBoxMinCount.Text = "10";
             // 
             // checkBoxRound
             // 
@@ -282,6 +283,7 @@
             // 
             // panel3
             // 
+            panel3.Controls.Add(checkBoxShowOnlyCount);
             panel3.Controls.Add(checkBoxAllwaysApplyNegativeTrim);
             panel3.Controls.Add(labelMaxBenzDiff);
             panel3.Controls.Add(textBoxMaxBenzDiff);
@@ -303,6 +305,26 @@
             panel3.Size = new Size(412, 172);
             panel3.TabIndex = 9;
             // 
+            // checkBoxShowOnlyCount
+            // 
+            checkBoxShowOnlyCount.AutoSize = true;
+            checkBoxShowOnlyCount.Location = new Point(4, 121);
+            checkBoxShowOnlyCount.Name = "checkBoxShowOnlyCount";
+            checkBoxShowOnlyCount.Size = new Size(119, 19);
+            checkBoxShowOnlyCount.TabIndex = 29;
+            checkBoxShowOnlyCount.Text = "Show Only Count";
+            checkBoxShowOnlyCount.UseVisualStyleBackColor = true;
+            // 
+            // checkBoxAllwaysApplyNegativeTrim
+            // 
+            checkBoxAllwaysApplyNegativeTrim.AutoSize = true;
+            checkBoxAllwaysApplyNegativeTrim.Location = new Point(6, 97);
+            checkBoxAllwaysApplyNegativeTrim.Name = "checkBoxAllwaysApplyNegativeTrim";
+            checkBoxAllwaysApplyNegativeTrim.Size = new Size(176, 19);
+            checkBoxAllwaysApplyNegativeTrim.TabIndex = 28;
+            checkBoxAllwaysApplyNegativeTrim.Text = "Allways Apply Negative Trim";
+            checkBoxAllwaysApplyNegativeTrim.UseVisualStyleBackColor = true;
+            // 
             // labelMaxBenzDiff
             // 
             labelMaxBenzDiff.AutoSize = true;
@@ -319,7 +341,7 @@
             textBoxMaxBenzDiff.RightToLeft = RightToLeft.Yes;
             textBoxMaxBenzDiff.Size = new Size(44, 23);
             textBoxMaxBenzDiff.TabIndex = 26;
-            textBoxMaxBenzDiff.Text = "10";
+            textBoxMaxBenzDiff.Text = "100";
             // 
             // labelMinCount
             // 
@@ -442,16 +464,6 @@
             DataGridViewInvalidData.Size = new Size(553, 207);
             DataGridViewInvalidData.TabIndex = 19;
             // 
-            // checkBoxAllwaysApplyNegativeTrim
-            // 
-            checkBoxAllwaysApplyNegativeTrim.AutoSize = true;
-            checkBoxAllwaysApplyNegativeTrim.Location = new Point(6, 97);
-            checkBoxAllwaysApplyNegativeTrim.Name = "checkBoxAllwaysApplyNegativeTrim";
-            checkBoxAllwaysApplyNegativeTrim.Size = new Size(176, 19);
-            checkBoxAllwaysApplyNegativeTrim.TabIndex = 28;
-            checkBoxAllwaysApplyNegativeTrim.Text = "Allways Apply Negative Trim";
-            checkBoxAllwaysApplyNegativeTrim.UseVisualStyleBackColor = true;
-            // 
             // PredictionControl
             // 
             Controls.Add(tableLayoutPanelMain);
@@ -512,5 +524,6 @@
         private TextBox textBoxMaxBenzDiff;
         private Label labelMaxBenzDiff;
         private CheckBox checkBoxAllwaysApplyNegativeTrim;
+        private CheckBox checkBoxShowOnlyCount;
     }
 }
