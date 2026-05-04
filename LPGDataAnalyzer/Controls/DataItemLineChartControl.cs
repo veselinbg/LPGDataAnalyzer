@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using LPGDataAnalyzer.Models;
 using System.Linq.Expressions;
-using System.Windows.Forms;
 using System.Windows.Forms.DataVisualization.Charting;
-using System.Drawing;
-using LPGDataAnalyzer.Models;
 
 namespace LPGDataAnalyzer.Controls
 {
@@ -22,8 +17,8 @@ namespace LPGDataAnalyzer.Controls
         };
 
         private readonly Button btnBuild = new() { Text = "Build" };
-        private readonly Button btnZoomIn = new() { Text = "+" };
-        private readonly Button btnZoomOut = new() { Text = "-" };
+        private readonly Button btnZoomIn = new() { Text = "+" , Width = 30};
+        private readonly Button btnZoomOut = new() { Text = "-", Width = 30 };
         private readonly Button btnReset = new() { Text = "Reset" };
 
         private readonly Label lblInfo = new()
