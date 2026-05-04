@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace LPGDataAnalyzer
+﻿namespace LPGDataAnalyzer
 {
     public class Helper
     {

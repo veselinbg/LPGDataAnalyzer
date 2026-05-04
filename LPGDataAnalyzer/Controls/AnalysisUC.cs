@@ -119,8 +119,8 @@ namespace LPGDataAnalyzer.Controls
                 ],
                 [
                     $"{fieldBank1}_b1",
-                    $"{fieldBank1}_b2",
-                    $"{fieldBank2}_b1",
+                    $"{fieldBank2}_b2",
+                    $"{fieldBank1}_b1",
                     $"{fieldBank2}_b2"
                 ],
                 aggregationBank1,
@@ -169,11 +169,11 @@ namespace LPGDataAnalyzer.Controls
 
             dataGridViewAnalyzeDataBank1t1.SetData(
                 Analyzer.BuildTable(filteredT1, injectionBankSelectors[0], valueSelectors[0], aggregationT1),
-                Data, titles[0]);
+                Data, injectionBankSelectors[0], titles[0]);
 
             dataGridViewAnalyzeDataBank2t1.SetData(
                 Analyzer.BuildTable(filteredT1, injectionBankSelectors[1], valueSelectors[1], aggregationT1),
-                Data, titles[1]);
+                Data, injectionBankSelectors[1], titles[1]);
 
             DataGridViewColorization.HighlightDifferencesHeatmapWithValues(dataGridViewAnalyzeDataBank1t1.Grid);
             DataGridViewColorization.HighlightDifferencesHeatmapWithValues(dataGridViewAnalyzeDataBank2t1.Grid);
@@ -185,11 +185,11 @@ namespace LPGDataAnalyzer.Controls
 
             dataGridViewAnalyzeDataBank1t2.SetData(
                 Analyzer.BuildTable(filteredT2, injectionBankSelectors[2], valueSelectors[2], aggregationT2),
-                Data, titles[2]);
+                Data, injectionBankSelectors[2], titles[2]);
 
             dataGridViewAnalyzeDataBank2t2.SetData(
                 Analyzer.BuildTable(filteredT2, injectionBankSelectors[3], valueSelectors[3], aggregationT2),
-                Data, titles[3]);
+                Data, injectionBankSelectors[3], titles[3]);
 
             DataGridViewColorization.HighlightDifferencesHeatmapWithValues(dataGridViewAnalyzeDataBank1t2.Grid);
             DataGridViewColorization.HighlightDifferencesHeatmapWithValues(dataGridViewAnalyzeDataBank2t2.Grid);

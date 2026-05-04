@@ -112,6 +112,8 @@ namespace LPGDataAnalyzer.Controls
         private DataGridViewUC dataGridView;
         private DataItem[] data;
         private double?[,] currentTable;
+        private Func<DataItem, double> _InjectionSelector;
+
         public ReadOnlyDataGridView()
         {
             InitializeComponents();
@@ -129,8 +131,9 @@ namespace LPGDataAnalyzer.Controls
             get { return titleLabel.Visible; }
             set { titleLabel.Visible = value; }
         }
-        public void SetData(double?[,] table, DataItem[] dataItems, string title = "")
+        public void SetData(double?[,] table, DataItem[] dataItems, Func<DataItem, double> injectionSelector, string title = "")
         {
+            _InjectionSelector = injectionSelector;
             currentTable = table;
             data = dataItems;
             Title = title;
@@ -168,23 +171,20 @@ namespace LPGDataAnalyzer.Controls
                 dataGridView.ApplyLightHeaderStyle(e.CellStyle);
             }
         }
-        
         private void DataGridView_CellClick(object? sender, DataGridViewCellEventArgs e)
         {
-            if (data is not null && e.ColumnIndex != 0 && e.RowIndex >= 0)
-            {
-                var range = Settings.InjectionRanges[e.RowIndex];
-                var rpm = Settings.RpmColumns[e.ColumnIndex - 1];
+            if (data is null || e.ColumnIndex == 0 || e.RowIndex < 0)
+                return;
 
-                var dataItem = data.Where(x =>
-                    x.RPM > rpm.Min && x.RPM <= rpm.Max &&
-                    ((x.BENZ_b1 > range.Min && x.BENZ_b1 <= range.Max) ||
-                     (x.BENZ_b2 > range.Min && x.BENZ_b2 <= range.Max)))
-                    .ToList();
-                var cellValue = currentTable[e.ColumnIndex - 1, e.RowIndex];
+            var range = Settings.InjectionRanges[e.RowIndex];
+            var rpm = Settings.RpmColumns[e.ColumnIndex - 1];
 
-                ShowStatisticForm(this, dataItem, cellValue);
-            }
+            var dataItem = data.Where(x => _InjectionSelector(x) > range.Min && _InjectionSelector(x) <= range.Max &&
+                 x.RPM > rpm.Min && x.RPM <= rpm.Max).ToList();
+
+            var cellValue = currentTable[e.ColumnIndex - 1, e.RowIndex];
+
+            ShowStatisticForm(this, dataItem, cellValue);
         }
 
         public static void ShowStatisticForm(IWin32Window? owner, List<DataItem> data, double? value)

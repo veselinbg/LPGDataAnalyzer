@@ -113,10 +113,17 @@ namespace LPGDataAnalyzer.Controls
 
         private void InitChart()
         {
-            var area = new ChartArea("Main");
+            chart.AntiAliasing = AntiAliasingStyles.All;
 
+            var area = new ChartArea("Main");
+            
             area.AxisX.ScaleView.Zoomable = true;
             area.AxisY.ScaleView.Zoomable = true;
+
+            area.CursorX.IsUserEnabled = true;
+            area.CursorX.IsUserSelectionEnabled = true;
+            area.CursorX.LineColor = Color.Gray;
+            area.CursorX.LineDashStyle = ChartDashStyle.Dash;
 
             chart.ChartAreas.Add(area);
 
@@ -250,7 +257,9 @@ namespace LPGDataAnalyzer.Controls
                 ChartType = SeriesChartType.Line,
                 BorderWidth = 2,
                 Color = colors[index % colors.Length],
-                Legend = "Legend"
+                Legend = "Legend",
+                MarkerStyle = MarkerStyle.Circle,
+                MarkerSize = 5
             };
 
             FillSeries(s, index);
@@ -332,7 +341,8 @@ namespace LPGDataAnalyzer.Controls
 
         private void Chart_MouseMove(object sender, MouseEventArgs e)
         {
-            if (_xValues.Length == 0) return;
+            if (_xValues.Length == 0)
+                return;
 
             var area = chart.ChartAreas[0];
 
@@ -341,9 +351,22 @@ namespace LPGDataAnalyzer.Controls
                 double xVal = area.AxisX.PixelPositionToValue(e.X);
                 int idx = FindNearestIndex(xVal);
 
-                var item = _cacheData[idx].item;
+                double x = _xValues[idx];
 
-                lblInfo.Text = $"X: {_xValues[idx]:0.###}";
+                area.CursorX.Position = x;
+
+                var dataItem = _data[idx];
+
+                var props = dataItem.GetType().GetProperties();
+
+                string text = $"X: {x:0.#####}\n";
+
+                foreach (var p in props)
+                {
+                    text += $"{p.Name}: {p.GetValue(dataItem)}\n";
+                }
+
+                lblInfo.Text = text;
                 lblInfo.Visible = true;
             }
             catch
