@@ -35,6 +35,35 @@ namespace LPGDataAnalyzer.Controls
             AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
 
             AutoSize = true;
+
+            this.CellFormatting += (s, e) =>
+            {
+                var col = this.Columns[e.ColumnIndex].Name;
+
+                if (col.Contains("Trim") && e.Value is double val)
+                {
+                    if (val > 10)
+                    {
+                        e.CellStyle.BackColor = Color.LightCoral;
+                        e.CellStyle.ForeColor = Color.Black;
+                    }
+                    else if (val < -10)
+                    {
+                        e.CellStyle.BackColor = Color.LightBlue;
+                        e.CellStyle.ForeColor = Color.Black;
+                    }
+                    else
+                    {
+                        e.CellStyle.BackColor = Color.LightGreen;
+                        e.CellStyle.ForeColor = Color.Black;
+                    }
+                }
+                if (e.Value != null && e.CellStyle.ForeColor == e.CellStyle.BackColor)
+                {
+                    e.CellStyle.BackColor = Color.Magenta; // obvious bug marker
+                    e.CellStyle.ForeColor = Color.Black;
+                }
+            };
         }
         public void ApplyLightHeaderStyle(DataGridViewCellStyle style)
         {
@@ -70,34 +99,7 @@ namespace LPGDataAnalyzer.Controls
                     col.DefaultCellStyle.ForeColor = Color.DarkOrange;
                 }
             }
-            this.CellFormatting += (s, e) =>
-            {
-                var col = this.Columns[e.ColumnIndex].Name;
-
-                if (col.Contains("Trim") && e.Value is double val)
-                {
-                    if (val > 10)
-                    {
-                        e.CellStyle.BackColor = Color.LightCoral;
-                        e.CellStyle.ForeColor = Color.Black;
-                    }
-                    else if (val < -10)
-                    {
-                        e.CellStyle.BackColor = Color.LightBlue;
-                        e.CellStyle.ForeColor = Color.Black;
-                    }
-                    else
-                    {
-                        e.CellStyle.BackColor = Color.LightGreen;
-                        e.CellStyle.ForeColor = Color.Black;
-                    }
-                }
-                if (e.Value != null && e.CellStyle.ForeColor == e.CellStyle.BackColor)
-                {
-                    e.CellStyle.BackColor = Color.Magenta; // obvious bug marker
-                    e.CellStyle.ForeColor = Color.Black;
-                }
-            };
+            
         }
 
         public void LoadData(object data)
@@ -137,9 +139,7 @@ namespace LPGDataAnalyzer.Controls
             currentTable = table;
             data = dataItems;
             Title = title;
-
-            CreateColumns(RpmColumns.Select(x => x.Label));
-
+            CreateColumns();
             FillRows( table);
         }
         private void InitializeComponents()
@@ -195,68 +195,81 @@ namespace LPGDataAnalyzer.Controls
             };
             form.ShowDialog(owner);
         }
-        private void CreateColumns(IEnumerable<int> rpmColumns)
+        private void CreateColumns()
         {
-            dataGridView.Columns.Clear();
-
-            var col = new DataGridViewTextBoxColumn
+            if (dataGridView.Columns.Count != RpmColumns.Length + 1)
             {
-                Name = "InjectionTime",
-                HeaderText = "Inj.Time",
-                ValueType = typeof(string),
-                AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells
-            };
-            dataGridView.Columns.Add(col);
+                dataGridView.Columns.Clear();
 
-            foreach (int rpm in rpmColumns)
-            {
-                var rpmCol = new DataGridViewTextBoxColumn
+                var col = new DataGridViewTextBoxColumn
                 {
-                    Name = $"RPM_{rpm}",
-                    HeaderText = rpm.ToString(),
-                    ValueType = typeof(double),
-                    AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill
+                    Name = "InjectionTime",
+                    HeaderText = "Inj.Time",
+                    ValueType = typeof(string),
+                    AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells
                 };
-                //rpmCol.DefaultCellStyle.Format = "F2"; // automatic formatting
-                dataGridView.Columns.Add(rpmCol);
+                dataGridView.Columns.Add(col);
+
+                foreach (var rpm in RpmColumns)
+                {
+                    var rpmCol = new DataGridViewTextBoxColumn
+                    {
+                        Name = $"RPM_{rpm.Label}",
+                        HeaderText = rpm.Label.ToString(),
+                        ValueType = typeof(double),
+                        AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill
+                    };
+                    dataGridView.Columns.Add(rpmCol);
+                }
             }
         }
         private void FillRows(double?[,] table)
         {
-            dataGridView.SuspendLayout();
+            int injCount = InjectionRanges.Length;
+            int rpmCount = RpmColumns.Length;
+
+            var grid = dataGridView;
+
+            grid.SuspendLayout();
+
             try
             {
-                dataGridView.Rows.Clear();
-
-                int injCount = InjectionRanges.Length;
-                int rpmCount = RpmColumns.Length;
-
-                // Cache column indices
-                int injectionColIndex = dataGridView.Columns["InjectionTime"].Index;
-
-                int[] rpmColIndices = new int[rpmCount];
-                for (int i = 0; i < rpmCount; i++)
+                // Ensure row count
+                if (grid.Rows.Count != injCount)
                 {
-                    rpmColIndices[i] = dataGridView.Columns[$"RPM_{RpmColumns[i].Label}"].Index;
+                    grid.Rows.Clear();
+                    grid.RowCount = injCount;
                 }
 
-                for (int injIndex = 0; injIndex < injCount; injIndex++)
+                var rows = grid.Rows;
+
+                for (int i = 0; i < injCount; i++)
                 {
-                    object[] cells = new object[dataGridView.Columns.Count];
+                    var cells = rows[i].Cells;
 
-                    cells[injectionColIndex] = InjectionRanges[injIndex].Label;
+                    // Column 0 = InjectionTime
+                    if (!Equals(cells[0].Value, InjectionRanges[i].Label))
+                        cells[0].Value = InjectionRanges[i].Label;
 
-                    for (int rpmIndex = 0; rpmIndex < rpmCount; rpmIndex++)
+                    // Columns 1..N = RPM values
+                    for (int j = 0; j < rpmCount; j++)
                     {
-                        cells[rpmColIndices[rpmIndex]] = table[rpmIndex, injIndex];
-                    }
+                        if (j >= 0 && j < table.GetLength(0) &&
+                            i >= 0 && i < table.GetLength(1))
+                        {
+                            var newVal = table[j, i];
 
-                    dataGridView.Rows.Add(cells);
+                            if (!Equals(cells[j + 1].Value, newVal))
+                            {
+                                cells[j + 1].Value = newVal;
+                            }
+                        }
+                    }
                 }
             }
             finally
             {
-                dataGridView.ResumeLayout();
+                grid.ResumeLayout();
             }
         }
     }

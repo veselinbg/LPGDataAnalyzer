@@ -50,9 +50,9 @@ namespace LPGDataAnalyzer
             reducerTempCorrection1 = new ReducerTempCorrection();
             tabPageAllData = new TabPage();
             showAllFileDataui1 = new ShowAllFileDataUI();
-            buttonExtraInjectionCalculator = new Button();
             tabPageChart = new TabPage();
             dataItemLineChartControl1 = new DataItemLineChartControl();
+            buttonExtraInjectionCalculator = new Button();
             statusBar.SuspendLayout();
             tabControlMain.SuspendLayout();
             tabPageMainData.SuspendLayout();
@@ -161,9 +161,10 @@ namespace LPGDataAnalyzer
             // 
             // analysisUC
             // 
-            analysisUC.Location = new Point(0, 0);
+            analysisUC.Dock = DockStyle.Fill;
+            analysisUC.Location = new Point(3, 3);
             analysisUC.Name = "analysisUC";
-            analysisUC.Size = new Size(1516, 848);
+            analysisUC.Size = new Size(1402, 769);
             analysisUC.TabIndex = 0;
             // 
             // tabPageGroupByTemp
@@ -249,16 +250,6 @@ namespace LPGDataAnalyzer
             showAllFileDataui1.Size = new Size(1408, 775);
             showAllFileDataui1.TabIndex = 0;
             // 
-            // buttonExtraInjectionCalculator
-            // 
-            buttonExtraInjectionCalculator.Location = new Point(1216, 11);
-            buttonExtraInjectionCalculator.Name = "buttonExtraInjectionCalculator";
-            buttonExtraInjectionCalculator.Size = new Size(152, 23);
-            buttonExtraInjectionCalculator.TabIndex = 21;
-            buttonExtraInjectionCalculator.Text = "Extra Injection Calculator";
-            buttonExtraInjectionCalculator.UseVisualStyleBackColor = true;
-            buttonExtraInjectionCalculator.Click += buttonExtraInjectionCalculator_Click;
-            // 
             // tabPageChart
             // 
             tabPageChart.Controls.Add(dataItemLineChartControl1);
@@ -276,6 +267,16 @@ namespace LPGDataAnalyzer
             dataItemLineChartControl1.Name = "dataItemLineChartControl1";
             dataItemLineChartControl1.Size = new Size(1408, 775);
             dataItemLineChartControl1.TabIndex = 0;
+            // 
+            // buttonExtraInjectionCalculator
+            // 
+            buttonExtraInjectionCalculator.Location = new Point(1216, 11);
+            buttonExtraInjectionCalculator.Name = "buttonExtraInjectionCalculator";
+            buttonExtraInjectionCalculator.Size = new Size(152, 23);
+            buttonExtraInjectionCalculator.TabIndex = 21;
+            buttonExtraInjectionCalculator.Text = "Extra Injection Calculator";
+            buttonExtraInjectionCalculator.UseVisualStyleBackColor = true;
+            buttonExtraInjectionCalculator.Click += buttonExtraInjectionCalculator_Click;
             // 
             // MainForm
             // 

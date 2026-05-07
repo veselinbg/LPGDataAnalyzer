@@ -106,7 +106,7 @@ namespace LPGDataAnalyzer.Controls
             var deadTime = MapRpmAnalyzer.LpgInjectorDeadTimeEstimation(data);
             dataGridViewDeadTime.Grid.LoadData(deadTime);
 
-            var enhancedBank = MapRpmAnalyzer.BuildEnhancedBankMap(data);
+            var enhancedBank = MapRpmAnalyzer.BuildGrid(data);
             dataGridViewEnhancedBank.Grid.LoadData(enhancedBank);
         }
     }

@@ -1,4 +1,5 @@
 ﻿using LPGDataAnalyzer.Models;
+using System.Runtime.Intrinsics.Arm;
 
 namespace LPGDataAnalyzer.Services
 {
@@ -202,109 +203,118 @@ namespace LPGDataAnalyzer.Services
             }).ToArray();
         }
         /// <summary>
-//         Uses map filters, driving, and RPM ranges.
-//        Keeps RPM bins grouping(250 RPM steps, configurable).
-//Calculates fuel and LPG bank averages and differences.
-//Includes Trim and Pressure stats like in BuildTableByMap.
-//Handles empty filtered sets safely.
+        //         Uses map filters, driving, and RPM ranges.
+        //        Keeps RPM bins grouping(250 RPM steps, configurable).
+        //Calculates fuel and LPG bank averages and differences.
+        //Includes Trim and Pressure stats like in BuildTableByMap.
+        //Handles empty filtered sets safely.
         /// </summary>
         /// <param name="data"></param>
         /// <returns></returns>
-        public static object BuildEnhancedBankMap(DataItem[] data)
+        public static object BuildGrid(DataItem[] data)
         {
-            return Settings.MapModes.SelectMany(map =>
+            var result = new Dictionary<(int rpm, double inj), dynamic>();
+
+            foreach (var d in data)
             {
-                // Filter by MAP range
-                var mapData = data.Where(d => d.MAP > map.Min && d.MAP <= map.Max);
+                // RPM bucket (columns)
+                int rpmLabel =
+                    Settings.RpmColumns.First(r => d.RPM > r.Min && d.RPM <= r.Max).Label;
 
-                // Apply Driving range if available
-                var drivingRangeItem = Settings.DrivingModes.FirstOrDefault(dr => dr.Label == map.Label);
-                if (!drivingRangeItem.Equals(default))
+                // Injection bucket (rows)
+                double injAvg = (d.BENZ_b1 + d.BENZ_b2) / 2.0;
+                double injLabel =
+                    Settings.InjectionRanges.First(r => injAvg > r.Min && injAvg <= r.Max).Label;
+
+                var key = (rpmLabel, injLabel);
+
+                if (!result.TryGetValue(key, out var cell))
                 {
-                    mapData = mapData.Where(x => x.BENZ_b1 > drivingRangeItem.Min && x.BENZ_b1 <= drivingRangeItem.Max);
-                }
-
-                // Apply RPM range if available
-                var rpmRangeItem = Settings.RpmRanges.FirstOrDefault(dr => dr.Label == map.Label);
-                if (!rpmRangeItem.Equals(default))
-                {
-                    mapData = mapData.Where(x => x.RPM > rpmRangeItem.Min && x.RPM <= rpmRangeItem.Max);
-                }
-
-                // Group by RPM bins (e.g., 250 rpm steps)
-                var groupedByRpm = mapData
-                    .GroupBy(s => (int)Math.Round(s.RPM / 250.0) * 250);
-
-                return groupedByRpm.Select(g =>
-                {
-                    var mapArray = g.ToArray();
-
-                    if (!mapArray.Any())
-                        return new
-                        {
-                            map.Label,
-                            Rpm = g.Key,
-                            Bank1Ms = 0.0,
-                            Bank2Ms = 0.0,
-                            DeltaBenzPct = "0%",
-                            Lpg1 = 0.0,
-                            Lpg2 = 0.0,
-                            DeltaLpgPct = "0%",
-                            AvgTrim = 0.0,
-                            MedianTrim = 0.0,
-                            MinTrim = 0d,
-                            MaxTrim = 0d,
-                            PRESS = 0.0,
-                            Press_Min = 0.0,
-                            Press_Max = 0.0
-                        };
-
-                    // Fuel (BENZ) averages
-                    var avgBenzB1 = mapArray.Average(x => x.BENZ_b1);
-                    var avgBenzB2 = mapArray.Average(x => x.BENZ_b2);
-
-                    // LPG (GAS) averages
-                    var avgGasB1 = mapArray.Average(x => x.GAS_b1);
-                    var avgGasB2 = mapArray.Average(x => x.GAS_b2);
-
-                    // Trim and pressure
-                    var avgTrim = mapArray.Average(x => x.Trim);
-                    var medianTrim = mapArray.Select(x => x.Trim).Median();
-                    var minTrim = mapArray.Min(x => x.Trim);
-                    var maxTrim = mapArray.Max(x => x.Trim);
-                    var avgPress = mapArray.Average(x => x.PRESS);
-                    var minPress = mapArray.Min(x => x.PRESS);
-                    var maxPress = mapArray.Max(x => x.PRESS);
-
-                    return new
+                    cell = new
                     {
-                        map.Label,
-                        Rpm = g.Key,
+                        Rpm = rpmLabel,
+                        Injection = injLabel,
+                        Count = 0,
 
-                        // BENZ
-                        Bank1Ms = avgBenzB1.Round(),
-                        Bank2Ms = avgBenzB2.Round(),
-                        DeltaBenzPct = (100.0 * (avgBenzB1 - avgBenzB2) / avgBenzB1).Round() + "%",
-
-                        // LPG
-                        Lpg1 = avgGasB1.Round(),
-                        Lpg2 = avgGasB2.Round(),
-                        DeltaLpgPct = ((avgGasB1 - avgGasB2) / ((avgGasB1 + avgGasB2) / 2.0)).ToString("P"),
-
-                        // Trim / Pressure
-                        AvgTrim = avgTrim.Round(),
-                        MedianTrim = medianTrim.Round(),
-                        MinTrim = minTrim.Round(),
-                        MaxTrim = maxTrim.Round(),
-                        PRESS = avgPress.Round(),
-                        Press_Min = minPress.Round(),
-                        Press_Max = maxPress.Round()
+                        SumB1 = 0.0,
+                        SumB2 = 0.0,
+                        SumT1 = 0.0,
+                        SumT2 = 0.0,
+                        SumDiff = 0.0
                     };
+                }
+
+                result[key] = new
+                {
+                    cell.Rpm,
+                    cell.Injection,
+                    Count = cell.Count + 1,
+
+                    SumB1 = cell.SumB1 + d.BENZ_b1,
+                    SumB2 = cell.SumB2 + d.BENZ_b2,
+                    SumT1 = cell.SumT1 + d.Trim_b1,
+                    SumT2 = cell.SumT2 + d.Trim_b2,
+
+                    SumDiff = cell.SumDiff +
+                              (d.BENZ_b1 != 0
+                                ? ((d.BENZ_b2 - d.BENZ_b1) / d.BENZ_b1) * 100.0
+                                : 0)
+                };
+            }
+
+            // -------------------------
+            // FINAL projection
+            // -------------------------
+            var output = new List<object>();
+
+            foreach (var c in result.Values)
+            {
+                double avgB1 = c.SumB1 / c.Count;
+                double avgB2 = c.SumB2 / c.Count;
+                double avgT1 = c.SumT1 / c.Count;
+                double avgT2 = c.SumT2 / c.Count;
+                double avgDiff = c.SumDiff / c.Count;
+
+                // opposite trim detection
+                double oppositeTrimScore =
+                    (avgT1 > 0 && avgT2 < 0) || (avgT1 < 0 && avgT2 > 0)
+                        ? Math.Abs(avgT1) + Math.Abs(avgT2)
+                        : 0;
+
+                double score = Math.Abs(avgDiff) * 2 + oppositeTrimScore;
+
+                output.Add(new
+                {
+                    c.Rpm,
+                    c.Injection,
+                    c.Count,
+
+                    AvgB1 = avgB1.Round(),
+                    AvgB2 = avgB2.Round(),
+
+                    BDes = avgB1 > avgB2 ? "B2rich" : "B2lean",
+                    TrimDes = avgT1 > avgT2 ? "B2rich" : "B2lean",
+
+                    Des = (!(avgB1 > avgB2) && (avgT1 > avgT2)) ? "-" : ((avgB1 > avgB2) && !(avgT1 > avgT2)) ? "+" : "",
+
+                    AvgTrimB1 = avgT1.Round(),
+                    AvgTrimB2 = avgT2.Round(),
+
+                    DiffPercent = avgDiff.Round(),
+
+                    OppositeTrimScore = oppositeTrimScore.Round(),
+                    Score = score.Round(),
+
+                    FuelCorrection = (-avgDiff / 2.0).Round()
                 });
-            })
-            .OrderBy(x => x.Rpm)
-            .ThenBy(x => x.Label)
-            .ToArray();
+            }
+
+            output = output
+    .OrderBy(x => ((dynamic)x).Rpm)
+    .ThenBy(x => ((dynamic)x).Injection)
+    .ToList();
+
+            return output;
         }
     }
 }

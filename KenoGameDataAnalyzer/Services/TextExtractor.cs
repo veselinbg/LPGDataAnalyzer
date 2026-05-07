@@ -64,6 +64,43 @@ namespace LPGDataAnalyzer.Services
 
             return table;
         }
+        public static string ConvertColumnsToRows(string input)
+        {
+            // Split rows by "new row"
+            var rows = input
+                .Split(new[] { "\r" }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(r => r.Trim())
+                .ToArray();
+
+            // Each number is 3 digits
+            int cols = rows[0].Length / 3;
+
+            // Build matrix
+            string[,] matrix = new string[rows.Length, cols];
+
+            for (int r = 0; r < rows.Length; r++)
+            {
+                for (int c = 0; c < cols; c++)
+                {
+                    matrix[r, c] = rows[r].Substring(c * 3, 3);
+                }
+            }
+
+            // Read column by column
+            var result = "";
+
+            for (int c = 0; c < cols; c++)
+            {
+                for (int r = 0; r < rows.Length; r++)
+                {
+                    result += matrix[r, c];
+                }
+
+                result += Environment.NewLine;
+            }
+
+            return result.TrimEnd();
+        }
         private static int[] SplitToThreeDigitInts(string input)
         {
             if (string.IsNullOrEmpty(input))

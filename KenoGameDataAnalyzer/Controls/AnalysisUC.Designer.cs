@@ -24,6 +24,8 @@
             checkedListGasTemperatureb2 = new CheckedListBox();
             checkedListGasTemperatureb1 = new CheckedListBox();
             tableLayoutPanelAnalyses = new TableLayoutPanel();
+            dataGridViewAnalyzeDataBank2t3 = new ReadOnlyDataGridView();
+            dataGridViewAnalyzeDataBank1t3 = new ReadOnlyDataGridView();
             dataGridViewAnalyzeDataBank1t1 = new ReadOnlyDataGridView();
             dataGridViewAnalyzeDataBank1t2 = new ReadOnlyDataGridView();
             dataGridViewAnalyzeDataBank2t1 = new ReadOnlyDataGridView();
@@ -112,9 +114,13 @@
             // 
             // tableLayoutPanelAnalyses
             // 
-            tableLayoutPanelAnalyses.ColumnCount = 2;
-            tableLayoutPanelAnalyses.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
-            tableLayoutPanelAnalyses.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+            tableLayoutPanelAnalyses.BackColor = SystemColors.Control;
+            tableLayoutPanelAnalyses.ColumnCount = 3;
+            tableLayoutPanelAnalyses.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 33.66337F));
+            tableLayoutPanelAnalyses.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 33.66337F));
+            tableLayoutPanelAnalyses.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 32.6732674F));
+            tableLayoutPanelAnalyses.Controls.Add(dataGridViewAnalyzeDataBank2t3, 2, 1);
+            tableLayoutPanelAnalyses.Controls.Add(dataGridViewAnalyzeDataBank1t3, 2, 0);
             tableLayoutPanelAnalyses.Controls.Add(dataGridViewAnalyzeDataBank1t1, 0, 0);
             tableLayoutPanelAnalyses.Controls.Add(dataGridViewAnalyzeDataBank1t2, 1, 0);
             tableLayoutPanelAnalyses.Controls.Add(dataGridViewAnalyzeDataBank2t1, 0, 1);
@@ -128,6 +134,30 @@
             tableLayoutPanelAnalyses.Size = new Size(1500, 880);
             tableLayoutPanelAnalyses.TabIndex = 0;
             // 
+            // dataGridViewAnalyzeDataBank2t3
+            // 
+            dataGridViewAnalyzeDataBank2t3.AutoSize = true;
+            dataGridViewAnalyzeDataBank2t3.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+            dataGridViewAnalyzeDataBank2t3.Dock = DockStyle.Fill;
+            dataGridViewAnalyzeDataBank2t3.EnableTitle = true;
+            dataGridViewAnalyzeDataBank2t3.Location = new Point(1011, 443);
+            dataGridViewAnalyzeDataBank2t3.Name = "dataGridViewAnalyzeDataBank2t3";
+            dataGridViewAnalyzeDataBank2t3.Size = new Size(486, 434);
+            dataGridViewAnalyzeDataBank2t3.TabIndex = 5;
+            dataGridViewAnalyzeDataBank2t3.Title = "";
+            // 
+            // dataGridViewAnalyzeDataBank1t3
+            // 
+            dataGridViewAnalyzeDataBank1t3.AutoSize = true;
+            dataGridViewAnalyzeDataBank1t3.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+            dataGridViewAnalyzeDataBank1t3.Dock = DockStyle.Fill;
+            dataGridViewAnalyzeDataBank1t3.EnableTitle = true;
+            dataGridViewAnalyzeDataBank1t3.Location = new Point(1011, 3);
+            dataGridViewAnalyzeDataBank1t3.Name = "dataGridViewAnalyzeDataBank1t3";
+            dataGridViewAnalyzeDataBank1t3.Size = new Size(486, 434);
+            dataGridViewAnalyzeDataBank1t3.TabIndex = 4;
+            dataGridViewAnalyzeDataBank1t3.Title = "";
+            // 
             // dataGridViewAnalyzeDataBank1t1
             // 
             dataGridViewAnalyzeDataBank1t1.AutoSize = true;
@@ -136,7 +166,7 @@
             dataGridViewAnalyzeDataBank1t1.EnableTitle = true;
             dataGridViewAnalyzeDataBank1t1.Location = new Point(3, 3);
             dataGridViewAnalyzeDataBank1t1.Name = "dataGridViewAnalyzeDataBank1t1";
-            dataGridViewAnalyzeDataBank1t1.Size = new Size(744, 434);
+            dataGridViewAnalyzeDataBank1t1.Size = new Size(498, 434);
             dataGridViewAnalyzeDataBank1t1.TabIndex = 0;
             dataGridViewAnalyzeDataBank1t1.Title = "";
             // 
@@ -146,9 +176,9 @@
             dataGridViewAnalyzeDataBank1t2.AutoSizeMode = AutoSizeMode.GrowAndShrink;
             dataGridViewAnalyzeDataBank1t2.Dock = DockStyle.Fill;
             dataGridViewAnalyzeDataBank1t2.EnableTitle = true;
-            dataGridViewAnalyzeDataBank1t2.Location = new Point(753, 3);
+            dataGridViewAnalyzeDataBank1t2.Location = new Point(507, 3);
             dataGridViewAnalyzeDataBank1t2.Name = "dataGridViewAnalyzeDataBank1t2";
-            dataGridViewAnalyzeDataBank1t2.Size = new Size(744, 434);
+            dataGridViewAnalyzeDataBank1t2.Size = new Size(498, 434);
             dataGridViewAnalyzeDataBank1t2.TabIndex = 1;
             dataGridViewAnalyzeDataBank1t2.Title = "";
             // 
@@ -160,7 +190,7 @@
             dataGridViewAnalyzeDataBank2t1.EnableTitle = true;
             dataGridViewAnalyzeDataBank2t1.Location = new Point(3, 443);
             dataGridViewAnalyzeDataBank2t1.Name = "dataGridViewAnalyzeDataBank2t1";
-            dataGridViewAnalyzeDataBank2t1.Size = new Size(744, 434);
+            dataGridViewAnalyzeDataBank2t1.Size = new Size(498, 434);
             dataGridViewAnalyzeDataBank2t1.TabIndex = 2;
             dataGridViewAnalyzeDataBank2t1.Title = "";
             // 
@@ -170,9 +200,9 @@
             dataGridViewAnalyzeDataBank2t2.AutoSizeMode = AutoSizeMode.GrowAndShrink;
             dataGridViewAnalyzeDataBank2t2.Dock = DockStyle.Fill;
             dataGridViewAnalyzeDataBank2t2.EnableTitle = true;
-            dataGridViewAnalyzeDataBank2t2.Location = new Point(753, 443);
+            dataGridViewAnalyzeDataBank2t2.Location = new Point(507, 443);
             dataGridViewAnalyzeDataBank2t2.Name = "dataGridViewAnalyzeDataBank2t2";
-            dataGridViewAnalyzeDataBank2t2.Size = new Size(744, 434);
+            dataGridViewAnalyzeDataBank2t2.Size = new Size(498, 434);
             dataGridViewAnalyzeDataBank2t2.TabIndex = 3;
             dataGridViewAnalyzeDataBank2t2.Title = "";
             // 
@@ -376,5 +406,7 @@
         private ComboBox comboBoxFieldsToShowBank2;
         private ComboBox comboBoxAggregationBank1;
         private ComboBox comboBoxAggregationBank2;
+        private ReadOnlyDataGridView dataGridViewAnalyzeDataBank2t3;
+        private ReadOnlyDataGridView dataGridViewAnalyzeDataBank1t3;
     }
 }

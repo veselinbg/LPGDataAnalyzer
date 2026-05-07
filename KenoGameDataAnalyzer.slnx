@@ -4,7 +4,7 @@
     <Platform Name="x64" />
   </Configurations>
   <Project Path="FTDIDataReceiver/FTDIDataReceiver.csproj" Id="a4a6ff50-5c6c-472b-83a1-5676cf5ed7e8" />
-  <Project Path="LPGDataAnalyzer/LPGDataAnalyzer.csproj">
+  <Project Path="KenoGameDataAnalyzer/KenoGameDataAnalyzer.csproj">
     <Platform Solution="*|x64" Project="x64" />
   </Project>
 </Solution>

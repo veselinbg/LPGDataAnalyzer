@@ -52,6 +52,7 @@
             dataGridViewOrig = new ReadOnlyDataGridView();
             panelLegend = new Panel();
             DataGridViewInvalidData = new DataGridView();
+            buttonConvert = new Button();
             panelHistory.SuspendLayout();
             tableLayoutPanelMain.SuspendLayout();
             tableLayoutPanelRight.SuspendLayout();
@@ -177,7 +178,7 @@
             // 
             buttonParceSelectedPhoto.Location = new Point(671, 3);
             buttonParceSelectedPhoto.Name = "buttonParceSelectedPhoto";
-            buttonParceSelectedPhoto.Size = new Size(96, 23);
+            buttonParceSelectedPhoto.Size = new Size(77, 23);
             buttonParceSelectedPhoto.TabIndex = 14;
             buttonParceSelectedPhoto.Text = "Parse";
             buttonParceSelectedPhoto.Click += ButtonParceSelectedImage_Click;
@@ -383,9 +384,11 @@
             // 
             // tableLayoutPanelTopLine
             // 
-            tableLayoutPanelTopLine.ColumnCount = 2;
+            tableLayoutPanelTopLine.ColumnCount = 3;
             tableLayoutPanelTopLine.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 80F));
-            tableLayoutPanelTopLine.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 20F));
+            tableLayoutPanelTopLine.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 10F));
+            tableLayoutPanelTopLine.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 10F));
+            tableLayoutPanelTopLine.Controls.Add(buttonConvert, 2, 0);
             tableLayoutPanelTopLine.Controls.Add(buttonParceSelectedPhoto, 1, 0);
             tableLayoutPanelTopLine.Controls.Add(textBoxImagePath, 0, 0);
             tableLayoutPanelTopLine.Dock = DockStyle.Fill;
@@ -393,7 +396,6 @@
             tableLayoutPanelTopLine.Name = "tableLayoutPanelTopLine";
             tableLayoutPanelTopLine.RowCount = 1;
             tableLayoutPanelTopLine.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
-            tableLayoutPanelTopLine.RowStyles.Add(new RowStyle(SizeType.Absolute, 20F));
             tableLayoutPanelTopLine.Size = new Size(836, 29);
             tableLayoutPanelTopLine.TabIndex = 12;
             // 
@@ -464,6 +466,16 @@
             DataGridViewInvalidData.Size = new Size(553, 207);
             DataGridViewInvalidData.TabIndex = 19;
             // 
+            // buttonConvert
+            // 
+            buttonConvert.Location = new Point(754, 3);
+            buttonConvert.Name = "buttonConvert";
+            buttonConvert.Size = new Size(75, 23);
+            buttonConvert.TabIndex = 22;
+            buttonConvert.Text = "Convert";
+            buttonConvert.UseVisualStyleBackColor = true;
+            buttonConvert.Click += buttonConvert_Click;
+            // 
             // PredictionControl
             // 
             Controls.Add(tableLayoutPanelMain);
@@ -525,5 +537,6 @@
         private Label labelMaxBenzDiff;
         private CheckBox checkBoxAllwaysApplyNegativeTrim;
         private CheckBox checkBoxShowOnlyCount;
+        private Button buttonConvert;
     }
 }

@@ -103,7 +103,7 @@ namespace LPGDataAnalyzer.Controls
         }
         private void PreviewPrediction(double?[,] table, double?[,] tableNew)
         {
-            dataGridViewOrig.SetData(table, Data, x=>x.BENZ);
+            dataGridViewOrig.SetData(table, Data, x => x.BENZ);
             dataGridViewPrediction.SetData(tableNew, Data, x => x.BENZ);
 
             if (checkBoxShowOnlyMiplayerChange.Checked)
@@ -118,6 +118,12 @@ namespace LPGDataAnalyzer.Controls
                 // Create horizontal legend aligned with DataGridView
                 PanelLegendBuilder.CreateDynamicHorizontalHeatmapLegend(panelLegend, dataGridViewPrediction.Grid, vals.WLow, vals.WHigh);
             }
+        }
+
+        private void buttonConvert_Click(object sender, EventArgs e)
+        {
+            var convertedText = TextExtractor.ConvertColumnsToRows(textBoxParsedData.Text.Trim());
+            textBoxParsedData.Text = convertedText;
         }
     }
 }
