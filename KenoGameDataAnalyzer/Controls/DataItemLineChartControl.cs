@@ -98,7 +98,24 @@ namespace LPGDataAnalyzer.Controls
             top.Controls.Add(btnPanel, 3, 0);
 
             chart.Dock = DockStyle.Fill;
+
+            // Configure lblInfo
+            lblInfo.Visible = false;
+            lblInfo.AutoSize = true;
+            lblInfo.BackColor = Color.FromArgb(230, 255, 255, 255);
+            lblInfo.BorderStyle = BorderStyle.FixedSingle;
+            lblInfo.Padding = new Padding(6);
+
+            // Add to chart
             chart.Controls.Add(lblInfo);
+            lblInfo.BringToFront(); // ensure it's above chart drawing
+
+            // Update position dynamically
+            chart.Resize += (_, _) =>
+            {
+                lblInfo.Left = chart.ClientSize.Width - lblInfo.Width - 10; // 10px from right
+                lblInfo.Top = (chart.ClientSize.Height - lblInfo.Height) / 2; // vertical center
+            };
 
             root.Controls.Add(top, 0, 0);
             root.Controls.Add(chart, 0, 1);
@@ -416,7 +433,8 @@ namespace LPGDataAnalyzer.Controls
         {
             if (chart.Series.Count == 0) return;
 
-            var axis = chart.ChartAreas[0].AxisY;
+            var area = chart.ChartAreas[0];
+            var axis = area.AxisY;
 
             if (axis.ScaleView.IsZoomed) return;
 
@@ -433,13 +451,37 @@ namespace LPGDataAnalyzer.Controls
                 }
             }
 
+            // Always include zero
+            if (min > 0) min = 0;
+            if (max < 0) max = 0;
+
             double pad = (max - min) * 0.02;
             if (pad == 0) pad = 1;
 
             axis.IntervalAutoMode = IntervalAutoMode.VariableCount;
-
             axis.Minimum = min - pad;
             axis.Maximum = max + pad;
+
+            // --------------------------
+            // Draw bold zero line with label
+            // --------------------------
+            area.AxisY.StripLines.Clear();
+
+            var zeroLine = new StripLine
+            {
+                IntervalOffset = 0,        // Position at 0
+                BorderColor = Color.Black, // Bold line
+                BorderWidth = 2,
+                BorderDashStyle = ChartDashStyle.Solid,
+                StripWidth = 0,            // Only a line
+                Text = "0",                // Show number
+                TextAlignment = StringAlignment.Near,
+                TextLineAlignment = StringAlignment.Near,
+                Font = new Font("Segoe UI", 8, FontStyle.Bold),
+                ForeColor = Color.Black
+            };
+
+            area.AxisY.StripLines.Add(zeroLine);
         }
 
         // ---------------- ZOOM ----------------

@@ -46,13 +46,13 @@
             labelValueOfChange = new Label();
             panel4 = new Panel();
             tableLayoutPanelTopLine = new TableLayoutPanel();
+            buttonConvert = new Button();
             textBoxImagePath = new TextBox();
             tableLayoutPanelLeft = new TableLayoutPanel();
             dataGridViewPrediction = new ReadOnlyDataGridView();
             dataGridViewOrig = new ReadOnlyDataGridView();
             panelLegend = new Panel();
             DataGridViewInvalidData = new DataGridView();
-            buttonConvert = new Button();
             panelHistory.SuspendLayout();
             tableLayoutPanelMain.SuspendLayout();
             tableLayoutPanelRight.SuspendLayout();
@@ -98,7 +98,7 @@
             textBoxMinCount.RightToLeft = RightToLeft.Yes;
             textBoxMinCount.Size = new Size(45, 23);
             textBoxMinCount.TabIndex = 2;
-            textBoxMinCount.Text = "10";
+            textBoxMinCount.Text = "0";
             // 
             // checkBoxRound
             // 
@@ -399,6 +399,16 @@
             tableLayoutPanelTopLine.Size = new Size(836, 29);
             tableLayoutPanelTopLine.TabIndex = 12;
             // 
+            // buttonConvert
+            // 
+            buttonConvert.Location = new Point(754, 3);
+            buttonConvert.Name = "buttonConvert";
+            buttonConvert.Size = new Size(75, 23);
+            buttonConvert.TabIndex = 22;
+            buttonConvert.Text = "Convert";
+            buttonConvert.UseVisualStyleBackColor = true;
+            buttonConvert.Click += buttonConvert_Click;
+            // 
             // textBoxImagePath
             // 
             textBoxImagePath.Dock = DockStyle.Fill;
@@ -465,16 +475,6 @@
             DataGridViewInvalidData.Name = "DataGridViewInvalidData";
             DataGridViewInvalidData.Size = new Size(553, 207);
             DataGridViewInvalidData.TabIndex = 19;
-            // 
-            // buttonConvert
-            // 
-            buttonConvert.Location = new Point(754, 3);
-            buttonConvert.Name = "buttonConvert";
-            buttonConvert.Size = new Size(75, 23);
-            buttonConvert.TabIndex = 22;
-            buttonConvert.Text = "Convert";
-            buttonConvert.UseVisualStyleBackColor = true;
-            buttonConvert.Click += buttonConvert_Click;
             // 
             // PredictionControl
             // 

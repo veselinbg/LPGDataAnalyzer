@@ -173,6 +173,29 @@ namespace LPGDataAnalyzer
                     return false;
             }
         }
-        
+        public static int GetRpmIndex(this DataItem d)
+        {
+            for (int j = 0; j < RpmColumns.Length; j++)
+            {
+                var r = RpmColumns[j];
+                if (d.RPM > r.Min && d.RPM <= r.Max)
+                    return j;
+            }
+
+            return -1;
+        }
+        public static int GetInjectionIndex(this DataItem d)
+        {
+            double injAvg = (d.BENZ_b1 + d.BENZ_b2) / 2.0;
+
+            for (int i = 0; i < InjectionRanges.Length; i++)
+            {
+                var r = InjectionRanges[i];
+                if (injAvg > r.Min && injAvg <= r.Max)
+                    return i;
+            }
+
+            return -1;
+        }
     }
 }

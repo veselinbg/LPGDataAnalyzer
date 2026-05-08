@@ -3,13 +3,14 @@ namespace LPGDataAnalyzer.Controls
 {
     public class ColorHelper
     {
+        public const string FONT_NAME = "Segoe UI";
         public static readonly Color Blue = Color.FromArgb(100, 140, 255);
         public static readonly Color White = Color.White;
         public static readonly Color Red = Color.FromArgb(255, 120, 120);
 
-        public static readonly Font BoldFont = new("Segoe UI", 9, FontStyle.Bold);
+        public static readonly Font BoldFont = new(FONT_NAME, 9, FontStyle.Bold);
         public static readonly Color DarkBackColor = Color.FromArgb(45, 45, 48);
-        public static readonly Font TitleFontBold = new("Segoe UI", 14, FontStyle.Bold);
+        public static readonly Font TitleFontBold = new(FONT_NAME, 14, FontStyle.Bold);
         public static Color InterpolateDiverging(double value)
         {
             value = Math.Max(-1, Math.Min(1, value));

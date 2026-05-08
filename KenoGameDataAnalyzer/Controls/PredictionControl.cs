@@ -1,8 +1,6 @@
 ﻿using LPGDataAnalyzer.Models;
 using LPGDataAnalyzer.Services;
-using System;
 using System.ComponentModel;
-using System.Windows.Forms;
 
 namespace LPGDataAnalyzer.Controls
 {
@@ -16,7 +14,8 @@ namespace LPGDataAnalyzer.Controls
         private AppSettingManager AppSettingManager { get; set; }
 
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public DataItem[] Data { get; set; }
+        private DataItem[] Data { get; set; }
+        private string[,] Markers { get; set;  }
         public PredictionControl()
         {
             InitializeComponent();
@@ -32,6 +31,8 @@ namespace LPGDataAnalyzer.Controls
             textBoxImagePath.Text = AppSettings.ImagePath;
             textBoxLastPredictedFuelTable.Text = AppSettings.LastPredictedFuelTable;
             Data = data;
+            Markers = MapRpmAnalyzer.BuildMarkers(data);
+
             historyControl1.HistorySelected += HistoryControl1_HistorySelected;
             historyControl1.AppSettings = AppSettings;
         }
@@ -108,12 +109,12 @@ namespace LPGDataAnalyzer.Controls
 
             if (checkBoxShowOnlyMiplayerChange.Checked)
             {
-                DataGridViewColorization.HighlightDifferencesHeatmapWithValues(dataGridViewPrediction.Grid, null, tolerance: 0.01);
+                DataGridViewColorization.HighlightDifferencesHeatmapWithValues(dataGridViewPrediction.Grid, null, Markers, tolerance: 0.01);
             }
             else
             {
                 // Apply heatmap to DataGridViews
-                var vals = DataGridViewColorization.HighlightDifferencesHeatmapWithValues(dataGridViewPrediction.Grid, dataGridViewOrig.Grid, tolerance: 0.01);
+                var vals = DataGridViewColorization.HighlightDifferencesHeatmapWithValues(dataGridViewPrediction.Grid, dataGridViewOrig.Grid, Markers, tolerance: 0.01);
 
                 // Create horizontal legend aligned with DataGridView
                 PanelLegendBuilder.CreateDynamicHorizontalHeatmapLegend(panelLegend, dataGridViewPrediction.Grid, vals.WLow, vals.WHigh);

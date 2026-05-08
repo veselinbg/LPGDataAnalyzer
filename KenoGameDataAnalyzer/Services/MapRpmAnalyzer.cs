@@ -155,29 +155,40 @@ namespace LPGDataAnalyzer.Services
         /// </returns>
         public static object BuildBankToBankfuelBalance(DataItem[] data)
         {
-            return Settings.MapModes.Select(map =>
+            var result = new object[Settings.MapModes.Length];
+
+            for (int i = 0; i < Settings.MapModes.Length; i++)
             {
-                // Filter by MAP range
-                var mapData = data.Where(d => d.MAP > map.Min && d.MAP <= map.Max);
+                var map = Settings.MapModes[i];
 
-                // Apply Driving range if available
-                var drivingRangeItem = Settings.DrivingModes.FirstOrDefault(dr => dr.Label == map.Label);
-                if (!drivingRangeItem.Equals(default))
+                var driving = Settings.DrivingModes.FirstOrDefault(x => x.Label == map.Label);
+                var rpm = Settings.RpmRanges.FirstOrDefault(x => x.Label == map.Label);
+
+                double sumB1 = 0;
+                double sumB2 = 0;
+                int count = 0;
+
+                foreach (var d in data)
                 {
-                    mapData = mapData.Where(x => x.BENZ_b1 > drivingRangeItem.Min && x.BENZ_b1 <= drivingRangeItem.Max);
+                    if (d.MAP <= map.Min || d.MAP > map.Max)
+                        continue;
+
+                    if (driving.Label != null &&
+                        !(d.BENZ_b1 > driving.Min && d.BENZ_b1 <= driving.Max))
+                        continue;
+
+                    if (rpm.Label != null &&
+                        !(d.RPM > rpm.Min && d.RPM <= rpm.Max))
+                        continue;
+
+                    sumB1 += d.BENZ_b1;
+                    sumB2 += d.BENZ_b2;
+                    count++;
                 }
 
-                // Apply RPM range if available
-                var rpmRangeItem = Settings.RpmRanges.FirstOrDefault(dr => dr.Label == map.Label);
-                if (!rpmRangeItem.Equals(default))
+                if (count == 0)
                 {
-                    mapData = mapData.Where(x => x.RPM > rpmRangeItem.Min && x.RPM <= rpmRangeItem.Max);
-                }
-
-                var mapArray = mapData.ToArray(); // Enumerate once
-
-                if (!mapArray.Any())
-                    return new
+                    result[i] = new
                     {
                         map.Label,
                         Bank1Ms = 0.0,
@@ -187,22 +198,33 @@ namespace LPGDataAnalyzer.Services
                         DeltaPct = "0%"
                     };
 
-                // Compute averages
-                var avgBenzB1 = mapArray.Average(x => x.BENZ_b1);
-                var avgBenzB2 = mapArray.Average(x => x.BENZ_b2);
+                    continue;
+                }
 
-                return new
+                double avgB1 = sumB1 / count;
+                double avgB2 = sumB2 / count;
+
+                double diff = avgB1 - avgB2;
+                double avg = (avgB1 + avgB2) / 2.0;
+
+                result[i] = new
                 {
                     map.Label,
-                    Bank1Ms = avgBenzB1.Round(),
-                    Bank2Ms = avgBenzB2.Round(),
-                    Diff = (avgBenzB1 - avgBenzB2).Round(),
-                    Diff_P = ((avgBenzB1 - avgBenzB2) / ((avgBenzB1 + avgBenzB2) / 2.0)).ToString("P"),
-                    DeltaPct = (100.0 * (avgBenzB1 - avgBenzB2) / avgBenzB1).Round() + "%"
+
+                    Bank1Ms = avgB1.Round(),
+                    Bank2Ms = avgB2.Round(),
+
+                    Diff = diff.Round(),
+                    Diff_P = (avg != 0 ? (diff / avg) : 0).ToString("P"),
+
+                    DeltaPct = avgB1 != 0
+                        ? (100.0 * diff / avgB1).Round() + "%"
+                        : "0%"
                 };
-            }).ToArray();
-        }
-        /// <summary>
+            }
+
+            return result;
+        }        /// <summary>
         //         Uses map filters, driving, and RPM ranges.
         //        Keeps RPM bins grouping(250 RPM steps, configurable).
         //Calculates fuel and LPG bank averages and differences.
@@ -213,108 +235,146 @@ namespace LPGDataAnalyzer.Services
         /// <returns></returns>
         public static object BuildGrid(DataItem[] data)
         {
-            var result = new Dictionary<(int rpm, double inj), dynamic>();
+            int rows = Settings.InjectionRanges.Length;
+            int cols = Settings.RpmColumns.Length;
+
+            var sumB1 = new double[rows, cols];
+            var sumB2 = new double[rows, cols];
+            var sumT1 = new double[rows, cols];
+            var sumT2 = new double[rows, cols];
+            var sumDiff = new double[rows, cols];
+            var count = new int[rows, cols];
 
             foreach (var d in data)
             {
-                // RPM bucket (columns)
-                int rpmLabel =
-                    Settings.RpmColumns.First(r => d.RPM > r.Min && d.RPM <= r.Max).Label;
+                int row = d.GetInjectionIndex();
+                int col = d.GetRpmIndex();
 
-                // Injection bucket (rows)
-                double injAvg = (d.BENZ_b1 + d.BENZ_b2) / 2.0;
-                double injLabel =
-                    Settings.InjectionRanges.First(r => injAvg > r.Min && injAvg <= r.Max).Label;
+                if (row < 0 || col < 0)
+                    continue;
 
-                var key = (rpmLabel, injLabel);
+                if (Math.Abs(d.BENZ_b1) < 1e-9)
+                    continue;
 
-                if (!result.TryGetValue(key, out var cell))
-                {
-                    cell = new
-                    {
-                        Rpm = rpmLabel,
-                        Injection = injLabel,
-                        Count = 0,
+                double diff = ((d.BENZ_b2 - d.BENZ_b1) / d.BENZ_b1) * 100.0;
 
-                        SumB1 = 0.0,
-                        SumB2 = 0.0,
-                        SumT1 = 0.0,
-                        SumT2 = 0.0,
-                        SumDiff = 0.0
-                    };
-                }
-
-                result[key] = new
-                {
-                    cell.Rpm,
-                    cell.Injection,
-                    Count = cell.Count + 1,
-
-                    SumB1 = cell.SumB1 + d.BENZ_b1,
-                    SumB2 = cell.SumB2 + d.BENZ_b2,
-                    SumT1 = cell.SumT1 + d.Trim_b1,
-                    SumT2 = cell.SumT2 + d.Trim_b2,
-
-                    SumDiff = cell.SumDiff +
-                              (d.BENZ_b1 != 0
-                                ? ((d.BENZ_b2 - d.BENZ_b1) / d.BENZ_b1) * 100.0
-                                : 0)
-                };
+                sumB1[row, col] += d.BENZ_b1;
+                sumB2[row, col] += d.BENZ_b2;
+                sumT1[row, col] += d.Trim_b1;
+                sumT2[row, col] += d.Trim_b2;
+                sumDiff[row, col] += diff;
+                count[row, col]++;
             }
 
-            // -------------------------
-            // FINAL projection
-            // -------------------------
             var output = new List<object>();
 
-            foreach (var c in result.Values)
+            for (int r = 0; r < rows; r++)
             {
-                double avgB1 = c.SumB1 / c.Count;
-                double avgB2 = c.SumB2 / c.Count;
-                double avgT1 = c.SumT1 / c.Count;
-                double avgT2 = c.SumT2 / c.Count;
-                double avgDiff = c.SumDiff / c.Count;
-
-                // opposite trim detection
-                double oppositeTrimScore =
-                    (avgT1 > 0 && avgT2 < 0) || (avgT1 < 0 && avgT2 > 0)
-                        ? Math.Abs(avgT1) + Math.Abs(avgT2)
-                        : 0;
-
-                double score = Math.Abs(avgDiff) * 2 + oppositeTrimScore;
-
-                output.Add(new
+                for (int c = 0; c < cols; c++)
                 {
-                    c.Rpm,
-                    c.Injection,
-                    c.Count,
+                    if (count[r, c] == 0)
+                        continue;
 
-                    AvgB1 = avgB1.Round(),
-                    AvgB2 = avgB2.Round(),
+                    double avgB1 = sumB1[r, c] / count[r, c];
+                    double avgB2 = sumB2[r, c] / count[r, c];
+                    double avgT1 = sumT1[r, c] / count[r, c];
+                    double avgT2 = sumT2[r, c] / count[r, c];
+                    double avgDiff = sumDiff[r, c] / count[r, c];
 
-                    BDes = avgB1 > avgB2 ? "B2rich" : "B2lean",
-                    TrimDes = avgT1 > avgT2 ? "B2rich" : "B2lean",
+                    double oppositeTrimScore =
+                        (avgT1 > 0 && avgT2 < 0) || (avgT1 < 0 && avgT2 > 0)
+                            ? Math.Abs(avgT1) + Math.Abs(avgT2)
+                            : 0;
 
-                    Des = (!(avgB1 > avgB2) && (avgT1 > avgT2)) ? "-" : ((avgB1 > avgB2) && !(avgT1 > avgT2)) ? "+" : "",
+                    double score = Math.Abs(avgDiff) * 2 + oppositeTrimScore;
 
-                    AvgTrimB1 = avgT1.Round(),
-                    AvgTrimB2 = avgT2.Round(),
+                    output.Add(new
+                    {
+                        Rpm = Settings.RpmColumns[c].Label,
+                        Injection = Settings.InjectionRanges[r].Label,
+                        Count = count[r, c],
 
-                    DiffPercent = avgDiff.Round(),
+                        AvgB1 = avgB1.Round(),
+                        AvgB2 = avgB2.Round(),
 
-                    OppositeTrimScore = oppositeTrimScore.Round(),
-                    Score = score.Round(),
+                        BDes = avgB1 > avgB2 ? "B2rich" : "B2lean",
+                        TrimDes = avgT1 > avgT2 ? "B2rich" : "B2lean",
 
-                    FuelCorrection = (-avgDiff / 2.0).Round()
-                });
+                        Des =
+                            (!(avgB1 > avgB2) && (avgT1 > avgT2)) ? "-" :
+                            ((avgB1 > avgB2) && !(avgT1 > avgT2)) ? "+" :
+                            "",
+
+                        AvgTrimB1 = avgT1.Round(),
+                        AvgTrimB2 = avgT2.Round(),
+
+                        DiffPercent = avgDiff.Round(),
+
+                        OppositeTrimScore = oppositeTrimScore.Round(),
+                        Score = score.Round(),
+
+                        FuelCorrection = (-avgDiff / 2.0).Round()
+                    });
+                }
             }
 
-            output = output
-    .OrderBy(x => ((dynamic)x).Rpm)
-    .ThenBy(x => ((dynamic)x).Injection)
-    .ToList();
+            return output
+                .OrderBy(x => ((dynamic)x).Rpm)
+                .ThenBy(x => ((dynamic)x).Injection)
+                .ToList();
+        }
+        public static string[,] BuildMarkers(DataItem[] data)
+        {
+            int injs = Settings.InjectionRanges.Length;
+            int rpms = Settings.RpmColumns.Length;
 
-            return output;
+            var sumB1 = new double[injs, rpms];
+            var sumB2 = new double[injs, rpms];
+            var sumT1 = new double[injs, rpms];
+            var sumT2 = new double[injs, rpms];
+            var count = new int[injs, rpms];
+
+            foreach (var d in data)
+            {
+                int inj = d.GetInjectionIndex();
+                int rpm = d.GetRpmIndex();
+
+                if (inj < 0 || rpm < 0)
+                    continue;
+
+                sumB1[inj, rpm] += d.BENZ_b1;
+                sumB2[inj, rpm] += d.BENZ_b2;
+                sumT1[inj, rpm] += d.Trim_b1;
+                sumT2[inj, rpm] += d.Trim_b2;
+                count[inj, rpm]++;
+            }
+
+            // 🔥 transposed output intentionally
+            var markers = new string[rpms, injs];
+
+            for (int rpm = 0; rpm < rpms; rpm++)
+            {
+                for (int inj = 0; inj < injs; inj++)
+                {
+                    if (count[inj, rpm] == 0)
+                    {
+                        markers[rpm, inj] = "";
+                        continue;
+                    }
+
+                    double avgB1 = sumB1[inj, rpm] / count[inj, rpm];
+                    double avgB2 = sumB2[inj, rpm] / count[inj, rpm];
+                    double avgT1 = sumT1[inj, rpm] / count[inj, rpm];
+                    double avgT2 = sumT2[inj, rpm] / count[inj, rpm];
+
+                    markers[rpm, inj] =
+                        (!(avgB1 > avgB2) && (avgT1 > avgT2)) ? "-" :
+                        ((avgB1 > avgB2) && !(avgT1 > avgT2)) ? "+" :
+                        "";
+                }
+            }
+
+            return markers;
         }
     }
 }

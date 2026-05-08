@@ -56,8 +56,8 @@ namespace LPGDataAnalyzer.Services
                 .Skip(2)
                 .Where(line => !string.IsNullOrWhiteSpace(line))
                 .Select(ParseLine)
-                .Where(x =>x.RPM > 0 && x.GAS_b1 > 0 && x.GAS_b2 > 0);
-                //.Where(x => x.RPM > 0 && x.GAS_b1 > 0 && x.GAS_b2 > 0 && x.FAST_b1 != 0 && x.FAST_b2 != 0 && (x.FAST_b1 >-25 && x.FAST_b1 <25) && (x.FAST_b2 > -25 && x.FAST_b2 < 25));
+                //.Where(x =>x.RPM > 0 && x.GAS_b1 > 0 && x.GAS_b2 > 0);
+                .Where(x => x.RPM > 0 && x.GAS_b1 > 0 && x.GAS_b2 > 0 && x.FAST_b1 != 0 && x.FAST_b2 != 0);
         }
 
         private static DataItem AverageGroup(List<DataItem> items)
@@ -75,8 +75,8 @@ namespace LPGDataAnalyzer.Services
             double avgFast2 = items.Avg(x => x.FAST_b2);
 
             // 🔥 unified trims per bank
-            double trim_b1 = avgSlow1 * 0.7 + avgFast1 * 0.3;
-            double trim_b2 = avgSlow2 * 0.7 + avgFast2 * 0.3;
+            double trim_b1 = avgSlow1 + avgFast1;
+            double trim_b2 = avgSlow2 + avgFast2;
 
             // 🔥 global trim
             double trim = (trim_b1 + trim_b2) / 2;

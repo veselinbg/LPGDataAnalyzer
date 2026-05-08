@@ -190,7 +190,7 @@ namespace LPGDataAnalyzer.Services
                     // ✅ B1
                     count = ProcessLogs(
                         injLogsB1,
-                        d => d.Trim_b1,
+                        d => d.FAST_b1,
                         mapRange,
                         rpm,
                         referencePressure,
@@ -201,7 +201,7 @@ namespace LPGDataAnalyzer.Services
                     // ✅ B2
                     count = ProcessLogs(
                         injLogsB2,
-                        d => d.Trim_b2,
+                        d => d.FAST_b2,
                         mapRange,
                         rpm,
                         referencePressure,

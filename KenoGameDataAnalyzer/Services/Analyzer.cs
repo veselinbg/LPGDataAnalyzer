@@ -134,69 +134,43 @@ namespace LPGDataAnalyzer.Services
         }
         public static double?[,] BuildFuelCorrectionMap(DataItem[] data)
         {
-            int rows = Settings.InjectionRanges.Length;
-            int cols = Settings.RpmColumns.Length;
+            int injs = Settings.InjectionRanges.Length;
+            int rpms = Settings.RpmColumns.Length;
 
-            double[,] sum = new double[rows, cols];
-            int[,] count = new int[rows, cols];
+            double[,] sum = new double[injs, rpms];
+            int[,] count = new int[injs, rpms];
 
             foreach (var d in data)
             {
-                int row = -1;
-                int col = -1;
+                int row = d.GetInjectionIndex();
+                int col = d.GetRpmIndex();
 
-                double injAvg = (d.BENZ_b1 + d.BENZ_b2) / 2.0;
-
-                // find injection row
-                for (int i = 0; i < rows; i++)
-                {
-                    var r = Settings.InjectionRanges[i];
-                    if (injAvg > r.Min && injAvg <= r.Max)
-                    {
-                        row = i;
-                        break;
-                    }
-                }
-
-                // find rpm column
-                for (int j = 0; j < cols; j++)
-                {
-                    var r = Settings.RpmColumns[j];
-                    if (d.RPM > r.Min && d.RPM <= r.Max)
-                    {
-                        col = j;
-                        break;
-                    }
-                }
-
-                if (row == -1 || col == -1)
+                if (row < 0 || col < 0)
                     continue;
 
-                if (d.BENZ_b1 == 0)
+                if (Math.Abs(d.BENZ_b1) < 1e-9)
                     continue;
 
-                double diff = ((d.BENZ_b2 - d.BENZ_b1) / d.BENZ_b1) * 100.0;
+                double diff =
+                    ((d.BENZ_b2 - d.BENZ_b1) / d.BENZ_b1) * 100.0;
 
                 sum[row, col] += diff;
                 count[row, col]++;
             }
 
-            var map = new double?[rows, cols];
+            // 🔥 SWAPPED OUTPUT DIMENSIONS
+            var map = new double?[rpms, injs];
 
-            for (int i = 0; i < rows; i++)
+            for (int inj = 0; inj < injs; inj++)
             {
-                for (int j = 0; j < cols; j++)
+                for (int rpm = 0; rpm < rpms; rpm++)
                 {
-                    if (count[i, j] == 0)
-                    {
-                        map[i, j] = null;
+                    if (count[inj, rpm] == 0)
                         continue;
-                    }
 
-                    double avgDiff = sum[i, j] / count[i, j];
+                    double avgDiff = sum[inj, rpm] / count[inj, rpm];
 
-                    // 🔥 fuel correction
-                    map[i, j] = Math.Round(-avgDiff / 2.0, 2);
+                    map[rpm, inj] = Math.Round(-avgDiff, 2);
                 }
             }
 

@@ -1,4 +1,6 @@
-﻿namespace LPGDataAnalyzer
+﻿using LPGDataAnalyzer.Models;
+
+namespace LPGDataAnalyzer
 {
     public class Helper
     {
