@@ -125,7 +125,7 @@ namespace LPGDataAnalyzer.Services
             bool enableInterpolation = false,
             bool showOnlyChanges = false,
             bool round = true,
-            bool showOnlyMultiplayer = false,
+            bool showOnlyMultiplier = false,
             double minChangeValue = 0.5d,
             double benzDiffMax = 10d,
             bool allwaysApplyNegativeTrim = true,
@@ -211,14 +211,14 @@ namespace LPGDataAnalyzer.Services
 
                     bool hasEnoughLogs = count > minCount;
 
-                    double multiplayer = 0;
+                    double multiplier = 0;
                     double trim = 1;
 
-                    if (count > 0 && (hasEnoughLogs || !showOnlyMultiplayer))
-                        multiplayer = buffer.AsSpan(0, count).Median();
+                    if (count > 0 && (hasEnoughLogs || !showOnlyMultiplier))
+                        multiplier = buffer.AsSpan(0, count).Median();
 
-                    if (hasEnoughLogs && !showOnlyMultiplayer)
-                        trim = TrimCalulation(multiplayer, minChangeValue, allwaysApplyNegativeTrim);
+                    if (hasEnoughLogs && !showOnlyMultiplier)
+                        trim = TrimCalculation(multiplier, minChangeValue, allwaysApplyNegativeTrim);
 
                     bool shouldUpdate = !showOnlyChanges || trim != 1;
                     if(showOnlyCount)
@@ -227,9 +227,9 @@ namespace LPGDataAnalyzer.Services
                     }
                     else if (hasEnoughLogs)
                     {
-                        if (showOnlyMultiplayer)
+                        if (showOnlyMultiplier)
                         {
-                            result[rpmIndex, injIndex] = multiplayer;
+                            result[rpmIndex, injIndex] = multiplier;
                         }
                         else if (shouldUpdate)
                         {
@@ -285,11 +285,14 @@ namespace LPGDataAnalyzer.Services
         {
             double lpgCoef = GetTemperatureCoef(tempGas, Settings.GasTemperatureRanges, Settings.GasTemperatureCorrectionCoef);
             double ridCoef = GetTemperatureCoef(tempRid, Settings.ReductorTemperatureRanges, Settings.ReductorTemperatureCorrectionCoef);
-            double pressCoef = Math.Sqrt(pressure / referencePressure);
+
+            pressure = pressure == 0 ? referencePressure : pressure;
+
+            double pressCoef = trim < 0 ? Math.Sqrt(referencePressure / pressure) : Math.Sqrt(pressure / referencePressure);
 
             return trim * pressCoef * (1 + lpgCoef / 100) * (1 + ridCoef / 100);
         }
-        public static double TrimCalulation(double trim, double minChangeValue, bool allwaysApplyNegativeTrim)
+        public static double TrimCalculation(double trim, double minChangeValue, bool allwaysApplyNegativeTrim)
         {
             return 1 + (Math.Abs(trim) > minChangeValue || (trim < 0 && allwaysApplyNegativeTrim) ? trim / 100 : 0); //Always apply negative trims to save fuel.
         }

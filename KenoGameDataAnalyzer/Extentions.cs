@@ -40,7 +40,7 @@ namespace LPGDataAnalyzer
         }
         public static double Median(this Span<double> span)
         {
-            if (span.Length == 0)
+            if (span.IsEmpty)
                 throw new ArgumentException("Median of empty span is not defined.", nameof(span));
 
             span.Sort();  
@@ -49,6 +49,24 @@ namespace LPGDataAnalyzer
             return (span.Length % 2 != 0)
                 ? span[mid]
                 : (span[mid - 1] + span[mid]) / 2.0;
+        }
+        public static double Average(this ReadOnlySpan<double> span)
+        {
+            if (span.IsEmpty)
+                throw new ArgumentException("Average of empty span is not defined.", nameof(span));
+
+            double sum = 0;
+            double compensation = 0;
+
+            foreach (double value in span)
+            {
+                double y = value - compensation;
+                double t = sum + y;
+                compensation = (t - sum) - y;
+                sum = t;
+            }
+
+            return sum / span.Length;
         }
         public static double StdDev(this IEnumerable<double> list)
         {

@@ -191,7 +191,7 @@ namespace LPGDataAnalyzer.Controls
                     MaxMap = g.Max(x => x.MAP).Round(),
                     Temp_GAS = g.Avg(x => x.Temp_GAS).Round(),
                     Temp_RID = g.Avg(x => x.Temp_RID).Round(), 
-                    Val = value.SafeMultiply(FuelMapPrediction.TrimCalulation(g.Avg(x => x.Trim), 0, true))?.Round()
+                    Val = value.SafeMultiply(FuelMapPrediction.TrimCalculation(g.Avg(x => x.Trim), 0, true))?.Round()
                 })
                 .OrderByDescending(x => x.Count)
                 .ToList();
