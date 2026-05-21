@@ -45,6 +45,7 @@
             labelPress = new Label();
             labelValueOfChange = new Label();
             panel4 = new Panel();
+            buttonExport = new Button();
             tableLayoutPanelTopLine = new TableLayoutPanel();
             buttonConvert = new Button();
             textBoxImagePath = new TextBox();
@@ -373,6 +374,7 @@
             // 
             // panel4
             // 
+            panel4.Controls.Add(buttonExport);
             panel4.Controls.Add(checkboxEnableSmooth);
             panel4.Controls.Add(checkboxInterpolation);
             panel4.Controls.Add(checkBoxUseHistory);
@@ -381,6 +383,16 @@
             panel4.Name = "panel4";
             panel4.Size = new Size(412, 172);
             panel4.TabIndex = 10;
+            // 
+            // buttonExport
+            // 
+            buttonExport.Location = new Point(3, 32);
+            buttonExport.Name = "buttonExport";
+            buttonExport.Size = new Size(152, 23);
+            buttonExport.TabIndex = 22;
+            buttonExport.Text = "Export Selected Cells";
+            buttonExport.UseVisualStyleBackColor = true;
+            buttonExport.Click += buttonExport_Click;
             // 
             // tableLayoutPanelTopLine
             // 
@@ -538,5 +550,6 @@
         private CheckBox checkBoxAllwaysApplyNegativeTrim;
         private CheckBox checkBoxShowOnlyCount;
         private Button buttonConvert;
+        private Button buttonExport;
     }
 }

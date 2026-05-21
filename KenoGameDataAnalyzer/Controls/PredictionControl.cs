@@ -1,4 +1,5 @@
-﻿using LPGDataAnalyzer.Models;
+﻿using KenoGameDataAnalyzer.Services;
+using LPGDataAnalyzer.Models;
 using LPGDataAnalyzer.Services;
 using System.ComponentModel;
 
@@ -15,7 +16,7 @@ namespace LPGDataAnalyzer.Controls
 
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         private DataItem[] Data { get; set; }
-        private string[,] Markers { get; set;  }
+        private string[,] Markers { get; set; }
         public PredictionControl()
         {
             InitializeComponent();
@@ -125,6 +126,29 @@ namespace LPGDataAnalyzer.Controls
         {
             var convertedText = TextExtractor.ConvertColumnsToRows(textBoxParsedData.Text.Trim());
             textBoxParsedData.Text = convertedText;
+        }
+
+        private void buttonExport_Click(object sender, EventArgs e)
+        {
+            var selectedLogs = dataGridViewPrediction.GetSelectedCellLogs(Data);
+
+            if (selectedLogs.Count == 0)
+            {
+                MessageBox.Show("No logs found for selected cells. You must mark some cells from Prediction grid and export them in file.");
+                return;
+            }
+
+            using SaveFileDialog dlg = new();
+
+            dlg.Filter = "Log files|*.txt";
+            dlg.FileName = $"export_{DateTime.Now:yyyyMMdd_HHmmss}.txt";
+
+            if (dlg.ShowDialog() != DialogResult.OK)
+                return;
+
+            ExportLogBuilder.Build(dlg.FileName, selectedLogs);
+
+            MessageBox.Show($"Export completed.\nRows exported: {selectedLogs.Count}");
         }
     }
 }

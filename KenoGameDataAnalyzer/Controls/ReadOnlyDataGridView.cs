@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.Data;
 using static LPGDataAnalyzer.Models.Settings;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace LPGDataAnalyzer.Controls
 {
@@ -18,6 +19,7 @@ namespace LPGDataAnalyzer.Controls
             AllowUserToDeleteRows = false;
             AllowUserToResizeRows = false;
             SelectionMode = DataGridViewSelectionMode.CellSelect;
+            MultiSelect = true;
             RowHeadersVisible = false;
             // Optional styling
             ApplyLightHeaderStyle(RowHeadersDefaultCellStyle);
@@ -33,7 +35,7 @@ namespace LPGDataAnalyzer.Controls
             GridColor = Color.LightGray;
             AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.AllCells;
             AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
-
+            
             AutoSize = true;
 
             this.CellFormatting += (s, e) =>
@@ -157,8 +159,8 @@ namespace LPGDataAnalyzer.Controls
             };
             
             dataGridView.CellFormatting += DataGridView_CellFormatting;
-            dataGridView.CellClick += DataGridView_CellClick;
-            
+            dataGridView.CellDoubleClick += DataGridView_CellDoubleClick;
+
             this.Controls.Add(dataGridView);
             this.Controls.Add(titleLabel);
             this.AutoSize = true;
@@ -171,7 +173,7 @@ namespace LPGDataAnalyzer.Controls
                 dataGridView.ApplyLightHeaderStyle(e.CellStyle);
             }
         }
-        private void DataGridView_CellClick(object? sender, DataGridViewCellEventArgs e)
+        private void DataGridView_CellDoubleClick(object? sender, DataGridViewCellEventArgs e)
         {
             if (data is null || e.ColumnIndex == 0 || e.RowIndex < 0)
                 return;
@@ -179,8 +181,12 @@ namespace LPGDataAnalyzer.Controls
             var range = Settings.InjectionRanges[e.RowIndex];
             var rpm = Settings.RpmColumns[e.ColumnIndex - 1];
 
-            var dataItem = data.Where(x => _InjectionSelector(x) > range.Min && _InjectionSelector(x) <= range.Max &&
-                 x.RPM > rpm.Min && x.RPM <= rpm.Max).ToList();
+            var dataItem = data.Where(x =>
+                _InjectionSelector(x) > range.Min &&
+                _InjectionSelector(x) <= range.Max &&
+                x.RPM > rpm.Min &&
+                x.RPM <= rpm.Max)
+                .ToList();
 
             var cellValue = currentTable[e.ColumnIndex - 1, e.RowIndex];
 
@@ -271,6 +277,39 @@ namespace LPGDataAnalyzer.Controls
             {
                 grid.ResumeLayout();
             }
+        }
+        public List<DataItem> GetSelectedCellLogs(DataItem[] data)
+        {
+            var selectedCells = dataGridView.SelectedCells
+                                            .Cast<DataGridViewCell>()
+                                            .Where(c => c.RowIndex >= 0 && c.ColumnIndex > 0) // skip InjectionTime column
+                                            .Select(c => new
+                                            {
+                                                RpmIndex = c.ColumnIndex - 1,
+                                                InjIndex = c.RowIndex
+                                            })
+                                            .Distinct()
+                                            .ToList();
+
+            var result = new List<DataItem>();
+
+            foreach (var cell in selectedCells)
+            {
+                var rpmRange = Settings.RpmColumns[cell.RpmIndex];
+                var injRange = Settings.InjectionRanges[cell.InjIndex];
+
+                var matched = data.Where(x =>
+                    x.BENZ > injRange.Min &&
+                    x.BENZ <= injRange.Max &&
+                    x.RPM > rpmRange.Min &&
+                    x.RPM <= rpmRange.Max);
+
+                result.AddRange(matched);
+            }
+
+            return result
+                .OrderBy(x => x.TEMPO)
+                .ToList();
         }
     }
 }

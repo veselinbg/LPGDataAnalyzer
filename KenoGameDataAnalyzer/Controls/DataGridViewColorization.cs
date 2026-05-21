@@ -71,12 +71,40 @@ namespace LPGDataAnalyzer.Controls
             return null;
         }
 
-        private static void SetCellColor(DataGridView dgv1, DataGridView dgv2, int r, int c, Color color)
+        private static void SetCellColor(
+                                        DataGridView dgv1,
+                                        DataGridView dgv2,
+                                        int r,
+                                        int c,
+                                        Color color)
         {
-            dgv1.Rows[r].Cells[c].Style.BackColor = color;
+            ApplyColor(dgv1, r, c, color);
 
             if (dgv2 != null)
-                dgv2.Rows[r].Cells[c].Style.BackColor = color;
+                ApplyColor(dgv2, r, c, color);
+        }
+
+        private static void ApplyColor(
+            DataGridView dgv,
+            int r,
+            int c,
+            Color color)
+        {
+            var cell = dgv.Rows[r].Cells[c];
+
+            cell.Style.BackColor = color;
+
+            // darker selected version of same color
+            cell.Style.SelectionBackColor = ControlPaint.Dark(color);
+
+            bool isDark = color.GetBrightness() < 0.45f;
+
+            var foreColor = isDark
+                ? Color.White
+                : Color.Black;
+
+            cell.Style.ForeColor = foreColor;
+            cell.Style.SelectionForeColor = foreColor;
         }
 
         // -------------------------
