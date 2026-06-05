@@ -5,77 +5,91 @@ namespace LPGDataAnalyzer
 {
     public partial class MainForm : Form
     {
-        private readonly Parser Parser = new();
         private readonly AppSettingManager _appSettingManager;
-        private AppSettings AppSettings { get; set; }
+
+        private readonly AppSettings _settings;
+
+        private DataItem[] CurrentData = [];
+
         public MainForm(AppSettingManager appSettingManager)
         {
             InitializeComponent();
 
             _appSettingManager = appSettingManager;
-            AppSettings = _appSettingManager.Load();
 
-            txtFilePath.Text = AppSettings.LastSavedFilePath;
+            _settings = _appSettingManager.Load();
 
-            LoadParsedData();
+            dataFilesSelectorUI1.Initialize(_settings);
+
+            dataFilesSelectorUI1.DataLoaded += DataFilesSelectorui1_DataLoaded;
         }
 
-        private void BtnSelectFile_Click(object sender, EventArgs e)
+        private void DataFilesSelectorui1_DataLoaded(DataItem[] data)
         {
-            using OpenFileDialog ofd = new OpenFileDialog();
-            ofd.Filter = "Text files (*.txt)|*.txt|All files (*.*)|*.*";
-            ofd.InitialDirectory = AppSettings.DataFilesFolder; 
-            if (ofd.ShowDialog() == DialogResult.OK)
+            CurrentData = data;
+
+            LoadParsedData(data);
+        }
+
+        private void LoadParsedData(DataItem[] data)
+        {
+            if (data == null || data.Length == 0)
             {
-                txtFilePath.Text = ofd.FileName;
-                AppSettings.LastSavedFilePath = ofd.FileName;
-                _appSettingManager.Save(AppSettings);
+                MessageBox.Show(
+                    "Invalid data.",
+                    "Error",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
 
-                LoadParsedData();
-            }
-        }
-        void LoadParsedData()
-        {
-            if (string.IsNullOrEmpty(AppSettings.LastSavedFilePath))
                 return;
-
-            Parser.Load(AppSettings.LastSavedFilePath);
-
-            if (Parser.Data.Length != 0)
-            {
-                dataGridViewMainData.SetData(Parser.Data);
-
-                predictionControl1.LoadSettings(_appSettingManager, Parser.Data);
-                analysisUC.LoadParcedData(Parser.Data);
-                temperatureAnalyzerui1.LoadData(Parser.Data);
-                reducerTempCorrection1.Data = Parser.Data;
-
-                mapAnalyzerUI.LoadData(Parser.Data);
-
-                dataItemLineChartControl1.SetData(Parser.Data);
-
-                _ = showAllFileDataui1.LoadAsync(AppSettings.DataFilesFolder);
-
-                toolStripSummary.Text = $"Total Rows: {Parser.Data.Length} " +
-                    $"LPG: Min Temp: {Parser.Data.Min(x => x.Temp_GAS)} Max Temp: {Parser.Data.Max(x => x.Temp_GAS)}" +
-                    $" Min PRESS: {Parser.Data.Min(x => x.PRESS)} Max PRESS: {Parser.Data.Max(x => x.PRESS)} Avarige PRESS: {(Parser.Data.Average(x => x.PRESS)).Round()}" +
-                    $" % of change Min {Helper.PercentageChange(Parser.Data.Average(x => x.PRESS), Parser.Data.Min(x => x.PRESS)).Round()} Max{Helper.PercentageChange(Parser.Data.Average(x => x.PRESS), Parser.Data.Max(x => x.PRESS)).Round()}";
             }
-            else MessageBox.Show("Invalid data.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+
+            dataGridViewMainData.SetData(data);
+
+            predictionControl1.LoadSettings(_appSettingManager, data);
+
+            analysisUC.LoadParcedData(data);
+
+            temperatureAnalyzerui1.LoadData(data);
+
+            reducerTempCorrection1.Data = data;
+
+            mapAnalyzerUI.LoadData(data);
+
+            dataItemLineChartControl1.SetData(data);
+
+            _ = showAllFileDataui1.LoadAsync(_settings.DataFilesFolder);
+
+            UpdateSummary(data);
         }
 
+        private void UpdateSummary(DataItem[] data)
+        {
+            toolStripSummary.Text =
+                $"Total Rows: {data.Length} " +
+                $"LPG: Min Temp: {data.Min(x => x.Temp_GAS)} " +
+                $"Max Temp: {data.Max(x => x.Temp_GAS)} " +
+                $"Min PRESS: {data.Min(x => x.PRESS)} " +
+                $"Max PRESS: {data.Max(x => x.PRESS)} " +
+                $"Average PRESS: {data.Average(x => x.PRESS).Round()} " +
+                $"% Change Min: {Helper.PercentageChange(data.Average(x => x.PRESS), data.Min(x => x.PRESS)).Round()} " +
+                $"Max: {Helper.PercentageChange(data.Average(x => x.PRESS), data.Max(x => x.PRESS)).Round()}";
+        }
 
         private void buttonExtraInjectionCalculator_Click(object sender, EventArgs e)
         {
-            var res = ExtraInjectionCalculator.CalculateIdentTime(Parser.Data);
+            if (CurrentData.Length == 0)
+                return;
+
+            var res = ExtraInjectionCalculator.CalculateIdentTime(CurrentData);
 
             MessageBox.Show("The result is : " + res, "Info");
 
-            var res2 = ExtraInjectionCalculator.PrintHistogram(Parser.Data);
+            var res2 = ExtraInjectionCalculator.PrintHistogram(CurrentData);
 
             MessageBox.Show(res2, "Histogram");
 
-            var res3 = ExtraInjectionCalculator.CalculateExtraInjectionTime(Parser.Data.ToList());
+            var res3 = ExtraInjectionCalculator.CalculateExtraInjectionTime(CurrentData.ToList());
 
             MessageBox.Show(res3.ToString(), "ExtraInjectionTime");
         }

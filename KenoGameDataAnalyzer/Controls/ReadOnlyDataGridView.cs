@@ -1,8 +1,8 @@
-﻿using LPGDataAnalyzer.Models;
+﻿using KenoGameDataAnalyzer;
+using LPGDataAnalyzer.Models;
 using System.ComponentModel;
 using System.Data;
 using static LPGDataAnalyzer.Models.Settings;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace LPGDataAnalyzer.Controls
 {
@@ -299,8 +299,10 @@ namespace LPGDataAnalyzer.Controls
                 var injRange = Settings.InjectionRanges[cell.InjIndex];
 
                 var matched = data.Where(x =>
-                    x.BENZ > injRange.Min &&
-                    x.BENZ <= injRange.Max &&
+                    x.BENZ_b1 > injRange.Min &&
+                    x.BENZ_b1 <= injRange.Max &&
+                    x.BENZ_b2 > injRange.Min &&
+                    x.BENZ_b2 <= injRange.Max &&
                     x.RPM > rpmRange.Min &&
                     x.RPM <= rpmRange.Max);
 

@@ -31,11 +31,8 @@ namespace LPGDataAnalyzer
         private void InitializeComponent()
         {
             mapAnalyzerUI = new MapAnalyzerUI();
-            openFileDialog1 = new OpenFileDialog();
             statusBar = new StatusStrip();
             toolStripSummary = new ToolStripStatusLabel();
-            txtFilePath = new TextBox();
-            buttonSelectFile = new Button();
             tabControlMain = new TabControl();
             tabPageMainData = new TabPage();
             dataGridViewMainData = new DataItemGrid();
@@ -53,6 +50,8 @@ namespace LPGDataAnalyzer
             tabPageChart = new TabPage();
             dataItemLineChartControl1 = new DataItemLineChartControl();
             buttonExtraInjectionCalculator = new Button();
+            tabPageFileSelector = new TabPage();
+            dataFilesSelectorUI1 = new DataFilesSelectorUI();
             statusBar.SuspendLayout();
             tabControlMain.SuspendLayout();
             tabPageMainData.SuspendLayout();
@@ -63,6 +62,7 @@ namespace LPGDataAnalyzer
             tabPageReducerPred.SuspendLayout();
             tabPageAllData.SuspendLayout();
             tabPageChart.SuspendLayout();
+            tabPageFileSelector.SuspendLayout();
             SuspendLayout();
             // 
             // mapAnalyzerUI
@@ -72,10 +72,6 @@ namespace LPGDataAnalyzer
             mapAnalyzerUI.Name = "mapAnalyzerUI";
             mapAnalyzerUI.Size = new Size(1408, 775);
             mapAnalyzerUI.TabIndex = 0;
-            // 
-            // openFileDialog1
-            // 
-            openFileDialog1.FileName = "openFileDialog1";
             // 
             // statusBar
             // 
@@ -92,27 +88,9 @@ namespace LPGDataAnalyzer
             toolStripSummary.Size = new Size(118, 17);
             toolStripSummary.Text = "toolStripStatusLabel1";
             // 
-            // txtFilePath
-            // 
-            txtFilePath.Location = new Point(7, 11);
-            txtFilePath.Name = "txtFilePath";
-            txtFilePath.ReadOnly = true;
-            txtFilePath.Size = new Size(843, 23);
-            txtFilePath.TabIndex = 0;
-            // 
-            // buttonSelectFile
-            // 
-            buttonSelectFile.Location = new Point(856, 10);
-            buttonSelectFile.Name = "buttonSelectFile";
-            buttonSelectFile.Size = new Size(108, 23);
-            buttonSelectFile.TabIndex = 1;
-            buttonSelectFile.Text = "Select Txt File";
-            buttonSelectFile.UseVisualStyleBackColor = true;
-            buttonSelectFile.Click += BtnSelectFile_Click;
-            // 
             // tabControlMain
             // 
-            tabControlMain.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            tabControlMain.Controls.Add(tabPageFileSelector);
             tabControlMain.Controls.Add(tabPageMainData);
             tabControlMain.Controls.Add(tabPageAnalyses);
             tabControlMain.Controls.Add(tabPageGroupByTemp);
@@ -121,11 +99,10 @@ namespace LPGDataAnalyzer
             tabControlMain.Controls.Add(tabPageReducerPred);
             tabControlMain.Controls.Add(tabPageAllData);
             tabControlMain.Controls.Add(tabPageChart);
-            tabControlMain.Location = new Point(0, 40);
             tabControlMain.Name = "tabControlMain";
             tabControlMain.SelectedIndex = 0;
-            tabControlMain.Size = new Size(1416, 803);
             tabControlMain.TabIndex = 5;
+            tabControlMain.Dock = DockStyle.Fill;
             // 
             // tabPageMainData
             // 
@@ -278,15 +255,31 @@ namespace LPGDataAnalyzer
             buttonExtraInjectionCalculator.UseVisualStyleBackColor = true;
             buttonExtraInjectionCalculator.Click += buttonExtraInjectionCalculator_Click;
             // 
+            // tabPageFileSelector
+            // 
+            tabPageFileSelector.Controls.Add(dataFilesSelectorUI1);
+            tabPageFileSelector.Location = new Point(4, 24);
+            tabPageFileSelector.Name = "tabPageFileSelector";
+            tabPageFileSelector.Size = new Size(1408, 775);
+            tabPageFileSelector.TabIndex = 8;
+            tabPageFileSelector.Text = "File Selector";
+            tabPageFileSelector.UseVisualStyleBackColor = true;
+            // 
+            // dataFilesSelectorui1
+            // 
+            dataFilesSelectorUI1.Dock = DockStyle.Fill;
+            dataFilesSelectorUI1.Location = new Point(0, 0);
+            dataFilesSelectorUI1.Name = "dataFilesSelectorui1";
+            dataFilesSelectorUI1.Size = new Size(1408, 775);
+            dataFilesSelectorUI1.TabIndex = 0;
+            // 
             // MainForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(1416, 868);
             Controls.Add(buttonExtraInjectionCalculator);
-            Controls.Add(txtFilePath);
             Controls.Add(tabControlMain);
-            Controls.Add(buttonSelectFile);
             Controls.Add(statusBar);
             Name = "MainForm";
             Text = "LPG Analyser";
@@ -303,16 +296,14 @@ namespace LPGDataAnalyzer
             tabPageReducerPred.PerformLayout();
             tabPageAllData.ResumeLayout(false);
             tabPageChart.ResumeLayout(false);
+            tabPageFileSelector.ResumeLayout(false);
             ResumeLayout(false);
             PerformLayout();
         }
 
         #endregion
         private MapAnalyzerUI mapAnalyzerUI;
-        private OpenFileDialog openFileDialog1;
         private StatusStrip statusBar;
-        private TextBox txtFilePath;
-        private Button buttonSelectFile;
         private ToolStripStatusLabel toolStripSummary;
         private TabControl tabControlMain;
         private TabPage tabPageMainData;
@@ -331,5 +322,7 @@ namespace LPGDataAnalyzer
         private ShowAllFileDataUI showAllFileDataui1;
         private TabPage tabPageChart;
         private DataItemLineChartControl dataItemLineChartControl1;
+        private TabPage tabPageFileSelector;
+        private DataFilesSelectorUI dataFilesSelectorUI1;
     }
 }

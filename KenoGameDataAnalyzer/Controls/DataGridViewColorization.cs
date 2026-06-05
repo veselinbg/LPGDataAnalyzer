@@ -1,4 +1,5 @@
-﻿using LPGDataAnalyzer.Models.Common;
+﻿using KenoGameDataAnalyzer;
+using LPGDataAnalyzer.Models.Common;
 
 namespace LPGDataAnalyzer.Controls
 {
