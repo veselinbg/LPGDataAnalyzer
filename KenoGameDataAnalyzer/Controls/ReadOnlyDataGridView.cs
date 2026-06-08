@@ -247,8 +247,11 @@ namespace LPGDataAnalyzer.Controls
         }
         private void FillRows(double?[,] table)
         {
-            int injCount = InjectionRanges.Length;
-            int rpmCount = RpmColumns.Length;
+            if (table == null)
+                return;
+
+            int rpmCount = table.GetLength(0);
+            int injCount = table.GetLength(1);
 
             var grid = dataGridView;
 
@@ -256,7 +259,7 @@ namespace LPGDataAnalyzer.Controls
 
             try
             {
-                // Ensure row count
+                // Ensure row count matches the table
                 if (grid.Rows.Count != injCount)
                 {
                     grid.Rows.Clear();
@@ -265,26 +268,25 @@ namespace LPGDataAnalyzer.Controls
 
                 var rows = grid.Rows;
 
-                for (int i = 0; i < injCount; i++)
+                for (int inj = 0; inj < injCount; inj++)
                 {
-                    var cells = rows[i].Cells;
+                    var cells = rows[inj].Cells;
 
-                    // Column 0 = InjectionTime
-                    if (!Equals(cells[0].Value, InjectionRanges[i].Label))
-                        cells[0].Value = InjectionRanges[i].Label;
+                    // Column 0 = Injection label
+                    var label = InjectionRanges[inj].Label;
+                    if (!Equals(cells[0].Value, label))
+                    {
+                        cells[0].Value = label;
+                    }
 
                     // Columns 1..N = RPM values
-                    for (int j = 0; j < rpmCount; j++)
+                    for (int rpm = 0; rpm < rpmCount; rpm++)
                     {
-                        if (j >= 0 && j < table.GetLength(0) &&
-                            i >= 0 && i < table.GetLength(1))
-                        {
-                            var newVal = table[j, i];
+                        var value = table[rpm, inj];
 
-                            if (!Equals(cells[j + 1].Value, newVal))
-                            {
-                                cells[j + 1].Value = newVal;
-                            }
+                        if (!Equals(cells[rpm + 1].Value, value))
+                        {
+                            cells[rpm + 1].Value = value;
                         }
                     }
                 }

@@ -12,8 +12,8 @@ namespace LPGDataAnalyzer.Services
                         x.Temp_GAS >= r.Min && x.Temp_GAS <= r.Max))
                 .Select(g =>
                 {
-                    var bank1 = g.Select(x=>x.Trim_b1);
-                    var bank2 = g.Select(x => x.Trim_b2);
+                    var bank1 = g.Select(x=>x.FAST_b1);
+                    var bank2 = g.Select(x => x.FAST_b2);
                     var tempRid = g.Select(y => y.Temp_RID);
 
                     return new
@@ -48,8 +48,8 @@ namespace LPGDataAnalyzer.Services
                         x.Temp_RID >= r.Min && x.Temp_RID <= r.Max))
                 .Select(x =>
                 {
-                    var bank1 = x.Select(x => x.Trim_b1);
-                    var bank2 = x.Select(x => x.Trim_b2);
+                    var bank1 = x.Select(x => x.FAST_b1);
+                    var bank2 = x.Select(x => x.FAST_b2);
                     var Temp_GAS = x.Select(y => y.Temp_GAS);
 
                     return new

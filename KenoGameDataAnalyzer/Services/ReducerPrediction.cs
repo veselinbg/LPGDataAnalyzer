@@ -81,7 +81,7 @@ namespace LPGDataAnalyzer.Services
             double referenceMAP,
             double maxRPM)
         {
-            double fuelError = d.Trim;
+            double fuelError = d.Fast;
 
             // Pressure effect
             double pressureRatio = d.PRESS / referencePressure;
@@ -197,7 +197,7 @@ namespace LPGDataAnalyzer.Services
             double referenceMAP,
             double maxRPM)
         {
-            double fuelError = d.Trim;
+            double fuelError = d.Fast;
 
             // Pressure effect
             double pressureRatio = d.PRESS / referencePressure;

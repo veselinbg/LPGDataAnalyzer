@@ -15,7 +15,7 @@ namespace LPGDataAnalyzer.Models
         /// <summary>
         ///  Point to the folder where your JSON snapshots are stored.
         /// </summary>
-        public string HistoryFolder { get; set; } = @"C:\Users\veselin.ivanov\Downloads\LPGDataAnalyzer\LPGDataAnalyzer\History";
+        public string HistoryFolder { get; set; } = @"C:\Users\veselin.ivanov\Downloads\KenoGameDataAnalyzer\KenoGameDataAnalyzer\History";
         public string DataFilesFolder { get; set; } = @"C:\Users\veselin.ivanov\Documents\MultipointInj\Acquisition";
     }
 }

@@ -84,10 +84,9 @@ namespace LPGDataAnalyzer
             {
                 var text = new StringBuilder();
 
-                for (int inj = 0; inj < InjectionRanges.Length; inj++)
+                for (int inj = 0; inj < table.GetLength(1); inj++)
                 {
-                    for (int rpm = 0; rpm < RpmColumns.Length; rpm++)
-
+                    for (int rpm = 0; rpm < table.GetLength(0); rpm++)
                     {
                         text.Append(table[rpm, inj]);
                     }

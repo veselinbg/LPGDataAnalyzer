@@ -21,6 +21,7 @@ namespace LPGDataAnalyzer.Controls
         {
             InitializeComponent();
             panelLegend.Paint += PanelLegendBuilder.PanelLegend_Paint;
+            historyControl1.HistorySelected += HistoryControl1_HistorySelected;
         }
 
 
@@ -34,7 +35,6 @@ namespace LPGDataAnalyzer.Controls
             Data = data;
             Markers = MapRpmAnalyzer.BuildMarkers(data);
 
-            historyControl1.HistorySelected += HistoryControl1_HistorySelected;
             historyControl1.AppSettings = AppSettings;
         }
 
@@ -78,7 +78,9 @@ namespace LPGDataAnalyzer.Controls
             historyControl1.ClearAddSnapshots(historySnapshots);
 
             historySnapshots = checkBoxUseHistory.Checked ? historySnapshots : null;
+
             var referencePressure = double.Parse(textBoxRefPress.Text.Trim());
+
             var tableNew = FuelMapPrediction.BuildTable(Data, table, referencePressure, historySnapshots, textBoxMinCount.Text.Trim().ToInt(),
                 checkboxEnableSmooth.Checked, checkboxInterpolation.Checked, checkBoxOnlyChanges.Checked,
                 checkBoxRound.Checked, checkBoxShowOnlyMiplayerChange.Checked, textBoxMinValueOfChange.Text.Trim().ToDouble(),
