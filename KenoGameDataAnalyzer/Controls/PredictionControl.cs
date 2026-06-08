@@ -105,8 +105,8 @@ namespace LPGDataAnalyzer.Controls
         }
         private void PreviewPrediction(double?[,] table, double?[,] tableNew)
         {
-            dataGridViewOrig.SetData(table, Data, x => x.BENZ);
-            dataGridViewPrediction.SetData(tableNew, Data, x => x.BENZ);
+            dataGridViewOrig.SetData(table, Data,"Original Data", x => x.BENZ_b1, x => x.BENZ_b2);
+            dataGridViewPrediction.SetData(tableNew, Data, "Prediction Data", x => x.BENZ_b1, x => x.BENZ_b2);
 
             if (checkBoxShowOnlyMiplayerChange.Checked)
             {

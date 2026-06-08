@@ -229,10 +229,10 @@ namespace LPGDataAnalyzer.Controls
                 var grid = grids[i];
 
                 grid.SetData(
-                    tables[i],
-                    Data,
-                    injectionSelectors[i],
-                    titles[i]);
+                             tables[i],
+                             Data,
+                             titles[i],
+                             injectionSelectors[i]);
 
                 DataGridViewColorization.HighlightDifferencesHeatmapWithValues(grid.Grid);
             }

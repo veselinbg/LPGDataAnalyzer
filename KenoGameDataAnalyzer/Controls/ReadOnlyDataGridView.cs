@@ -24,8 +24,8 @@ namespace LPGDataAnalyzer.Controls
             // Optional styling
             ApplyLightHeaderStyle(RowHeadersDefaultCellStyle);
             ApplyLightHeaderStyle(ColumnHeadersDefaultCellStyle);
-            DefaultCellStyle.SelectionBackColor = Color.DodgerBlue;
-            DefaultCellStyle.SelectionForeColor = Color.White;
+            DefaultCellStyle.SelectionBackColor = Color.Yellow;
+            DefaultCellStyle.SelectionForeColor = Color.Black;
             DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
             ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
             DefaultCellStyle.BackColor = Color.White;
@@ -116,8 +116,7 @@ namespace LPGDataAnalyzer.Controls
         private DataGridViewUC dataGridView;
         private DataItem[] data;
         private double?[,] currentTable;
-        private Func<DataItem, double> _InjectionSelector;
-
+        private Func<DataItem, double>[] _InjectionSelectors = Array.Empty<Func<DataItem, double>>();
         public ReadOnlyDataGridView()
         {
             InitializeComponents();
@@ -135,14 +134,19 @@ namespace LPGDataAnalyzer.Controls
             get { return titleLabel.Visible; }
             set { titleLabel.Visible = value; }
         }
-        public void SetData(double?[,] table, DataItem[] dataItems, Func<DataItem, double> injectionSelector, string title = "")
+        public void SetData(
+                            double?[,] table,
+                            DataItem[] dataItems,
+                            string title = "",
+                            params Func<DataItem, double>[] injectionSelectors)
         {
-            _InjectionSelector = injectionSelector;
+            _InjectionSelectors = injectionSelectors;
             currentTable = table;
             data = dataItems;
             Title = title;
+
             CreateColumns();
-            FillRows( table);
+            FillRows(table);
         }
         private void InitializeComponents()
         {
@@ -182,11 +186,23 @@ namespace LPGDataAnalyzer.Controls
             var rpm = Settings.RpmColumns[e.ColumnIndex - 1];
 
             var dataItem = data.Where(x =>
-                _InjectionSelector(x) > range.Min &&
-                _InjectionSelector(x) <= range.Max &&
-                x.RPM > rpm.Min &&
-                x.RPM <= rpm.Max)
-                .ToList();
+            {
+                bool injectionMatch = _InjectionSelectors.Length switch
+                {
+                    0 => true,
+                    1 => _InjectionSelectors[0](x) > range.Min &&
+                         _InjectionSelectors[0](x) <= range.Max,
+
+                    _ => _InjectionSelectors.Any(sel =>
+                         sel(x) > range.Min &&
+                         sel(x) <= range.Max)
+                };
+
+                return injectionMatch &&
+                       x.RPM > rpm.Min &&
+                       x.RPM <= rpm.Max;
+            })
+            .ToList();
 
             var cellValue = currentTable[e.ColumnIndex - 1, e.RowIndex];
 

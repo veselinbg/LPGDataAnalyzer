@@ -86,17 +86,14 @@ namespace LPGDataAnalyzer.Controls
         }
 
         private static void ApplyColor(
-            DataGridView dgv,
-            int r,
-            int c,
-            Color color)
+    DataGridView dgv,
+    int r,
+    int c,
+    Color color)
         {
             var cell = dgv.Rows[r].Cells[c];
 
             cell.Style.BackColor = color;
-
-            // darker selected version of same color
-            cell.Style.SelectionBackColor = ControlPaint.Dark(color);
 
             bool isDark = color.GetBrightness() < 0.45f;
 
@@ -105,7 +102,10 @@ namespace LPGDataAnalyzer.Controls
                 : Color.Black;
 
             cell.Style.ForeColor = foreColor;
-            cell.Style.SelectionForeColor = foreColor;
+
+            // Always yellow when selected
+            cell.Style.SelectionBackColor = Color.Yellow;
+            cell.Style.SelectionForeColor = Color.Black;
         }
 
         // -------------------------

@@ -155,40 +155,27 @@ namespace LPGDataAnalyzer.Services
         /// </returns>
         public static object BuildBankToBankfuelBalance(DataItem[] data)
         {
-            var result = new object[Settings.MapModes.Length];
-
-            for (int i = 0; i < Settings.MapModes.Length; i++)
+            return Settings.MapModes.Select(map =>
             {
-                var map = Settings.MapModes[i];
+                var driving = Settings.DrivingModes
+                    .FirstOrDefault(x => x.Label == map.Label);
 
-                var driving = Settings.DrivingModes.FirstOrDefault(x => x.Label == map.Label);
-                var rpm = Settings.RpmRanges.FirstOrDefault(x => x.Label == map.Label);
+                var rpm = Settings.RpmRanges
+                    .FirstOrDefault(x => x.Label == map.Label);
 
-                double sumB1 = 0;
-                double sumB2 = 0;
-                int count = 0;
+                var filtered = data.Where(d =>
+                    d.MAP > map.Min &&
+                    d.MAP <= map.Max &&
+                    (string.IsNullOrEmpty(driving.Label) ||
+                        (d.BENZ_b1 > driving.Min && d.BENZ_b1 <= driving.Max)) &&
+                    (string.IsNullOrEmpty(rpm.Label) ||
+                        (d.RPM > rpm.Min && d.RPM <= rpm.Max)));
 
-                foreach (var d in data)
-                {
-                    if (d.MAP <= map.Min || d.MAP > map.Max)
-                        continue;
-
-                    if (driving.Label != null &&
-                        !(d.BENZ_b1 > driving.Min && d.BENZ_b1 <= driving.Max))
-                        continue;
-
-                    if (rpm.Label != null &&
-                        !(d.RPM > rpm.Min && d.RPM <= rpm.Max))
-                        continue;
-
-                    sumB1 += d.BENZ_b1;
-                    sumB2 += d.BENZ_b2;
-                    count++;
-                }
+                var count = filtered.Count();
 
                 if (count == 0)
                 {
-                    result[i] = new
+                    return new
                     {
                         map.Label,
                         Bank1Ms = 0.0,
@@ -197,34 +184,27 @@ namespace LPGDataAnalyzer.Services
                         Diff_P = "0%",
                         DeltaPct = "0%"
                     };
-
-                    continue;
                 }
 
-                double avgB1 = sumB1 / count;
-                double avgB2 = sumB2 / count;
+                var avgB1 = filtered.Average(x => x.BENZ_b1);
+                var avgB2 = filtered.Average(x => x.BENZ_b2);
 
-                double diff = avgB1 - avgB2;
-                double avg = (avgB1 + avgB2) / 2.0;
+                var diff = avgB1 - avgB2;
+                var avg = (avgB1 + avgB2) / 2.0;
 
-                result[i] = new
+                return new
                 {
                     map.Label,
-
                     Bank1Ms = avgB1.Round(),
                     Bank2Ms = avgB2.Round(),
-
                     Diff = diff.Round(),
-                    Diff_P = (avg != 0 ? (diff / avg) : 0).ToString("P"),
-
+                    Diff_P = (avg != 0 ? diff / avg : 0).ToString("P"),
                     DeltaPct = avgB1 != 0
                         ? (100.0 * diff / avgB1).Round() + "%"
                         : "0%"
                 };
-            }
-
-            return result;
-        }        /// <summary>
+            }).ToArray();
+        }
         //         Uses map filters, driving, and RPM ranges.
         //        Keeps RPM bins grouping(250 RPM steps, configurable).
         //Calculates fuel and LPG bank averages and differences.
