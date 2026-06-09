@@ -124,8 +124,8 @@ namespace LPGDataAnalyzer.Controls
             var p = new Parser();
             p.Load(file);
 
-            var t1 = Analyzer.BuildTable(p.Data, x => x.BENZ_b1, x => x.Trim_b1, Aggregation.Median);
-            var t2 = Analyzer.BuildTable(p.Data, x => x.BENZ_b2, x => x.Trim_b2, Aggregation.Median);
+            var t1 = Analyzer.BuildTable(p.Data, x => x.BENZ_b1, x => x.FAST_b1, Aggregation.Median);
+            var t2 = Analyzer.BuildTable(p.Data, x => x.BENZ_b2, x => x.FAST_b2, Aggregation.Median);
 
             return new FileResult
             {

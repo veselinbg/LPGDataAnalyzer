@@ -124,7 +124,7 @@ namespace LPGDataAnalyzer.Services
                 for (int j = 0; j < colsA; j++)
                 {
                     if (a[i, j].HasValue && b[i, j].HasValue && a[i, j].Value != b[i, j].Value)
-                        result[i, j] = (a[i, j].Value + b[i, j].Value).Round();
+                        result[i, j] = ((a[i, j].Value + b[i, j].Value)/2).Round();
                     else
                         result[i, j] = null; // preserve missing data
                 }

@@ -70,15 +70,17 @@ namespace LPGDataAnalyzer.Controls
         {
             var table = textExtractor.BuildFinalTable(textBoxParsedData.Text);
 
-            // Load all JSON files from that folder
-            historyManager.ClearAndLoadFromDirectory(AppSettings.HistoryFolder);
-
             // Get all loaded snapshots as a list
-            var historySnapshots = historyManager.Items.ToArray();
-            historyControl1.ClearAddSnapshots(historySnapshots);
+            HistorySnapshot[] historySnapshots = null;
 
-            historySnapshots = checkBoxUseHistory.Checked ? historySnapshots : null;
+            if (checkBoxUseHistory.Checked)
+            {
+                // Load all JSON files from that folder
+                historyManager.ClearAndLoadFromDirectory(AppSettings.HistoryFolder);
 
+                historySnapshots = historyManager.Items.ToArray();
+                historyControl1.ClearAddSnapshots(historySnapshots);
+            }
             var referencePressure = double.Parse(textBoxRefPress.Text.Trim());
 
             var tableNew = FuelMapPrediction.BuildTable(Data, table, referencePressure, historySnapshots, textBoxMinCount.Text.Trim().ToInt(),
