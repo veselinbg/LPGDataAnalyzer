@@ -28,7 +28,6 @@ namespace LPGDataAnalyzer.Controls
 
         private readonly Font cellFont = new("Segoe UI", 7f);
         private readonly SolidBrush _solidBrush = new (Color.Black);
-        private float lastRenderedScroll;
         public ShowAllFileDataUI()
         {
             InitUI();
@@ -66,7 +65,7 @@ namespace LPGDataAnalyzer.Controls
 
             smoothTimer = new System.Windows.Forms.Timer
             {
-                Interval = 15
+                Interval = 30
             };
 
             smoothTimer.Tick += (_, __) =>
@@ -76,10 +75,6 @@ namespace LPGDataAnalyzer.Controls
                 if (Math.Abs(targetScroll - currentScroll) < 0.5f)
                     currentScroll = targetScroll;
 
-                int currentRow = (int)(currentScroll / ItemHeight);
-                int lastRow = (int)(lastRenderedScroll / ItemHeight);
-
-                if (currentRow != lastRow)
                     viewport.Invalidate();
 
                 if (currentScroll == targetScroll)
