@@ -13,7 +13,6 @@ namespace LPGDataAnalyzer.Controls
 
         private double _min = double.MaxValue;
         private double _max = double.MinValue;
-        private bool _isSignedMode;
 
         private Canvas viewport;
         private VScrollBar vScroll;
@@ -21,7 +20,13 @@ namespace LPGDataAnalyzer.Controls
 
         private int targetScroll;
         private float currentScroll;
+        private readonly StringFormat sf = new()
+        {
+            Alignment = StringAlignment.Center,
+            LineAlignment = StringAlignment.Center
+        };
 
+        private readonly Font cellFont = new("Segoe UI", 7f);
         public ShowAllFileDataUI()
         {
             InitUI();
@@ -43,7 +48,6 @@ namespace LPGDataAnalyzer.Controls
 
             // FIX: ensure mouse wheel always works
             viewport.MouseEnter += (_, __) => viewport.Focus();
-            viewport.MouseWheel += OnMouseWheelScroll;
 
             vScroll = new VScrollBar
             {
@@ -109,7 +113,6 @@ namespace LPGDataAnalyzer.Controls
         {
             _min = double.MaxValue;
             _max = double.MinValue;
-            _isSignedMode = false;
         }
 
         // =====================================================
@@ -134,8 +137,6 @@ namespace LPGDataAnalyzer.Controls
                     if (val > _max) _max = val;
                 }
             }
-
-            _isSignedMode = _min < 0 && _max > 0;
         }
 
         // =====================================================
@@ -146,7 +147,7 @@ namespace LPGDataAnalyzer.Controls
             if (_max <= _min)
                 return 0;
 
-            if (_isSignedMode)
+            if (_min < 0 && _max > 0)
             {
                 double absMax = Math.Max(Math.Abs(_min), Math.Abs(_max));
                 if (absMax < 1e-12)
@@ -329,13 +330,6 @@ namespace LPGDataAnalyzer.Controls
 
             int startY = baseY + 75;
 
-            var sf = new StringFormat
-            {
-                Alignment = StringAlignment.Center,
-                LineAlignment = StringAlignment.Center
-            };
-
-            using var font = new Font("Segoe UI", 7f);
 
             // HEADER
             var headerRect = new Rectangle(gridX, startY - 40, usableWidth, 22);
@@ -360,7 +354,7 @@ namespace LPGDataAnalyzer.Controls
 
                 g.DrawString(
                     InjectionRanges[r].Label.ToString(),
-                    font,
+                    cellFont,
                     Brushes.Black,
                     rect,
                     sf);
@@ -389,7 +383,7 @@ namespace LPGDataAnalyzer.Controls
                     g.DrawRectangle(Pens.LightGray, rect);
 
                     if (val.HasValue)
-                        g.DrawString(val.Value.ToString("0.##"), font, Brushes.Black, rect, sf);
+                        g.DrawString(val.Value.ToString("0.##"), cellFont, Brushes.Black, rect, sf);
                 }
             }
         }
