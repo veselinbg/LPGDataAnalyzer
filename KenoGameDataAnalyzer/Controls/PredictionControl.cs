@@ -70,16 +70,16 @@ namespace LPGDataAnalyzer.Controls
         private void ButtonPredict_Click(object sender, EventArgs e)
         {
             var table = textExtractor.BuildFinalTable(textBoxParsedData.Text);
-
+            IReadOnlyList<HistorySnapshot> historySnapshots = null;
             if (checkBoxUseHistory.Checked && HistorySnapshots != null)
             {
                 // Load all JSON files from that folder
-                
+                historySnapshots = HistorySnapshots;
                 historyControl1.ClearAddSnapshots(HistorySnapshots);
             }
             var referencePressure = double.Parse(textBoxRefPress.Text.Trim());
 
-            var tableNew = FuelMapPrediction.BuildTable(Data, table, referencePressure, HistorySnapshots, textBoxMinCount.Text.Trim().ToInt(),
+            var tableNew = FuelMapPrediction.BuildTable(Data, table, referencePressure, historySnapshots, textBoxMinCount.Text.Trim().ToInt(),
                 checkboxEnableSmooth.Checked, checkboxInterpolation.Checked, checkBoxOnlyChanges.Checked,
                 checkBoxRound.Checked, checkBoxShowOnlyMiplayerChange.Checked, textBoxMinValueOfChange.Text.Trim().ToDouble(),
                 textBoxMaxBenzDiff.Text.Trim().ToDouble(), checkBoxAllwaysApplyNegativeTrim.Checked, checkBoxShowOnlyCount.Checked);
