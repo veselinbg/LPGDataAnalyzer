@@ -27,6 +27,7 @@ namespace LPGDataAnalyzer.Controls
         };
 
         private readonly Font cellFont = new("Segoe UI", 7f);
+        private readonly SolidBrush _solidBrush = new SolidBrush(Color.Black);
         public ShowAllFileDataUI()
         {
             InitUI();
@@ -144,9 +145,6 @@ namespace LPGDataAnalyzer.Controls
         // =====================================================
         private double Normalize(double v)
         {
-            if (_max <= _min)
-                return 0;
-
             if (_min < 0 && _max > 0)
             {
                 double absMax = Math.Max(Math.Abs(_min), Math.Abs(_max));
@@ -156,7 +154,7 @@ namespace LPGDataAnalyzer.Controls
                 return Math.Clamp(v / absMax, -1, 1);
             }
 
-            double range = _max - _min;
+            double range = Math.Max(_max - _min, 1e-9);
             if (range < 1e-12)
                 return 0;
 
@@ -311,8 +309,8 @@ namespace LPGDataAnalyzer.Controls
         {
             if (table == null) return;
 
-            int rows = table.GetLength(1);
-            int cols = table.GetLength(0);
+            int rows = table.GetLength(0);
+            int cols = table.GetLength(1);
 
             int labelWidth = 40;
             int labelGap = 2;
@@ -320,8 +318,8 @@ namespace LPGDataAnalyzer.Controls
 
             int usableWidth = Math.Max(200, (width - 3 * (labelWidth + blockGap)) / 3);
 
-            int cellW = Math.Max(8, usableWidth / cols);
-            int cellH = Math.Max(8, (ItemHeight - 90) / rows);
+            int cellW = Math.Max(8, usableWidth / rows);
+            int cellH = Math.Max(8, (ItemHeight - 90) / cols);
 
             int blockX = block * (usableWidth + labelWidth + blockGap);
 
@@ -341,14 +339,14 @@ namespace LPGDataAnalyzer.Controls
             g.DrawString(title, ColorHelper.BoldFont, Brushes.Black, headerRect, sf);
 
             // COLUMN HEADERS
-            for (int c = 0; c < cols; c++)
+            for (int c = 0; c < rows; c++)
             {
                 var rect = new Rectangle(gridX + c * cellW, startY - 20, cellW, 20);
                 g.DrawString(RpmColumns[c].Label.ToString(), ColorHelper.BoldFont, Brushes.Black, rect, sf);
             }
 
             // ROW LABELS
-            for (int r = 0; r < rows; r++)
+            for (int r = 0; r < cols; r++)
             {
                 var rect = new Rectangle(labelX, startY + r * cellH, labelWidth, cellH);
 
@@ -361,9 +359,9 @@ namespace LPGDataAnalyzer.Controls
             }
 
             // CELLS
-            for (int r = 0; r < rows; r++)
+            for (int r = 0; r < cols; r++)
             {
-                for (int c = 0; c < cols; c++)
+                for (int c = 0; c < rows; c++)
                 {
                     var val = table[c, r];
 
@@ -378,8 +376,10 @@ namespace LPGDataAnalyzer.Controls
 
                     double normalized = val.HasValue ? Normalize(val.Value) : 0;
 
-                    using var brush = new SolidBrush(ColorHelper.InterpolateDiverging(normalized));
-                    g.FillRectangle(brush, rect);
+                    _solidBrush.Color = ColorHelper.InterpolateDiverging(normalized); 
+
+                    g.FillRectangle(_solidBrush, rect);
+
                     g.DrawRectangle(Pens.LightGray, rect);
 
                     if (val.HasValue)
