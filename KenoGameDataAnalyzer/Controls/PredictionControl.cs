@@ -8,8 +8,6 @@ namespace LPGDataAnalyzer.Controls
     public partial class PredictionControl : UserControl
     {
         private readonly TextExtractor textExtractor = new();
-        // Create a history manager
-        private readonly HistoryManager historyManager = new();
 
         private AppSettings AppSettings { get; set; }
         private AppSettingManager AppSettingManager { get; set; }
@@ -17,6 +15,8 @@ namespace LPGDataAnalyzer.Controls
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         private DataItem[] Data { get; set; }
         private string[,] Markers { get; set; }
+
+        private IReadOnlyList<HistorySnapshot> HistorySnapshots { get; set; }
         public PredictionControl()
         {
             InitializeComponent();
@@ -25,8 +25,9 @@ namespace LPGDataAnalyzer.Controls
         }
 
 
-        public void LoadSettings(AppSettingManager appSettingManager, DataItem[] data)
+        public void LoadSettings(AppSettingManager appSettingManager, DataItem[] data, IReadOnlyList<HistorySnapshot> historySnapshots)
         {
+            HistorySnapshots = historySnapshots;
             AppSettingManager = appSettingManager;
             AppSettings = appSettingManager.Load();
             textBoxParsedData.Text = AppSettings.LastLoadedFuelTable;
@@ -70,20 +71,15 @@ namespace LPGDataAnalyzer.Controls
         {
             var table = textExtractor.BuildFinalTable(textBoxParsedData.Text);
 
-            // Get all loaded snapshots as a list
-            HistorySnapshot[] historySnapshots = null;
-
-            if (checkBoxUseHistory.Checked)
+            if (checkBoxUseHistory.Checked && HistorySnapshots != null)
             {
                 // Load all JSON files from that folder
-                historyManager.ClearAndLoadFromDirectory(AppSettings.HistoryFolder);
-
-                historySnapshots = historyManager.Items.ToArray();
-                historyControl1.ClearAddSnapshots(historySnapshots);
+                
+                historyControl1.ClearAddSnapshots(HistorySnapshots);
             }
             var referencePressure = double.Parse(textBoxRefPress.Text.Trim());
 
-            var tableNew = FuelMapPrediction.BuildTable(Data, table, referencePressure, historySnapshots, textBoxMinCount.Text.Trim().ToInt(),
+            var tableNew = FuelMapPrediction.BuildTable(Data, table, referencePressure, HistorySnapshots, textBoxMinCount.Text.Trim().ToInt(),
                 checkboxEnableSmooth.Checked, checkboxInterpolation.Checked, checkBoxOnlyChanges.Checked,
                 checkBoxRound.Checked, checkBoxShowOnlyMiplayerChange.Checked, textBoxMinValueOfChange.Text.Trim().ToDouble(),
                 textBoxMaxBenzDiff.Text.Trim().ToDouble(), checkBoxAllwaysApplyNegativeTrim.Checked, checkBoxShowOnlyCount.Checked);

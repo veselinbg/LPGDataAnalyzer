@@ -1,4 +1,5 @@
 ﻿using LPGDataAnalyzer.Models;
+using static LPGDataAnalyzer.Models.Settings;
 
 namespace LPGDataAnalyzer.Services
 {
@@ -62,12 +63,7 @@ namespace LPGDataAnalyzer.Services
             var table = new double?[rpmCount, injCount];
 
             // Buckets for values
-            var buckets = new List<double>[rpmCount, injCount];
-            for (int r = 0; r < rpmCount; r++)
-                for (int i = 0; i < injCount; i++)
-                    buckets[r, i] = new List<double>();
-
-            
+            var buckets = new List<double>[rpmCount, injCount];            
 
             // 1️⃣ Single pass: distribute data into buckets
             foreach (var d in data)
@@ -76,18 +72,25 @@ namespace LPGDataAnalyzer.Services
                 if (!value.HasValue)
                     continue;
 
-                int rpmIndex = Helper.FindIndex(d.RPM, rpmRanges, r => (r.Min, r.Max));
-                if (rpmIndex < 0)
-                    throw new IndexOutOfRangeException($"Invalid rpm valie {d.RPM}.");
+                int rpmIndex = d.GetRpmIndex();
 
                 double inj = injectionBankSelector(d);
-                int injIndex = Helper.FindIndex(injectionBankSelector(d), injRanges, r => (r.Min, r.Max));
-                if (injIndex < 0)
-                    throw new IndexOutOfRangeException($"Invalid rpm valie {injectionBankSelector(d)}.");
 
+                int injIndex = d.GetInjectionIndex();
+
+                if(buckets[rpmIndex, injIndex] is null)
+                    buckets[rpmIndex, injIndex] = [];
+                
                 buckets[rpmIndex, injIndex].Add(value.Value);
             }
-
+            Func<List<double>, double> aggregator = aggregation switch
+            {
+                Aggregation.Average => Extentions.AverageFast,
+                Aggregation.Min => Extentions.MinFast,
+                Aggregation.Max => Extentions.MaxFast,
+                Aggregation.Median => Extentions.Median,
+                _ => throw new ArgumentOutOfRangeException()
+            };
             // 2️⃣ Aggregate buckets into final table
             for (int r = 0; r < rpmCount; r++)
             {
@@ -95,9 +98,8 @@ namespace LPGDataAnalyzer.Services
                 {
                     var values = buckets[r, i];
 
-                    table[r, i] = values.Count == 0
-                        ? (double?)null
-                        : values.AggregateValues(aggregation).Round();
+                    if (values is { Count: > 0 })
+                        table[r, i] = aggregator(values).Round();
                 }
             }
 

@@ -1,3 +1,4 @@
+using LPGDataAnalyzer.Controls;
 using LPGDataAnalyzer.Models;
 using LPGDataAnalyzer.Services;
 
@@ -10,7 +11,9 @@ namespace LPGDataAnalyzer
         private readonly AppSettings _settings;
 
         private DataItem[] CurrentData = [];
-
+        // Create a history manager
+        private readonly HistoryManager historyManager = new();
+        private readonly IReadOnlyList<HistorySnapshot> historySnapshots;
         public MainForm(AppSettingManager appSettingManager)
         {
             InitializeComponent();
@@ -20,6 +23,14 @@ namespace LPGDataAnalyzer
             _settings = _appSettingManager.Load();
 
             dataFilesSelectorUI1.Initialize(_settings);
+
+            historyManager.ClearAndLoadFromDirectory(_settings.HistoryFolder);
+
+            historySnapshots = historyManager.Items;
+
+            showAllStoredData.LoadSnapshots(historySnapshots);
+            
+            _ = showAllFileDataui1.LoadAsync(_settings.DataFilesFolder);
 
             dataFilesSelectorUI1.DataLoaded += DataFilesSelectorui1_DataLoaded;
         }
@@ -46,7 +57,7 @@ namespace LPGDataAnalyzer
 
             dataGridViewMainData.SetData(data);
 
-            predictionControl1.LoadSettings(_appSettingManager, data);
+            predictionControl1.LoadSettings(_appSettingManager, data, historySnapshots);
 
             analysisUC.LoadParcedData(data);
 
@@ -57,8 +68,6 @@ namespace LPGDataAnalyzer
             mapAnalyzerUI.LoadData(data);
 
             dataItemLineChartControl1.SetData(data);
-
-            _ = showAllFileDataui1.LoadAsync(_settings.DataFilesFolder);
 
             UpdateSummary(data);
         }

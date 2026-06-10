@@ -20,7 +20,7 @@ namespace LPGDataAnalyzer.Services
                     {
                         LPG_Range = g.Key.Label,
 
-                        AvgTrim = g.Average(x => x.Trim).Round(),
+                        AvgTrim = Enumerable.Average(g, x => x.Trim).Round(),
 
                         AvgB1 = bank1.Average().Round(),
                         AvgB2 = bank2.Average().Round(),
@@ -34,7 +34,7 @@ namespace LPGDataAnalyzer.Services
                         MinTempRed = tempRid.Min().Round(),
                         MaxTempRed = tempRid.Max().Round(),
 
-                        AvgPress = g.Average(y => y.PRESS).Round(),
+                        AvgPress = Enumerable.Average(g, y => y.PRESS).Round(),
                         Count = g.Count()
                     };
                 })
@@ -55,7 +55,7 @@ namespace LPGDataAnalyzer.Services
                     return new
                     {
                         REDUCER_Temp = x.Key.Label,
-                        AvgTrim = x.Average(x => x.Trim).Round(),
+                        AvgTrim = Enumerable.Average(x, x => x.Trim).Round(),
                         AvgB1 = bank1.Average().Round(),
                         AvgB2 = bank2.Average().Round(),
                         MinB1 = bank1.Min().Round(),
@@ -64,7 +64,7 @@ namespace LPGDataAnalyzer.Services
                         MaxB2 = bank2.Max().Round(),
                         MinTempGas = Temp_GAS.Min().Round(),
                         MaxTempGas = Temp_GAS.Max().Round(),
-                        AvgPress = x.Average(y => y.PRESS).Round(),
+                        AvgPress = Enumerable.Average(x, y => y.PRESS).Round(),
                         Count = x.Count()
                     };
                 }).ToArray();

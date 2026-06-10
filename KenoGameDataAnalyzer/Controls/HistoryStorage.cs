@@ -115,7 +115,9 @@ namespace LPGDataAnalyzer.Controls
             if (!Directory.Exists(directoryPath))
                 return;
 
-            foreach (var file in Directory.GetFiles(directoryPath, "*.json"))
+            var files = Directory.GetFiles(directoryPath, "*.json").OrderByDescending(f => File.GetCreationTime(f));
+
+            foreach (var file in files)
             {
                 try
                 {

@@ -59,7 +59,7 @@ namespace LPGDataAnalyzer.Services
 
                     if (lowerLogs.Length != 0)
                     {
-                        double tNew = 1 + lowerLogs.Median() / 100;
+                        double tNew = 1 + lowerLogs.MedianCore() / 100;
 
                         if (tNew > t)
                         {
@@ -119,7 +119,7 @@ namespace LPGDataAnalyzer.Services
             DataItem[] logs,
             double?[,] cellMap,
             double referencePressure,
-            HistorySnapshot[]? historySnapshots = null,
+            IReadOnlyList<HistorySnapshot>? historySnapshots = null,
             int minCount = 0,
             bool enableSmooth = true,
             bool enableInterpolation = false,
@@ -215,7 +215,7 @@ namespace LPGDataAnalyzer.Services
                     double trim = 1;
 
                     if (count > 0 && (hasEnoughLogs || !showOnlyMultiplier))
-                        multiplier = buffer.AsSpan(0, count).Median();
+                        multiplier = buffer.AsSpan(0, count).MedianCore();
 
                     if (hasEnoughLogs && !showOnlyMultiplier)
                         trim = TrimCalculation(multiplier, minChangeValue, allwaysApplyNegativeTrim);
@@ -236,7 +236,7 @@ namespace LPGDataAnalyzer.Services
                             double? currentValue = cellMap[rpmIndex, injIndex].SafeMultiply(trim);
 
                             if (currentValue.HasValue &&
-                                historySnapshots?.Length > 0 &&
+                                historySnapshots?.Count > 0 &&
                                 trim != 1)
                             {
                                 var values = HistoryHelper.GetCellHistoryValues(

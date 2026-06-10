@@ -62,17 +62,17 @@ namespace LPGDataAnalyzer.Services
 
         private static DataItem AverageGroup(List<DataItem> items)
         {
-            double avgRPM = items.Avg(x => x.RPM);
+            double avgRPM = items.Average(x => x.RPM);
 
-            double avgGas1 = items.Avg(x => x.GAS_b1);
-            double avgGas2 = items.Avg(x => x.GAS_b2);
-            double avgBenz1 = items.Avg(x => x.BENZ_b1);
-            double avgBenz2 = items.Avg(x => x.BENZ_b2);
+            double avgGas1 = items.Average(x => x.GAS_b1);
+            double avgGas2 = items.Average(x => x.GAS_b2);
+            double avgBenz1 = items.Average(x => x.BENZ_b1);
+            double avgBenz2 = items.Average(x => x.BENZ_b2);
 
-            double avgSlow1 = items.Avg(x => x.SLOW_b1);
-            double avgFast1 = items.Avg(x => x.FAST_b1);
-            double avgSlow2 = items.Avg(x => x.SLOW_b2);
-            double avgFast2 = items.Avg(x => x.FAST_b2);
+            double avgSlow1 = items.Average(x => x.SLOW_b1);
+            double avgFast1 = items.Average(x => x.FAST_b1);
+            double avgSlow2 = items.Average(x => x.SLOW_b2);
+            double avgFast2 = items.Average(x => x.FAST_b2);
 
             // 🔥 unified trims per bank
             double trim_b1 = avgSlow1 + avgFast1;
@@ -90,10 +90,10 @@ namespace LPGDataAnalyzer.Services
                 BENZ_b1 = avgBenz1.Round(),
                 BENZ_b2 = avgBenz2.Round(),
 
-                PRESS = items.Avg(x => x.PRESS).Round(),
-                MAP = items.Avg(x => x.MAP).Round(),
-                Temp_RID = items.Avg(x => x.Temp_RID).Round(),
-                Temp_GAS = items.Avg(x => x.Temp_GAS).Round(),
+                PRESS = items.Average(x => x.PRESS).Round(),
+                MAP = items.Average(x => x.MAP).Round(),
+                Temp_RID = items.Average(x => x.Temp_RID).Round(),
+                Temp_GAS = items.Average(x => x.Temp_GAS).Round(),
 
                 SLOW_b1 = avgSlow1.Round(),
                 FAST_b1 = avgFast1.Round(),
@@ -104,8 +104,8 @@ namespace LPGDataAnalyzer.Services
                 Trim_b1 = trim_b1.Round(),
                 Trim_b2 = trim_b2.Round(),
                 Trim = trim.Round(),
-                Fast = items.Avg(x=>x.Fast).Round(),
-                Slow = items.Avg(x=>x.Slow).Round(),
+                Fast = items.Average(x=>x.Fast).Round(),
+                Slow = items.Average(x=>x.Slow).Round(),
                 TrimDiff = (trim_b1 - trim_b2).Round(),
 
                 // 🔥 AFR (correct model)
@@ -116,12 +116,12 @@ namespace LPGDataAnalyzer.Services
                 GAS = ((avgGas1 + avgGas2) / 2).Round(),
                 BENZ = ((avgBenz1 + avgBenz2) / 2).Round(),
 
-                OX_b1 = items.Avg(x => x.OX_b1).Round(),
-                OX_b2 = items.Avg(x => x.OX_b2).Round(),
+                OX_b1 = items.Average(x => x.OX_b1).Round(),
+                OX_b2 = items.Average(x => x.OX_b2).Round(),
 
-                Ratio_b1 = items.Avg(x => x.Ratio_b1).Round(),
-                Ratio_b2 = items.Avg(x => x.Ratio_b2).Round(),
-                RatioDifference = items.Avg(x => x.RatioDifference).Round(),
+                Ratio_b1 = items.Average(x => x.Ratio_b1).Round(),
+                Ratio_b2 = items.Average(x => x.Ratio_b2).Round(),
+                RatioDifference = items.Average(x => x.RatioDifference).Round(),
 
                 BENZ_Diff = avgBenz1.RelDiff(avgBenz2).Round()
             };

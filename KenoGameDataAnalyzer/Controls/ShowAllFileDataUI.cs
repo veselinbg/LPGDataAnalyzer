@@ -8,7 +8,7 @@ namespace LPGDataAnalyzer.Controls
     public class ShowAllFileDataUI : UserControl
     {
         private const int ItemHeight = 440;
-
+        private readonly ValueScale _scale = new();
         private readonly List<FileResult> _items = new();
 
         private Canvas viewport;
@@ -96,6 +96,33 @@ namespace LPGDataAnalyzer.Controls
         // =====================================================
         // LOAD DATA
         // =====================================================
+        public void LoadSnapshots(IReadOnlyList<HistorySnapshot> snapshots)
+        {
+            _items.Clear();
+
+            foreach (HistorySnapshot snapshot in snapshots)
+            {
+                var t1 = ArrayConverter.To2D(snapshot.CellMap);
+                var t2 = ArrayConverter.To2D(snapshot.NewCellMap);
+
+                var diff = Analyzer.Subtract(t1, t2);
+
+                // IMPORTANT: build global scale once
+                AddToScale(t1);
+
+                _items.Add(new FileResult
+                {
+                    Data = snapshot.Logs,
+                    T1 = t1,
+                    T2 = t2,
+                    File = snapshot.Name,
+                    Diff = diff
+                });
+            }
+
+            SetupScroll();
+            viewport.Invalidate();
+        }
         public async Task LoadAsync(string path)
         {
             var files = new DirectoryInfo(path)
@@ -126,6 +153,9 @@ namespace LPGDataAnalyzer.Controls
 
             var t1 = Analyzer.BuildTable(p.Data, x => x.BENZ_b1, x => x.FAST_b1, Aggregation.Median);
             var t2 = Analyzer.BuildTable(p.Data, x => x.BENZ_b2, x => x.FAST_b2, Aggregation.Median);
+            
+            // IMPORTANT: build global scale once
+            AddToScale(t1);
 
             return new FileResult
             {
@@ -150,7 +180,22 @@ namespace LPGDataAnalyzer.Controls
             vScroll.LargeChange = viewport.Height;
             vScroll.Value = 0;
         }
+        private void AddToScale(double?[,] table)
+        {
+            _scale.Reset();
+            int rows = table.GetLength(0);
+            int cols = table.GetLength(1);
 
+            for (int r = 0; r < rows; r++)
+            {
+                for (int c = 0; c < cols; c++)
+                {
+                    double? v = table[r, c];
+                    if (v.HasValue)
+                        _scale.Add(v.Value);
+                }
+            }
+        }
         private void StartSmoothScroll()
         {
             if (!smoothTimer.Enabled)
@@ -206,8 +251,8 @@ namespace LPGDataAnalyzer.Controls
         {
             if (table == null) return;
 
-            int rows = InjectionRanges.Length;
-            int cols = RpmColumns.Length;
+            int rows = table.GetLength(1);
+            int cols = table.GetLength(0);
 
             int labelWidth = 40;
             int labelGap = 2;
@@ -278,7 +323,11 @@ namespace LPGDataAnalyzer.Controls
                     if (rect.Width <= 0 || rect.Height <= 0)
                         continue;
 
-                    using var brush = new SolidBrush(ColorHelper.InterpolateDiverging(Normalize(val)));
+                    double normalized = val.HasValue
+                        ? _scale.Normalize(val.Value)
+                        : 0;
+
+                    using var brush = new SolidBrush(ColorHelper.InterpolateDiverging(normalized));
                     g.FillRectangle(brush, rect);
                     g.DrawRectangle(Pens.LightGray, rect);
 
@@ -287,16 +336,7 @@ namespace LPGDataAnalyzer.Controls
                 }
             }
         }
-
-        private double Normalize(double? v)
-        {
-            if (!v.HasValue) return 0;
-
-            double x = v.Value;
-            if (double.IsNaN(x) || double.IsInfinity(x)) return 0;
-
-            return Math.Max(-1, Math.Min(1, x / 20.0));
-        }
+        
 
         // =====================================================
         // CANVAS CLASS (SINGLE DRAW SURFACE)

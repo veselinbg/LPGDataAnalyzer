@@ -51,14 +51,14 @@ namespace LPGDataAnalyzer.Controls
             Manager.Clear();
             listHistory.Items.Clear();
         }
-        public void ClearAddSnapshots(HistorySnapshot[] snapshots)
+        public void ClearAddSnapshots(IReadOnlyList<HistorySnapshot> snapshots)
         {
             Manager.Clear();
             listHistory.Items.Clear();
 
             AddSnapshots(snapshots);
         }
-        public void AddSnapshots(HistorySnapshot[] snapshots)
+        public void AddSnapshots(IReadOnlyList<HistorySnapshot> snapshots)
         {
             Manager.AddRange(snapshots);
 

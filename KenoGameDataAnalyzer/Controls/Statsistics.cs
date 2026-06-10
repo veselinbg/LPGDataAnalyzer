@@ -2,11 +2,6 @@
 using LPGDataAnalyzer.Models;
 using LPGDataAnalyzer.Models.Common;
 using LPGDataAnalyzer.Services;
-using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
-using System.Windows.Forms;
 
 namespace LPGDataAnalyzer.Controls
 {
@@ -89,7 +84,7 @@ namespace LPGDataAnalyzer.Controls
             // Optional: improve readability
             e.CellStyle.ForeColor = GetContrastColor(color);
 
-            if (name == nameof(GroupStatsistic.Trim) || name == nameof(GroupStatsistic.Val))
+            if (name == nameof(GroupStatsistic.Fast) || name == nameof(GroupStatsistic.Val))
             {
                 e.CellStyle.Font = ColorHelper.BoldFont;
             }
@@ -115,7 +110,7 @@ namespace LPGDataAnalyzer.Controls
                     _columnRanges[name] = (values.Min(), values.Max());
             }
 
-            Add(nameof(GroupStatsistic.Trim), x => x.Trim);
+            Add(nameof(GroupStatsistic.Fast), x => x.Fast);
             Add(nameof(GroupStatsistic.Count), x => x.Count);
 
             Add(nameof(GroupStatsistic.MinPress), x => x.MinPress);
@@ -144,7 +139,7 @@ namespace LPGDataAnalyzer.Controls
             Set(nameof(GroupStatsistic.Slow_b2), "Slow B2");
             Set(nameof(GroupStatsistic.Fast_b2), "Fast B2");
 
-            Set(nameof(GroupStatsistic.Trim), "Trim (Avg)");
+            Set(nameof(GroupStatsistic.Fast), "Fast (Avg)");
             Set(nameof(GroupStatsistic.Count), "Count");
 
             Set(nameof(GroupStatsistic.MinPress), "Min PRESS");
@@ -179,20 +174,20 @@ namespace LPGDataAnalyzer.Controls
                     Slow_b2 = g.Key.Slow_b2,
                     Fast_b2 = g.Key.Fast_b2,
 
-                    Trim = g.Avg(x => x.Trim).Round(),
+                    Fast = g.Average(x => x.Fast).Round(),
 
                     Count = g.Count(),
 
                     MinPress = g.Min(x => x.PRESS).Round(),
-                    AvgPress = g.Avg(x => x.PRESS).Round(),
+                    AvgPress = g.Average(x => x.PRESS).Round(),
                     MaxPress = g.Max(x => x.PRESS).Round(),
 
                     MinMap = g.Min(x => x.MAP).Round(),
-                    AvgMap = g.Avg(x => x.MAP).Round(),
+                    AvgMap = g.Average(x => x.MAP).Round(),
                     MaxMap = g.Max(x => x.MAP).Round(),
-                    Temp_GAS = g.Avg(x => x.Temp_GAS).Round(),
-                    Temp_RID = g.Avg(x => x.Temp_RID).Round(), 
-                    Val = value.SafeMultiply(FuelMapPrediction.TrimCalculation(g.Avg(x => x.Trim), 0, true))?.Round()
+                    Temp_GAS = g.Average(x => x.Temp_GAS).Round(),
+                    Temp_RID = g.Average(x => x.Temp_RID).Round(), 
+                    Val = value.SafeMultiply(FuelMapPrediction.TrimCalculation(g.Average(x => x.Trim), 0, true))?.Round()
                 })
                 .OrderByDescending(x => x.Count)
                 .ToList();
@@ -200,11 +195,11 @@ namespace LPGDataAnalyzer.Controls
             var overall = new OverallStatsistic
             {
                 MinPress = data.Min(x => x.PRESS).Round(),
-                AvgPress = data.Avg(x => x.PRESS).Round(),
+                AvgPress = data.Average(x => x.PRESS).Round(),
                 MaxPress = data.Max(x => x.PRESS).Round(),
 
                 MinMap = data.Min(x => x.MAP).Round(),
-                AvgMap = data.Avg(x => x.MAP).Round(),
+                AvgMap = data.Average(x => x.MAP).Round(),
                 MaxMap = data.Max(x => x.MAP).Round()
             };
 
@@ -221,7 +216,7 @@ namespace LPGDataAnalyzer.Controls
         public double Slow_b2 { get; set; }
         public double Fast_b2 { get; set; }
 
-        public double Trim { get; set; }
+        public double Fast { get; set; }
 
         public double MinPress { get; set; }
         public double AvgPress { get; set; }

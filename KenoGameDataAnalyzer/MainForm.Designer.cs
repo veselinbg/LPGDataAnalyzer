@@ -34,6 +34,8 @@ namespace LPGDataAnalyzer
             statusBar = new StatusStrip();
             toolStripSummary = new ToolStripStatusLabel();
             tabControlMain = new TabControl();
+            tabPageFileSelector = new TabPage();
+            dataFilesSelectorUI1 = new DataFilesSelectorUI();
             tabPageMainData = new TabPage();
             dataGridViewMainData = new DataItemGrid();
             tabPageAnalyses = new TabPage();
@@ -50,10 +52,11 @@ namespace LPGDataAnalyzer
             tabPageChart = new TabPage();
             dataItemLineChartControl1 = new DataItemLineChartControl();
             buttonExtraInjectionCalculator = new Button();
-            tabPageFileSelector = new TabPage();
-            dataFilesSelectorUI1 = new DataFilesSelectorUI();
+            tabPageAllStoredData = new TabPage();
+            showAllStoredData = new ShowAllFileDataUI();
             statusBar.SuspendLayout();
             tabControlMain.SuspendLayout();
+            tabPageFileSelector.SuspendLayout();
             tabPageMainData.SuspendLayout();
             tabPageAnalyses.SuspendLayout();
             tabPageGroupByTemp.SuspendLayout();
@@ -62,7 +65,7 @@ namespace LPGDataAnalyzer
             tabPageReducerPred.SuspendLayout();
             tabPageAllData.SuspendLayout();
             tabPageChart.SuspendLayout();
-            tabPageFileSelector.SuspendLayout();
+            tabPageAllStoredData.SuspendLayout();
             SuspendLayout();
             // 
             // mapAnalyzerUI
@@ -70,7 +73,7 @@ namespace LPGDataAnalyzer
             mapAnalyzerUI.Dock = DockStyle.Fill;
             mapAnalyzerUI.Location = new Point(0, 0);
             mapAnalyzerUI.Name = "mapAnalyzerUI";
-            mapAnalyzerUI.Size = new Size(1408, 775);
+            mapAnalyzerUI.Size = new Size(1408, 818);
             mapAnalyzerUI.TabIndex = 0;
             // 
             // statusBar
@@ -99,10 +102,31 @@ namespace LPGDataAnalyzer
             tabControlMain.Controls.Add(tabPageReducerPred);
             tabControlMain.Controls.Add(tabPageAllData);
             tabControlMain.Controls.Add(tabPageChart);
+            tabControlMain.Controls.Add(tabPageAllStoredData);
+            tabControlMain.Dock = DockStyle.Fill;
+            tabControlMain.Location = new Point(0, 0);
             tabControlMain.Name = "tabControlMain";
             tabControlMain.SelectedIndex = 0;
+            tabControlMain.Size = new Size(1416, 846);
             tabControlMain.TabIndex = 5;
-            tabControlMain.Dock = DockStyle.Fill;
+            // 
+            // tabPageFileSelector
+            // 
+            tabPageFileSelector.Controls.Add(dataFilesSelectorUI1);
+            tabPageFileSelector.Location = new Point(4, 24);
+            tabPageFileSelector.Name = "tabPageFileSelector";
+            tabPageFileSelector.Size = new Size(1408, 818);
+            tabPageFileSelector.TabIndex = 8;
+            tabPageFileSelector.Text = "File Selector";
+            tabPageFileSelector.UseVisualStyleBackColor = true;
+            // 
+            // dataFilesSelectorUI1
+            // 
+            dataFilesSelectorUI1.Dock = DockStyle.Fill;
+            dataFilesSelectorUI1.Location = new Point(0, 0);
+            dataFilesSelectorUI1.Name = "dataFilesSelectorUI1";
+            dataFilesSelectorUI1.Size = new Size(1408, 818);
+            dataFilesSelectorUI1.TabIndex = 0;
             // 
             // tabPageMainData
             // 
@@ -110,7 +134,7 @@ namespace LPGDataAnalyzer
             tabPageMainData.Location = new Point(4, 24);
             tabPageMainData.Name = "tabPageMainData";
             tabPageMainData.Padding = new Padding(3);
-            tabPageMainData.Size = new Size(1408, 775);
+            tabPageMainData.Size = new Size(1408, 818);
             tabPageMainData.TabIndex = 0;
             tabPageMainData.Text = "Main Data";
             tabPageMainData.UseVisualStyleBackColor = true;
@@ -121,7 +145,7 @@ namespace LPGDataAnalyzer
             dataGridViewMainData.Location = new Point(-4, 0);
             dataGridViewMainData.Name = "dataGridViewMainData";
             dataGridViewMainData.ReadOnly = true;
-            dataGridViewMainData.Size = new Size(1412, 775);
+            dataGridViewMainData.Size = new Size(2628, 1521);
             dataGridViewMainData.TabIndex = 0;
             dataGridViewMainData.Title = "All logged data";
             // 
@@ -131,7 +155,7 @@ namespace LPGDataAnalyzer
             tabPageAnalyses.Location = new Point(4, 24);
             tabPageAnalyses.Name = "tabPageAnalyses";
             tabPageAnalyses.Padding = new Padding(3);
-            tabPageAnalyses.Size = new Size(1408, 775);
+            tabPageAnalyses.Size = new Size(1408, 818);
             tabPageAnalyses.TabIndex = 1;
             tabPageAnalyses.Text = "Analyses";
             tabPageAnalyses.UseVisualStyleBackColor = true;
@@ -141,7 +165,7 @@ namespace LPGDataAnalyzer
             analysisUC.Dock = DockStyle.Fill;
             analysisUC.Location = new Point(3, 3);
             analysisUC.Name = "analysisUC";
-            analysisUC.Size = new Size(1402, 769);
+            analysisUC.Size = new Size(1402, 812);
             analysisUC.TabIndex = 0;
             // 
             // tabPageGroupByTemp
@@ -149,7 +173,7 @@ namespace LPGDataAnalyzer
             tabPageGroupByTemp.Controls.Add(temperatureAnalyzerui1);
             tabPageGroupByTemp.Location = new Point(4, 24);
             tabPageGroupByTemp.Name = "tabPageGroupByTemp";
-            tabPageGroupByTemp.Size = new Size(1408, 775);
+            tabPageGroupByTemp.Size = new Size(1408, 818);
             tabPageGroupByTemp.TabIndex = 2;
             tabPageGroupByTemp.Text = "Temperature";
             tabPageGroupByTemp.UseVisualStyleBackColor = true;
@@ -159,7 +183,7 @@ namespace LPGDataAnalyzer
             temperatureAnalyzerui1.Dock = DockStyle.Fill;
             temperatureAnalyzerui1.Location = new Point(0, 0);
             temperatureAnalyzerui1.Name = "temperatureAnalyzerui1";
-            temperatureAnalyzerui1.Size = new Size(1408, 775);
+            temperatureAnalyzerui1.Size = new Size(1408, 818);
             temperatureAnalyzerui1.TabIndex = 0;
             // 
             // tabPageMapAnalysis
@@ -167,7 +191,7 @@ namespace LPGDataAnalyzer
             tabPageMapAnalysis.Controls.Add(mapAnalyzerUI);
             tabPageMapAnalysis.Location = new Point(4, 24);
             tabPageMapAnalysis.Name = "tabPageMapAnalysis";
-            tabPageMapAnalysis.Size = new Size(1408, 775);
+            tabPageMapAnalysis.Size = new Size(1408, 818);
             tabPageMapAnalysis.TabIndex = 3;
             tabPageMapAnalysis.Text = "Map Analysis";
             tabPageMapAnalysis.UseVisualStyleBackColor = true;
@@ -177,7 +201,7 @@ namespace LPGDataAnalyzer
             tabPagePredictions.Controls.Add(predictionControl1);
             tabPagePredictions.Location = new Point(4, 24);
             tabPagePredictions.Name = "tabPagePredictions";
-            tabPagePredictions.Size = new Size(1408, 775);
+            tabPagePredictions.Size = new Size(1408, 818);
             tabPagePredictions.TabIndex = 4;
             tabPagePredictions.Text = "Prediction";
             tabPagePredictions.UseVisualStyleBackColor = true;
@@ -187,7 +211,7 @@ namespace LPGDataAnalyzer
             predictionControl1.Dock = DockStyle.Fill;
             predictionControl1.Location = new Point(0, 0);
             predictionControl1.Name = "predictionControl1";
-            predictionControl1.Size = new Size(1408, 775);
+            predictionControl1.Size = new Size(1408, 818);
             predictionControl1.TabIndex = 0;
             // 
             // tabPageReducerPred
@@ -195,7 +219,7 @@ namespace LPGDataAnalyzer
             tabPageReducerPred.Controls.Add(reducerTempCorrection1);
             tabPageReducerPred.Location = new Point(4, 24);
             tabPageReducerPred.Name = "tabPageReducerPred";
-            tabPageReducerPred.Size = new Size(1408, 775);
+            tabPageReducerPred.Size = new Size(1408, 818);
             tabPageReducerPred.TabIndex = 5;
             tabPageReducerPred.Text = "Reducer prediction";
             tabPageReducerPred.UseVisualStyleBackColor = true;
@@ -206,7 +230,7 @@ namespace LPGDataAnalyzer
             reducerTempCorrection1.AutoSize = true;
             reducerTempCorrection1.Location = new Point(191, 145);
             reducerTempCorrection1.Name = "reducerTempCorrection1";
-            reducerTempCorrection1.Size = new Size(631, 240);
+            reducerTempCorrection1.Size = new Size(1847, 986);
             reducerTempCorrection1.TabIndex = 0;
             // 
             // tabPageAllData
@@ -214,7 +238,7 @@ namespace LPGDataAnalyzer
             tabPageAllData.Controls.Add(showAllFileDataui1);
             tabPageAllData.Location = new Point(4, 24);
             tabPageAllData.Name = "tabPageAllData";
-            tabPageAllData.Size = new Size(1408, 775);
+            tabPageAllData.Size = new Size(1408, 818);
             tabPageAllData.TabIndex = 6;
             tabPageAllData.Text = "All Data";
             tabPageAllData.UseVisualStyleBackColor = true;
@@ -224,7 +248,7 @@ namespace LPGDataAnalyzer
             showAllFileDataui1.Dock = DockStyle.Fill;
             showAllFileDataui1.Location = new Point(0, 0);
             showAllFileDataui1.Name = "showAllFileDataui1";
-            showAllFileDataui1.Size = new Size(1408, 775);
+            showAllFileDataui1.Size = new Size(1408, 818);
             showAllFileDataui1.TabIndex = 0;
             // 
             // tabPageChart
@@ -232,7 +256,7 @@ namespace LPGDataAnalyzer
             tabPageChart.Controls.Add(dataItemLineChartControl1);
             tabPageChart.Location = new Point(4, 24);
             tabPageChart.Name = "tabPageChart";
-            tabPageChart.Size = new Size(1408, 775);
+            tabPageChart.Size = new Size(1408, 818);
             tabPageChart.TabIndex = 7;
             tabPageChart.Text = "Chart";
             tabPageChart.UseVisualStyleBackColor = true;
@@ -242,7 +266,7 @@ namespace LPGDataAnalyzer
             dataItemLineChartControl1.Dock = DockStyle.Fill;
             dataItemLineChartControl1.Location = new Point(0, 0);
             dataItemLineChartControl1.Name = "dataItemLineChartControl1";
-            dataItemLineChartControl1.Size = new Size(1408, 775);
+            dataItemLineChartControl1.Size = new Size(1408, 818);
             dataItemLineChartControl1.TabIndex = 0;
             // 
             // buttonExtraInjectionCalculator
@@ -255,23 +279,23 @@ namespace LPGDataAnalyzer
             buttonExtraInjectionCalculator.UseVisualStyleBackColor = true;
             buttonExtraInjectionCalculator.Click += buttonExtraInjectionCalculator_Click;
             // 
-            // tabPageFileSelector
+            // tabPageAllStoredData
             // 
-            tabPageFileSelector.Controls.Add(dataFilesSelectorUI1);
-            tabPageFileSelector.Location = new Point(4, 24);
-            tabPageFileSelector.Name = "tabPageFileSelector";
-            tabPageFileSelector.Size = new Size(1408, 775);
-            tabPageFileSelector.TabIndex = 8;
-            tabPageFileSelector.Text = "File Selector";
-            tabPageFileSelector.UseVisualStyleBackColor = true;
+            tabPageAllStoredData.Controls.Add(showAllStoredData);
+            tabPageAllStoredData.Location = new Point(4, 24);
+            tabPageAllStoredData.Name = "tabPageAllStoredData";
+            tabPageAllStoredData.Size = new Size(1408, 818);
+            tabPageAllStoredData.TabIndex = 9;
+            tabPageAllStoredData.Text = "All Stored Data";
+            tabPageAllStoredData.UseVisualStyleBackColor = true;
             // 
-            // dataFilesSelectorui1
+            // showAllStoredData
             // 
-            dataFilesSelectorUI1.Dock = DockStyle.Fill;
-            dataFilesSelectorUI1.Location = new Point(0, 0);
-            dataFilesSelectorUI1.Name = "dataFilesSelectorui1";
-            dataFilesSelectorUI1.Size = new Size(1408, 775);
-            dataFilesSelectorUI1.TabIndex = 0;
+            showAllStoredData.Dock = DockStyle.Fill;
+            showAllStoredData.Location = new Point(0, 0);
+            showAllStoredData.Name = "showAllStoredData";
+            showAllStoredData.Size = new Size(1408, 818);
+            showAllStoredData.TabIndex = 0;
             // 
             // MainForm
             // 
@@ -287,6 +311,7 @@ namespace LPGDataAnalyzer
             statusBar.ResumeLayout(false);
             statusBar.PerformLayout();
             tabControlMain.ResumeLayout(false);
+            tabPageFileSelector.ResumeLayout(false);
             tabPageMainData.ResumeLayout(false);
             tabPageAnalyses.ResumeLayout(false);
             tabPageGroupByTemp.ResumeLayout(false);
@@ -296,7 +321,7 @@ namespace LPGDataAnalyzer
             tabPageReducerPred.PerformLayout();
             tabPageAllData.ResumeLayout(false);
             tabPageChart.ResumeLayout(false);
-            tabPageFileSelector.ResumeLayout(false);
+            tabPageAllStoredData.ResumeLayout(false);
             ResumeLayout(false);
             PerformLayout();
         }
@@ -324,5 +349,7 @@ namespace LPGDataAnalyzer
         private DataItemLineChartControl dataItemLineChartControl1;
         private TabPage tabPageFileSelector;
         private DataFilesSelectorUI dataFilesSelectorUI1;
+        private TabPage tabPageAllStoredData;
+        private ShowAllFileDataUI showAllStoredData;
     }
 }

@@ -39,7 +39,7 @@ namespace LPGDataAnalyzer.Services
                 .GroupBy(x => x.TempRange)
                 .ToDictionary(
                     g => g.Key,
-                    g => g.Average(x => x.Error)
+                    g => Enumerable.Average(g, x => x.Error)
                 );
             errorsByRange.TryGetValue("Temp_31_40", out var baseError);
             //if you want this value alwayes to be 0. comment next row.
@@ -152,7 +152,7 @@ namespace LPGDataAnalyzer.Services
                 .GroupBy(x => x.TempRange)
                 .ToDictionary(
                     g => g.Key,
-                    g => g.Average(x => x.Error)
+                    g => Enumerable.Average(g, x => x.Error)
                 );
 
             // Compute new corrections

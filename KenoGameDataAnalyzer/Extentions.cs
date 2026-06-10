@@ -1,5 +1,7 @@
 ﻿using LPGDataAnalyzer.Models;
 using System.Globalization;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Text;
 using static LPGDataAnalyzer.Models.Settings;
 
@@ -22,26 +24,24 @@ namespace LPGDataAnalyzer
                 ? result
                 : 0.0;
         }
+        public static double Median(this List<double> values)
+        {
+            return MedianCore(CollectionsMarshal.AsSpan(values));
+        }
+        public static double Median(this double[] values)
+        {
+            return MedianCore(values);
+        }
         public static double Median(this IEnumerable<double> numbers)
         {
-            if (numbers == null)
-                throw new ArgumentNullException(nameof(numbers));
+            ArgumentNullException.ThrowIfNull(numbers);
 
-            var sorted = numbers.ToArray();
-            if (sorted.Length == 0)
-                return 0;// throw new ArgumentException("Median of empty sequence is not defined.", nameof(numbers));
-
-            Array.Sort(sorted);
-
-            int mid = sorted.Length / 2;
-            return (sorted.Length % 2 != 0)
-                ? sorted[mid]
-                : (sorted[mid - 1] + sorted[mid]) / 2.0;
+            return MedianCore(numbers.ToArray());
         }
-        public static double Median(this Span<double> span)
+        public static double MedianCore(this Span<double> span)
         {
             if (span.IsEmpty)
-                throw new ArgumentException("Median of empty span is not defined.", nameof(span));
+                return 0;// throw new ArgumentException("Median of empty span is not defined.", nameof(span));
 
             span.Sort();  
 
@@ -101,22 +101,6 @@ namespace LPGDataAnalyzer
         {
             return value.HasValue ? value.Value * factor : null;
         }
-        public static double AggregateValues(this IEnumerable<double> values, Aggregation aggregation)
-        {
-            var clean = values.Where(v => !double.IsNaN(v)).ToList();
-
-            if (clean.Count == 0)
-                return double.NaN;
-
-            return aggregation switch
-            {
-                Aggregation.Median => clean.Median(),
-                Aggregation.Min => clean.Min(),
-                Aggregation.Max => clean.Max(),
-                Aggregation.Average => clean.Average(),
-                _ => throw new ArgumentOutOfRangeException(nameof(aggregation), aggregation, null)
-            };
-        }
         public static Func<DataItem, double?> GetFieldValue(this FieldsToShow field, Banks bank = Banks.ALL) 
         {
             return bank switch
@@ -154,15 +138,67 @@ namespace LPGDataAnalyzer
             };
         }
 
-        public static double Avg<T>(this IEnumerable<T> arr, Func<T, double> selector)
-    => arr.Select(selector).DefaultIfEmpty(0).Average();
+        public static double Average<T>(this IEnumerable<T> arr,Func<T, double> selector)
+        {
+            double sum = 0;
+            int count = 0;
+
+            foreach (var item in arr)
+            {
+                double v = selector(item);
+
+                if (double.IsNaN(v))
+                    continue;
+
+                sum += v;
+                count++;
+            }
+
+            return count == 0 ? double.NaN : sum / count;
+        }
 
         public static double Min<T>(this IEnumerable<T> arr, Func<T, double> selector)
-            => arr.Select(selector).DefaultIfEmpty(0).Min();
+        {
+            double min = double.PositiveInfinity;
+            bool found = false;
 
+            foreach (var item in arr)
+            {
+                double v = selector(item);
+
+                if (double.IsNaN(v))
+                    continue;
+
+                if (!found || v < min)
+                {
+                    min = v;
+                    found = true;
+                }
+            }
+
+            return found ? min : double.NaN;
+        }
         public static double Max<T>(this IEnumerable<T> arr, Func<T, double> selector)
-            => arr.Select(selector).DefaultIfEmpty(0).Max();
+        {
+            double max = double.NegativeInfinity;
+            bool found = false;
 
+            foreach (var item in arr)
+            {
+                double v = selector(item);
+
+                if (double.IsNaN(v))
+                    continue;
+
+                if (!found || v > max)
+                {
+                    max = v;
+                    found = true;
+                }
+            }
+
+            return found ? max : double.NaN;
+        }
         public static double RelDiff(this double a, double b)
             => (a == 0 && b == 0) ? 0d : (((a - b) / ((a + b) / 2.0)) * 100).Round();
         public static T[] Merge<T>(this T[] a, T[] b)
@@ -192,27 +228,120 @@ namespace LPGDataAnalyzer
         }
         public static int GetRpmIndex(this DataItem d)
         {
-            for (int j = 0; j < RpmColumns.Length; j++)
-            {
-                var r = RpmColumns[j];
-                if (d.RPM > r.Min && d.RPM <= r.Max)
-                    return j;
-            }
-
-            return -1;
+            return FindIndex(d.RPM, RpmColumns);
         }
         public static int GetInjectionIndex(this DataItem d)
         {
-            double injAvg = (d.BENZ_b1 + d.BENZ_b2) / 2.0;
+            return FindIndex(d.BENZ, InjectionRanges);
+        }
 
-            for (int i = 0; i < InjectionRanges.Length; i++)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static int FindIndex(int value,ReadOnlySpan<(int Min, int Max, int Label)> ranges)
+        {
+            int lo = 0;
+            int hi = ranges.Length - 1;
+
+            while (lo <= hi)
             {
-                var r = InjectionRanges[i];
-                if (injAvg > r.Min && injAvg <= r.Max)
-                    return i;
+                int mid = lo + ((hi - lo) >> 1);
+
+                var range = ranges[mid];
+
+                if (value <= range.Min)
+                    hi = mid - 1;
+                else if (value > range.Max)
+                    lo = mid + 1;
+                else
+                    return mid;
             }
 
-            return -1;
+            throw new ArgumentOutOfRangeException(nameof(value));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static int FindIndex(double value, ReadOnlySpan<(double Min, double Max, double Label)> ranges)
+        {
+            int lo = 0;
+            int hi = ranges.Length - 1;
+
+            while (lo <= hi)
+            {
+                int mid = lo + ((hi - lo) >> 1);
+
+                var range = ranges[mid];
+
+                if (value <= range.Min)
+                    hi = mid - 1;
+                else if (value > range.Max)
+                    lo = mid + 1;
+                else
+                    return mid;
+            }
+
+            throw new ArgumentOutOfRangeException(nameof(value));
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static double AverageFast(this List<double> values)
+        {
+            var span = CollectionsMarshal.AsSpan(values);
+
+            double sum = 0;
+            int count = 0;
+
+            foreach (var v in span)
+            {
+                if (double.IsNaN(v))
+                    continue;
+
+                sum += v;
+                count++;
+            }
+
+            return count == 0 ? double.NaN : sum / count;
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static double MinFast(this List<double> values)
+        {
+            var span = CollectionsMarshal.AsSpan(values);
+
+            double min = double.MaxValue;
+            bool found = false;
+
+            foreach (var v in span)
+            {
+                if (double.IsNaN(v))
+                    continue;
+
+                if (!found || v < min)
+                {
+                    min = v;
+                    found = true;
+                }
+            }
+
+            return found ? min : double.NaN;
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static double MaxFast(this List<double> values)
+        {
+            var span = CollectionsMarshal.AsSpan(values);
+
+            double max = double.MinValue;
+            bool found = false;
+
+            foreach (var v in span)
+            {
+                if (double.IsNaN(v))
+                    continue;
+
+                if (!found || v > max)
+                {
+                    max = v;
+                    found = true;
+                }
+            }
+
+            return found ? max : double.NaN;
         }
     }
 }

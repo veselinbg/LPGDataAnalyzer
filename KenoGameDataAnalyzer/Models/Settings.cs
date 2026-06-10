@@ -106,8 +106,8 @@
         }
         public enum FieldsToShow
         {
+            FastTrim, 
             Trim,
-            FastTrim,
             Ratio,
             GasTime,
             Press,

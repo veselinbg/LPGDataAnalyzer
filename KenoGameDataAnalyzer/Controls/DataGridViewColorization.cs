@@ -3,6 +3,47 @@ using LPGDataAnalyzer.Models.Common;
 
 namespace LPGDataAnalyzer.Controls
 {
+    public class ValueScale
+    {
+        public double Min { get; private set; } = double.MaxValue;
+        public double Max { get; private set; } = double.MinValue;
+        public void Reset()
+        {
+            Min = double.MaxValue;
+            Max = double.MinValue;
+        }
+        public void Add(double v)
+        {
+            if (double.IsNaN(v) || double.IsInfinity(v))
+                return;
+
+            if (v < Min) Min = v;
+            if (v > Max) Max = v;
+        }
+        public double Normalize(double v)
+        {
+            if (Min < 0 && Max > 0)
+            {
+                return Math.Max(-1, Math.Min(1, v / 20.0));
+            }
+
+            double range = Max - Min;
+            if (range < 1e-12) return 0;
+
+            var res = Math.Clamp((v - Min) / range, 0, 1);
+
+            return res;
+        }
+        public double NormalizeSigned(double v)
+        {
+            double absMax = Math.Max(Math.Abs(Min), Math.Abs(Max));
+
+            if (absMax < 1e-12)
+                return 0;
+
+            return Math.Clamp(v / absMax, -1, 1);
+        }
+    }
     public class DataGridViewColorization
     {
         public static AxisSplit<int> HighlightDifferencesHeatmapWithValues(

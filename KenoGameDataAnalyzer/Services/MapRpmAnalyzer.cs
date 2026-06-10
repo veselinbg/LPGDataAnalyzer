@@ -7,12 +7,10 @@ namespace LPGDataAnalyzer.Services
     {
         public static object BuildTableByMap(DataItem[] data)
         {
-
             return Settings.MapModes.Select(map =>
             {
                 // Filter by MAP range
                 var mapData = data.Where(d => d.MAP > map.Min && d.MAP <= map.Max);
-
                 // Apply Driving range if available
                 var drivingRangeItem = Settings.DrivingModes.FirstOrDefault(dr => dr.Label == map.Label);
 
@@ -28,18 +26,15 @@ namespace LPGDataAnalyzer.Services
                     mapData = mapData.Where(x => x.RPM > rpmRangeItem.Min && x.RPM <= rpmRangeItem.Max);
                 }
 
-
-                var mapArray = mapData.ToArray(); // Only enumerate once
-
                 // Compute averages
-                var avgBenzB1 = mapArray.Avg(x => x.BENZ_b1);
-                var avgBenzB2 = mapArray.Avg(x => x.BENZ_b2);
+                var avgBenzB1 = mapData.Average(x => x.BENZ_b1);
+                var avgBenzB2 = mapData.Average(x => x.BENZ_b2);
 
-                var avgGasB1 = mapArray.Avg(x => x.GAS_b1);
-                var avgGasB2 = mapArray.Avg(x => x.GAS_b2);
+                var avgGasB1 = mapData.Average(x => x.GAS_b1);
+                var avgGasB2 = mapData.Average(x => x.GAS_b2);
 
-                var avgTrimB1 = mapArray.Avg(x => x.Trim_b1);
-                var avgTrimB2 = mapArray.Avg(x => x.Trim_b2);
+                var avgTrimB1 = mapData.Average(x => x.Trim_b1);
+                var avgTrimB2 = mapData.Average(x => x.Trim_b2);
 
                 return new
                 {
@@ -52,12 +47,12 @@ namespace LPGDataAnalyzer.Services
                     Diff_Gas = avgGasB1.RelDiff(avgGasB2),
                     Diff_Trim = (avgTrimB1 - avgTrimB2).ToString("0.##'%'"),
 
-                    Press = mapArray.Avg(x => x.PRESS).Round(),
-                    Press_Min = mapArray.Min(x => x.PRESS).Round(),
-                    Press_Max = mapArray.Max(x => x.PRESS).Round(),
+                    Press = mapData.Average(x => x.PRESS).Round(),
+                    Press_Min = mapData.Min(x => x.PRESS).Round(),
+                    Press_Max = mapData.Max(x => x.PRESS).Round(),
 
-                    AvgTrim = mapArray.Avg(x => x.Trim).Round(),
-                    MedianTrim = mapArray.Select(x => x.Trim).Median().Round()
+                    AvgTrim = mapData.Average(x => x.Trim).Round(),
+                    MedianTrim = mapData.Select(x => x.Trim).Median().Round()
                 };
             }).ToArray();
         }
