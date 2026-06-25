@@ -51,9 +51,9 @@ namespace LPGDataAnalyzer
             showAllFileDataui1 = new ShowAllFileDataUI();
             tabPageChart = new TabPage();
             dataItemLineChartControl1 = new DataItemLineChartControl();
-            buttonExtraInjectionCalculator = new Button();
             tabPageAllStoredData = new TabPage();
             showAllStoredData = new ShowAllFileDataUI();
+            buttonExtraInjectionCalculator = new Button();
             statusBar.SuspendLayout();
             tabControlMain.SuspendLayout();
             tabPageFileSelector.SuspendLayout();
@@ -141,11 +141,11 @@ namespace LPGDataAnalyzer
             // 
             // dataGridViewMainData
             // 
-            dataGridViewMainData.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            dataGridViewMainData.Location = new Point(-4, 0);
+            dataGridViewMainData.Dock = DockStyle.Fill;
+            dataGridViewMainData.Location = new Point(3, 3);
             dataGridViewMainData.Name = "dataGridViewMainData";
             dataGridViewMainData.ReadOnly = true;
-            dataGridViewMainData.Size = new Size(2628, 1521);
+            dataGridViewMainData.Size = new Size(1402, 812);
             dataGridViewMainData.TabIndex = 0;
             dataGridViewMainData.Title = "All logged data";
             // 
@@ -269,16 +269,6 @@ namespace LPGDataAnalyzer
             dataItemLineChartControl1.Size = new Size(1408, 818);
             dataItemLineChartControl1.TabIndex = 0;
             // 
-            // buttonExtraInjectionCalculator
-            // 
-            buttonExtraInjectionCalculator.Location = new Point(1216, 11);
-            buttonExtraInjectionCalculator.Name = "buttonExtraInjectionCalculator";
-            buttonExtraInjectionCalculator.Size = new Size(152, 23);
-            buttonExtraInjectionCalculator.TabIndex = 21;
-            buttonExtraInjectionCalculator.Text = "Extra Injection Calculator";
-            buttonExtraInjectionCalculator.UseVisualStyleBackColor = true;
-            buttonExtraInjectionCalculator.Click += buttonExtraInjectionCalculator_Click;
-            // 
             // tabPageAllStoredData
             // 
             tabPageAllStoredData.Controls.Add(showAllStoredData);
@@ -296,6 +286,16 @@ namespace LPGDataAnalyzer
             showAllStoredData.Name = "showAllStoredData";
             showAllStoredData.Size = new Size(1408, 818);
             showAllStoredData.TabIndex = 0;
+            // 
+            // buttonExtraInjectionCalculator
+            // 
+            buttonExtraInjectionCalculator.Location = new Point(1216, 11);
+            buttonExtraInjectionCalculator.Name = "buttonExtraInjectionCalculator";
+            buttonExtraInjectionCalculator.Size = new Size(152, 23);
+            buttonExtraInjectionCalculator.TabIndex = 21;
+            buttonExtraInjectionCalculator.Text = "Extra Injection Calculator";
+            buttonExtraInjectionCalculator.UseVisualStyleBackColor = true;
+            buttonExtraInjectionCalculator.Click += buttonExtraInjectionCalculator_Click;
             // 
             // MainForm
             // 

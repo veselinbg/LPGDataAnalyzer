@@ -26,7 +26,7 @@ namespace LPGDataAnalyzer.Controls
             LineAlignment = StringAlignment.Center
         };
 
-        private readonly Font cellFont = new("Segoe UI", 7f);
+        private static readonly Font cellFont = new("Segoe UI", 10f, FontStyle.Regular);
         private readonly SolidBrush _solidBrush = new (Color.Black);
         public ShowAllFileDataUI()
         {
