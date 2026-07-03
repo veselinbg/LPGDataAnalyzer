@@ -82,7 +82,7 @@ namespace LPGDataAnalyzer.Controls
             var tableNew = FuelMapPrediction.BuildTable(Data, table, referencePressure, historySnapshots, textBoxMinCount.Text.Trim().ToInt(),
                 checkboxEnableSmooth.Checked, checkboxInterpolation.Checked, checkBoxOnlyChanges.Checked,
                 checkBoxRound.Checked, checkBoxShowOnlyMiplayerChange.Checked, textBoxMinValueOfChange.Text.Trim().ToDouble(),
-                textBoxMaxBenzDiff.Text.Trim().ToDouble(), checkBoxAllwaysApplyNegativeTrim.Checked, checkBoxShowOnlyCount.Checked);
+                textBoxMaxBenzDiff.Text.Trim().ToDouble(), checkBoxAllwaysApplyNegativeTrim.Checked, checkBoxShowOnlyCount.Checked, checkBoxMapRegression.Checked);
 
             if (checkBoxSaveSnapshot.Checked)
             {

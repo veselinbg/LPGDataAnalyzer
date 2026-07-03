@@ -15,7 +15,7 @@ namespace LPGDataAnalyzer.Controls
         private ReadOnlyDataGridView dataGridViewInjectionVsTemp;
         private ReadOnlyDataGridView dataGridViewSlowAndGetMinMax;
         private ReadOnlyDataGridView dataGridViewAverageTrimByTempGas;
-
+        private ReadOnlyDataGridView dataGridViewSlowTrimChanges;
         public TemperatureAnalyzerUI()
         {
             InitializeComponent();
@@ -31,6 +31,7 @@ namespace LPGDataAnalyzer.Controls
             dataGridViewInjectionVsTemp = CreateGrid("InjectionVsTemp");
             dataGridViewSlowAndGetMinMax = CreateGrid("SlowMinMax");
             dataGridViewAverageTrimByTempGas = CreateGrid("AvgTrimGas");
+            dataGridViewSlowTrimChanges = CreateGrid("SlowTrimChanges");
 
             tabControl = new TabControl { Dock = DockStyle.Fill };
 
@@ -65,9 +66,11 @@ namespace LPGDataAnalyzer.Controls
             );
 
             // DIAGNOSTICS TAB
-            tabDiag.Controls.Add(
-                Wrap("Temperature Extremes by SLOW (Min/Max Analysis)", dataGridViewSlowAndGetMinMax)
-            );
+            tabDiag.Controls.Add(CreateSplit(
+                Wrap("Temperature Extremes by SLOW (Min/Max Analysis)", dataGridViewSlowAndGetMinMax),
+                Wrap("Slow Trim Changes", dataGridViewSlowTrimChanges),
+                Orientation.Horizontal
+            ));
             Controls.Add(tabControl);
         }
         private ReadOnlyDataGridView CreateGrid(string name)
@@ -130,6 +133,8 @@ namespace LPGDataAnalyzer.Controls
             dataGridViewSlowAndGetMinMax.Grid.LoadData(TempeatureAnalyzer.TemperatureExtremesBySlowTrim(data));
 
             dataGridViewAverageTrimByTempGas.Grid.LoadData(TempeatureAnalyzer.AverageTrimByGasTemperature(data));
+
+            dataGridViewSlowTrimChanges.Grid.LoadData(TempeatureAnalyzer.SlowTrimChanges(data));
         }
     }
 }

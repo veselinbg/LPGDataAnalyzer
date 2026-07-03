@@ -234,9 +234,13 @@ namespace LPGDataAnalyzer
         {
             return FindIndex(d.BENZ, InjectionRanges);
         }
+        public static int GetInjectionIndex(this DataItem d, Func<DataItem, double> injectorSelector)
+        {
+            return FindIndex(injectorSelector(d), InjectionRanges);
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static int FindIndex(int value,ReadOnlySpan<(int Min, int Max, int Label)> ranges)
+        private static int FindIndex(int value, ReadOnlySpan<(int Min, int Max, int Label)> ranges)
         {
             int lo = 0;
             int hi = ranges.Length - 1;

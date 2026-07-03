@@ -54,6 +54,7 @@
             dataGridViewOrig = new ReadOnlyDataGridView();
             panelLegend = new Panel();
             DataGridViewInvalidData = new DataGridView();
+            checkBoxMapRegression = new CheckBox();
             panelHistory.SuspendLayout();
             tableLayoutPanelMain.SuspendLayout();
             tableLayoutPanelRight.SuspendLayout();
@@ -285,6 +286,7 @@
             // 
             // panel3
             // 
+            panel3.Controls.Add(checkBoxMapRegression);
             panel3.Controls.Add(checkBoxShowOnlyCount);
             panel3.Controls.Add(checkBoxAllwaysApplyNegativeTrim);
             panel3.Controls.Add(labelMaxBenzDiff);
@@ -488,6 +490,16 @@
             DataGridViewInvalidData.Size = new Size(553, 207);
             DataGridViewInvalidData.TabIndex = 19;
             // 
+            // checkBoxMapRegression
+            // 
+            checkBoxMapRegression.AutoSize = true;
+            checkBoxMapRegression.Location = new Point(134, 121);
+            checkBoxMapRegression.Name = "checkBoxMapRegression";
+            checkBoxMapRegression.Size = new Size(110, 19);
+            checkBoxMapRegression.TabIndex = 30;
+            checkBoxMapRegression.Text = "Map Regression";
+            checkBoxMapRegression.UseVisualStyleBackColor = true;
+            // 
             // PredictionControl
             // 
             Controls.Add(tableLayoutPanelMain);
@@ -551,5 +563,6 @@
         private CheckBox checkBoxShowOnlyCount;
         private Button buttonConvert;
         private Button buttonExport;
+        private CheckBox checkBoxMapRegression;
     }
 }

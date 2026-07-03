@@ -144,5 +144,93 @@ namespace LPGDataAnalyzer.Services
 
             return result;
         }
+        public static object SlowTrimChanges(DataItem[] data)
+        {
+            int lastB1 = 0;
+            int lastB2 = 0;
+
+            var result = data
+                .Select((current, index) => new
+                {
+                    Current = current,
+                    Previous = index > 0 ? data[index - 1] : null,
+                    Index = index
+                })
+                .Where(x => x.Previous != null &&
+                       (x.Previous.SLOW_b1 != x.Current.SLOW_b1 ||
+                        x.Previous.SLOW_b2 != x.Current.SLOW_b2))
+                .SelectMany(x =>
+                {
+                    var changes = new List<object>();
+
+                    if (x.Previous.SLOW_b1 != x.Current.SLOW_b1)
+                    {
+                        var range = data.Skip(lastB1).Take(x.Index - lastB1 + 1).ToList();
+
+                        changes.Add(new
+                        {
+                            Bank = "B1",
+
+                            PreviousSlow = x.Previous.SLOW_b1,
+                            CurrentSlow = x.Current.SLOW_b1,
+                            Delta = (x.Current.SLOW_b1 - x.Previous.SLOW_b1).Round(),
+
+                            Count = range.Count,
+
+                            AvgLpgInj = range.Average(r => r.GAS_b1).Round(),
+                            AvgPetrolInj = range.Average(r => r.BENZ_b1).Round(),
+                            AvgFast = range.Average(r => r.FAST_b1).Round(),
+                            AvgAFR = range.Average(r => r.AFR_b1).Round(),
+                            AvgRPM = range.Average(r => r.RPM).Round(),
+                            AvgMAP = range.Average(r => r.MAP).Round(),
+                            Pressure = range.Average(r => r.PRESS).Round(),
+                            Temp_RID = range.Average(r => r.Temp_RID).Round(),
+                            Temp_GAS = range.Average(r => r.Temp_GAS).Round(),
+                            IngAtChange = x.Current.BENZ_b1,
+                            RPMAtChange = x.Current.RPM,
+                            LPGInjectionAtChange = x.Current.GAS_b1.Round(),
+                            TEMPO = x.Current.TEMPO
+                        });
+
+                        lastB1 = x.Index;
+                    }
+
+                    if (x.Previous.SLOW_b2 != x.Current.SLOW_b2)
+                    {
+                        var range = data.Skip(lastB2).Take(x.Index - lastB2 + 1).ToList();
+
+                        changes.Add(new
+                        {
+                            Bank = "B2",
+
+                            PreviousSlow = x.Previous.SLOW_b2,
+                            CurrentSlow = x.Current.SLOW_b2,
+                            Delta = (x.Current.SLOW_b2 - x.Previous.SLOW_b2).Round(),
+
+                            Count = range.Count,
+
+                            AvgLpgInj = range.Average(r => r.GAS_b2).Round(),
+                            AvgPetrolInj = range.Average(r => r.BENZ_b2).Round(),
+                            AvgFast = range.Average(r => r.FAST_b2).Round(),
+                            AvgAFR = range.Average(r => r.AFR_b2).Round(),
+                            AvgRPM = range.Average(r => r.RPM).Round(),
+                            AvgMAP = range.Average(r => r.MAP).Round(),
+                            Pressure = range.Average(r => r.PRESS).Round(),
+                            Temp_RID = range.Average(r => r.Temp_RID).Round(),
+                            Temp_GAS = range.Average(r => r.Temp_GAS).Round(),
+                            IngAtChange = x.Current.BENZ_b1,
+                            RPMAtChange = x.Current.RPM,
+                            LPGInjectionAtChange = x.Current.GAS_b2.Round(),
+                            TEMPO = x.Current.TEMPO
+                        });
+
+                        lastB2 = x.Index;
+                    }
+
+                    return changes;
+                }).ToList();
+
+            return result;
+        }
     }
 }

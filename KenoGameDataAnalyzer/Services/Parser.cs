@@ -56,8 +56,8 @@ namespace LPGDataAnalyzer.Services
                 .Skip(2)
                 .Where(line => !string.IsNullOrWhiteSpace(line))
                 .Select(ParseLine)
-                //.Where(x =>x.RPM > 0 && x.GAS_b1 > 0 && x.GAS_b2 > 0);
-                .Where(x => x.RPM > 0 && x.GAS_b1 > 0 && x.GAS_b2 > 0 && x.FAST_b1 != 0 && x.FAST_b2 != 0);
+                .Where(x =>x.RPM > 0 && x.GAS_b1 > 0 && x.GAS_b2 > 0);
+                //.Where(x => x.RPM > 0 && x.GAS_b1 > 0 && x.GAS_b2 > 0 && x.FAST_b1 != 0 && x.FAST_b2 != 0);
         }
 
         private static DataItem AverageGroup(List<DataItem> items)
