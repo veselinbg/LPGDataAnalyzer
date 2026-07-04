@@ -76,7 +76,7 @@ namespace LPGDataAnalyzer.Services
 
                 double inj = injectionBankSelector(d);
 
-                int injIndex = d.GetInjectionIndex();
+                int injIndex = d.GetInjectionIndex(injectionBankSelector);
 
                 if(buckets[rpmIndex, injIndex] is null)
                     buckets[rpmIndex, injIndex] = [];

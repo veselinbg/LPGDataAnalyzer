@@ -8,6 +8,7 @@ namespace LPGDataAnalyzer.Controls
     {
         private readonly double?[][,] tables = new double?[6][,];
         private DataItem[] Data;
+        private DataItem[][] _filteredData = new DataItem[6][];
         public AnalysisUC()
         {
             InitializeComponent();
@@ -203,6 +204,7 @@ namespace LPGDataAnalyzer.Controls
 
                 for (int b = 0; b < injectionBankSelectors.Length; b++)
                 {
+                    _filteredData[baseIndex + b] = filtered;
                     tables[baseIndex + b] = Analyzer.BuildTable(
                         filtered,
                         injectionBankSelectors[b],
@@ -230,7 +232,7 @@ namespace LPGDataAnalyzer.Controls
 
                 grid.SetData(
                              tables[i],
-                             Data,
+                             _filteredData[i],
                              titles[i],
                              injectionSelectors[i]);
 
