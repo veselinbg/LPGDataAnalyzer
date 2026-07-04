@@ -1,4 +1,4 @@
-﻿namespace KenoGameDataAnalyzer
+﻿namespace LPGDataAnalyzer
 {
     public class ColorHelper
     {

@@ -1,4 +1,5 @@
 ﻿using LPGDataAnalyzer.Models;
+using System.Text.RegularExpressions;
 using Tesseract;
 
 namespace LPGDataAnalyzer.Services
@@ -7,20 +8,26 @@ namespace LPGDataAnalyzer.Services
     {
         public string Parcer(string imagePath)
         {
-            using (var engine = new TesseractEngine("tessdata", "eng", EngineMode.Default))
-            {
-                engine.SetVariable("tessedit_char_whitelist", "0123456789");
-                engine.SetVariable("load_system_dawg", "0");
-                engine.SetVariable("load_freq_dawg", "0");
+            using var engine = new TesseractEngine("tessdata", "eng", EngineMode.Default);
 
-                using var img = Pix.LoadFromFile(imagePath);
-                using (var page = engine.Process(img))
-                {
-                    string text = page.GetText();
+            engine.SetVariable("tessedit_char_whitelist", "0123456789");
+            engine.SetVariable("load_system_dawg", "0");
+            engine.SetVariable("load_freq_dawg", "0");
 
-                    return text.Replace("\n\n", Environment.NewLine).Replace("\n","").Trim();
-                }
-            }
+            using var img = Pix.LoadFromFile(imagePath);
+            using var page = engine.Process(img);
+
+            string text = page.GetText();
+
+            // Normalize line endings
+            text = text.Replace("\r\n", "\n")
+                       .Replace("\r", "\n");
+
+            // Remove spaces around newlines and collapse multiple blank lines
+            text = Regex.Replace(text, @"[ \t]*\n[ \t]*", Environment.NewLine);
+            text = Regex.Replace(text, @"(\r?\n){2,}", Environment.NewLine);
+
+            return text.Trim();
         }
         public void Validate(string text)
         {

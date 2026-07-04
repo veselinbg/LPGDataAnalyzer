@@ -1,4 +1,4 @@
-﻿using KenoGameDataAnalyzer;
+﻿using LPGDataAnalyzer;
 using LPGDataAnalyzer.Models;
 using LPGDataAnalyzer.Models.Common;
 using LPGDataAnalyzer.Services;

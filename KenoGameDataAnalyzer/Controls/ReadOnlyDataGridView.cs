@@ -1,7 +1,5 @@
-﻿using KenoGameDataAnalyzer;
-using LPGDataAnalyzer.Models;
+﻿using LPGDataAnalyzer.Models;
 using System.ComponentModel;
-using System.Data;
 using static LPGDataAnalyzer.Models.Settings;
 
 namespace LPGDataAnalyzer.Controls
@@ -36,8 +34,6 @@ namespace LPGDataAnalyzer.Controls
             AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.AllCells;
             AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
             
-            AutoSize = true;
-
             this.CellFormatting += (s, e) =>
             {
                 var col = this.Columns[e.ColumnIndex].Name;
@@ -82,13 +78,11 @@ namespace LPGDataAnalyzer.Controls
                 if (col.Name.Contains("Avg"))
                 {
                     col.DefaultCellStyle.BackColor = Color.FromArgb(230, 240, 255);
-                    col.DefaultCellStyle.ForeColor = Color.Black;
                 }
 
                 if (col.Name.Contains("Min") || col.Name.Contains("Max"))
                 {
                     col.DefaultCellStyle.BackColor = Color.FromArgb(245, 245, 245);
-                    col.DefaultCellStyle.ForeColor = Color.Black;
                 }
 
                 if (col.Name.Contains("Count"))
@@ -161,13 +155,16 @@ namespace LPGDataAnalyzer.Controls
                 BackColor = ColorHelper.DarkBackColor,
                 ForeColor = ColorHelper.White
             };
-            
+            dataGridView.ColumnHeadersDefaultCellStyle.WrapMode =DataGridViewTriState.True;
+
+            dataGridView.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.EnableResizing;
+
+            dataGridView.ColumnHeadersHeight = 42;   // adjust as needed
             dataGridView.CellFormatting += DataGridView_CellFormatting;
             dataGridView.CellDoubleClick += DataGridView_CellDoubleClick;
 
             this.Controls.Add(dataGridView);
             this.Controls.Add(titleLabel);
-            this.AutoSize = true;
             this.AutoSizeMode = AutoSizeMode.GrowAndShrink;
         }
         private void DataGridView_CellFormatting(object? sender, DataGridViewCellFormattingEventArgs e)
@@ -226,22 +223,31 @@ namespace LPGDataAnalyzer.Controls
                 var col = new DataGridViewTextBoxColumn
                 {
                     Name = "InjectionTime",
-                    HeaderText = "Inj.Time",
+                    HeaderText = "Inj (ms)",
                     ValueType = typeof(string),
-                    AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells
+                    AutoSizeMode = DataGridViewAutoSizeColumnMode.None,
+                    Width = 65,
+                    DefaultCellStyle =
+                    {
+                        Alignment = DataGridViewContentAlignment.MiddleRight
+                    }
                 };
                 dataGridView.Columns.Add(col);
+
+                int previous = 0;
 
                 foreach (var rpm in RpmColumns)
                 {
                     var rpmCol = new DataGridViewTextBoxColumn
                     {
                         Name = $"RPM_{rpm.Label}",
-                        HeaderText = rpm.Label.ToString(),
+                        HeaderText = $"{previous}\n{rpm.Label}",
                         ValueType = typeof(double),
                         AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill
                     };
+
                     dataGridView.Columns.Add(rpmCol);
+                    previous = rpm.Label;
                 }
             }
         }
@@ -259,7 +265,6 @@ namespace LPGDataAnalyzer.Controls
 
             try
             {
-                // Ensure row count matches the table
                 if (grid.Rows.Count != injCount)
                 {
                     grid.Rows.Clear();
@@ -272,14 +277,16 @@ namespace LPGDataAnalyzer.Controls
                 {
                     var cells = rows[inj].Cells;
 
-                    // Column 0 = Injection label
-                    var label = InjectionRanges[inj].Label;
+                    // Injection range label
+                    var previous = inj == 0 ? 0 : InjectionRanges[inj - 1].Label;
+                    string label = $"{previous}-{InjectionRanges[inj].Label}";
+
                     if (!Equals(cells[0].Value, label))
                     {
                         cells[0].Value = label;
                     }
 
-                    // Columns 1..N = RPM values
+                    // RPM values
                     for (int rpm = 0; rpm < rpmCount; rpm++)
                     {
                         var value = table[rpm, inj];

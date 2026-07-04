@@ -37,6 +37,7 @@
             tableLayoutPanelManagement = new TableLayoutPanel();
             panel1 = new Panel();
             panel3 = new Panel();
+            checkBoxMapRegression = new CheckBox();
             checkBoxShowOnlyCount = new CheckBox();
             checkBoxAllwaysApplyNegativeTrim = new CheckBox();
             labelMaxBenzDiff = new Label();
@@ -54,7 +55,6 @@
             dataGridViewOrig = new ReadOnlyDataGridView();
             panelLegend = new Panel();
             DataGridViewInvalidData = new DataGridView();
-            checkBoxMapRegression = new CheckBox();
             panelHistory.SuspendLayout();
             tableLayoutPanelMain.SuspendLayout();
             tableLayoutPanelRight.SuspendLayout();
@@ -82,7 +82,7 @@
             panelHistory.Dock = DockStyle.Fill;
             panelHistory.Location = new Point(3, 399);
             panelHistory.Name = "panelHistory";
-            panelHistory.Size = new Size(836, 355);
+            panelHistory.Size = new Size(805, 355);
             panelHistory.TabIndex = 1;
             // 
             // historyControl1
@@ -90,7 +90,7 @@
             historyControl1.Dock = DockStyle.Fill;
             historyControl1.Location = new Point(0, 0);
             historyControl1.Name = "historyControl1";
-            historyControl1.Size = new Size(836, 355);
+            historyControl1.Size = new Size(805, 355);
             historyControl1.TabIndex = 1;
             // 
             // textBoxMinCount
@@ -143,10 +143,10 @@
             // textBoxLastPredictedFuelTable
             // 
             textBoxLastPredictedFuelTable.Dock = DockStyle.Fill;
-            textBoxLastPredictedFuelTable.Location = new Point(421, 3);
+            textBoxLastPredictedFuelTable.Location = new Point(405, 3);
             textBoxLastPredictedFuelTable.Multiline = true;
             textBoxLastPredictedFuelTable.Name = "textBoxLastPredictedFuelTable";
-            textBoxLastPredictedFuelTable.Size = new Size(412, 171);
+            textBoxLastPredictedFuelTable.Size = new Size(397, 171);
             textBoxLastPredictedFuelTable.TabIndex = 8;
             // 
             // textBoxParsedData
@@ -155,7 +155,7 @@
             textBoxParsedData.Location = new Point(0, 0);
             textBoxParsedData.Multiline = true;
             textBoxParsedData.Name = "textBoxParsedData";
-            textBoxParsedData.Size = new Size(412, 171);
+            textBoxParsedData.Size = new Size(396, 171);
             textBoxParsedData.TabIndex = 11;
             // 
             // buttonValidate
@@ -178,9 +178,9 @@
             // 
             // buttonParceSelectedPhoto
             // 
-            buttonParceSelectedPhoto.Location = new Point(671, 3);
+            buttonParceSelectedPhoto.Location = new Point(647, 3);
             buttonParceSelectedPhoto.Name = "buttonParceSelectedPhoto";
-            buttonParceSelectedPhoto.Size = new Size(77, 23);
+            buttonParceSelectedPhoto.Size = new Size(74, 23);
             buttonParceSelectedPhoto.TabIndex = 14;
             buttonParceSelectedPhoto.Text = "Parse";
             buttonParceSelectedPhoto.Click += ButtonParceSelectedImage_Click;
@@ -226,8 +226,8 @@
             // tableLayoutPanelMain
             // 
             tableLayoutPanelMain.ColumnCount = 2;
-            tableLayoutPanelMain.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 40F));
-            tableLayoutPanelMain.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 60F));
+            tableLayoutPanelMain.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 42.17976F));
+            tableLayoutPanelMain.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 57.82024F));
             tableLayoutPanelMain.Controls.Add(tableLayoutPanelRight, 1, 0);
             tableLayoutPanelMain.Controls.Add(tableLayoutPanelLeft, 0, 0);
             tableLayoutPanelMain.Dock = DockStyle.Fill;
@@ -247,14 +247,14 @@
             tableLayoutPanelRight.Controls.Add(tableLayoutPanelTopLine, 0, 0);
             tableLayoutPanelRight.Dock = DockStyle.Fill;
             tableLayoutPanelRight.ForeColor = SystemColors.ActiveCaptionText;
-            tableLayoutPanelRight.Location = new Point(568, 3);
+            tableLayoutPanelRight.Location = new Point(599, 3);
             tableLayoutPanelRight.Name = "tableLayoutPanelRight";
             tableLayoutPanelRight.RowCount = 3;
             tableLayoutPanelRight.RowStyles.Add(new RowStyle(SizeType.Absolute, 35F));
             tableLayoutPanelRight.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
             tableLayoutPanelRight.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
             tableLayoutPanelRight.RowStyles.Add(new RowStyle(SizeType.Absolute, 20F));
-            tableLayoutPanelRight.Size = new Size(842, 757);
+            tableLayoutPanelRight.Size = new Size(811, 757);
             tableLayoutPanelRight.TabIndex = 25;
             // 
             // tableLayoutPanelManagement
@@ -272,7 +272,7 @@
             tableLayoutPanelManagement.RowCount = 2;
             tableLayoutPanelManagement.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
             tableLayoutPanelManagement.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
-            tableLayoutPanelManagement.Size = new Size(836, 355);
+            tableLayoutPanelManagement.Size = new Size(805, 355);
             tableLayoutPanelManagement.TabIndex = 11;
             // 
             // panel1
@@ -281,7 +281,7 @@
             panel1.Dock = DockStyle.Fill;
             panel1.Location = new Point(3, 3);
             panel1.Name = "panel1";
-            panel1.Size = new Size(412, 171);
+            panel1.Size = new Size(396, 171);
             panel1.TabIndex = 0;
             // 
             // panel3
@@ -306,8 +306,18 @@
             panel3.Dock = DockStyle.Fill;
             panel3.Location = new Point(3, 180);
             panel3.Name = "panel3";
-            panel3.Size = new Size(412, 172);
+            panel3.Size = new Size(396, 172);
             panel3.TabIndex = 9;
+            // 
+            // checkBoxMapRegression
+            // 
+            checkBoxMapRegression.AutoSize = true;
+            checkBoxMapRegression.Location = new Point(134, 121);
+            checkBoxMapRegression.Name = "checkBoxMapRegression";
+            checkBoxMapRegression.Size = new Size(110, 19);
+            checkBoxMapRegression.TabIndex = 30;
+            checkBoxMapRegression.Text = "Map Regression";
+            checkBoxMapRegression.UseVisualStyleBackColor = true;
             // 
             // checkBoxShowOnlyCount
             // 
@@ -381,9 +391,9 @@
             panel4.Controls.Add(checkboxInterpolation);
             panel4.Controls.Add(checkBoxUseHistory);
             panel4.Dock = DockStyle.Fill;
-            panel4.Location = new Point(421, 180);
+            panel4.Location = new Point(405, 180);
             panel4.Name = "panel4";
-            panel4.Size = new Size(412, 172);
+            panel4.Size = new Size(397, 172);
             panel4.TabIndex = 10;
             // 
             // buttonExport
@@ -410,12 +420,12 @@
             tableLayoutPanelTopLine.Name = "tableLayoutPanelTopLine";
             tableLayoutPanelTopLine.RowCount = 1;
             tableLayoutPanelTopLine.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
-            tableLayoutPanelTopLine.Size = new Size(836, 29);
+            tableLayoutPanelTopLine.Size = new Size(805, 29);
             tableLayoutPanelTopLine.TabIndex = 12;
             // 
             // buttonConvert
             // 
-            buttonConvert.Location = new Point(754, 3);
+            buttonConvert.Location = new Point(727, 3);
             buttonConvert.Name = "buttonConvert";
             buttonConvert.Size = new Size(75, 23);
             buttonConvert.TabIndex = 22;
@@ -428,7 +438,7 @@
             textBoxImagePath.Dock = DockStyle.Fill;
             textBoxImagePath.Location = new Point(3, 3);
             textBoxImagePath.Name = "textBoxImagePath";
-            textBoxImagePath.Size = new Size(662, 23);
+            textBoxImagePath.Size = new Size(638, 23);
             textBoxImagePath.TabIndex = 15;
             // 
             // tableLayoutPanelLeft
@@ -447,7 +457,7 @@
             tableLayoutPanelLeft.RowStyles.Add(new RowStyle(SizeType.Absolute, 50F));
             tableLayoutPanelLeft.RowStyles.Add(new RowStyle(SizeType.Percent, 35F));
             tableLayoutPanelLeft.RowStyles.Add(new RowStyle(SizeType.Percent, 30F));
-            tableLayoutPanelLeft.Size = new Size(559, 757);
+            tableLayoutPanelLeft.Size = new Size(590, 757);
             tableLayoutPanelLeft.TabIndex = 23;
             // 
             // dataGridViewPrediction
@@ -458,7 +468,7 @@
             dataGridViewPrediction.EnableTitle = false;
             dataGridViewPrediction.Location = new Point(3, 300);
             dataGridViewPrediction.Name = "dataGridViewPrediction";
-            dataGridViewPrediction.Size = new Size(553, 241);
+            dataGridViewPrediction.Size = new Size(584, 241);
             dataGridViewPrediction.TabIndex = 18;
             dataGridViewPrediction.Title = "";
             // 
@@ -470,7 +480,7 @@
             dataGridViewOrig.EnableTitle = false;
             dataGridViewOrig.Location = new Point(3, 3);
             dataGridViewOrig.Name = "dataGridViewOrig";
-            dataGridViewOrig.Size = new Size(553, 241);
+            dataGridViewOrig.Size = new Size(584, 241);
             dataGridViewOrig.TabIndex = 17;
             dataGridViewOrig.Title = "";
             // 
@@ -479,7 +489,7 @@
             panelLegend.Dock = DockStyle.Fill;
             panelLegend.Location = new Point(3, 250);
             panelLegend.Name = "panelLegend";
-            panelLegend.Size = new Size(553, 44);
+            panelLegend.Size = new Size(584, 44);
             panelLegend.TabIndex = 9;
             // 
             // DataGridViewInvalidData
@@ -487,18 +497,8 @@
             DataGridViewInvalidData.Dock = DockStyle.Fill;
             DataGridViewInvalidData.Location = new Point(3, 547);
             DataGridViewInvalidData.Name = "DataGridViewInvalidData";
-            DataGridViewInvalidData.Size = new Size(553, 207);
+            DataGridViewInvalidData.Size = new Size(584, 207);
             DataGridViewInvalidData.TabIndex = 19;
-            // 
-            // checkBoxMapRegression
-            // 
-            checkBoxMapRegression.AutoSize = true;
-            checkBoxMapRegression.Location = new Point(134, 121);
-            checkBoxMapRegression.Name = "checkBoxMapRegression";
-            checkBoxMapRegression.Size = new Size(110, 19);
-            checkBoxMapRegression.TabIndex = 30;
-            checkBoxMapRegression.Text = "Map Regression";
-            checkBoxMapRegression.UseVisualStyleBackColor = true;
             // 
             // PredictionControl
             // 

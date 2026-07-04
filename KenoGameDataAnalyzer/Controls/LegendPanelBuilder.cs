@@ -1,9 +1,4 @@
-﻿using KenoGameDataAnalyzer;
-using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace LPGDataAnalyzer.Controls
+﻿namespace LPGDataAnalyzer.Controls
 {
     public class PanelLegendBuilder
     {

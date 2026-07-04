@@ -2,7 +2,7 @@
 using System.Globalization;
 using System.Text;
 
-namespace KenoGameDataAnalyzer.Services
+namespace LPGDataAnalyzer.Services
 {
     public class ExportLogBuilder
     {
