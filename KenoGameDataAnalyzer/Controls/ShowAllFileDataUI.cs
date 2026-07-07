@@ -338,20 +338,24 @@ namespace LPGDataAnalyzer.Controls
             g.DrawRectangle(Pens.LightGray, headerRect);
             g.DrawString(title, ColorHelper.BoldFont, Brushes.Black, headerRect, sf);
 
-            // COLUMN HEADERS
-            for (int c = 0; c < rows; c++)
-            {
-                var rect = new Rectangle(gridX + c * cellW, startY - 20, cellW, 20);
-                g.DrawString(RpmColumns[c].Label.ToString(), ColorHelper.BoldFont, Brushes.Black, rect, sf);
-            }
-
             // ROW LABELS
-            for (int r = 0; r < cols; r++)
+            for (int r = 0; r < rows; r++)
             {
-                var rect = new Rectangle(labelX, startY + r * cellH, labelWidth, cellH);
+                var rect = new Rectangle(gridX + r * cellW, startY - 20, cellW, 20);
+                g.DrawString(RpmColumns[r].Label.ToString(), ColorHelper.BoldFont, Brushes.Black, rect, sf);
+            }
+            var injectionTimeLenght = InjectionRanges.Length;
+            // COLUMN HEADERS
+            for (int col = 0; col < cols; col++)
+            {
+                var label = "...";
+                if (injectionTimeLenght > col)
+                    label = InjectionRanges[col].Label.ToString();
+
+                var rect = new Rectangle(labelX, startY + col * cellH, labelWidth, cellH);
 
                 g.DrawString(
-                    InjectionRanges[r].Label.ToString(),
+                    label,
                     cellFont,
                     Brushes.Black,
                     rect,
@@ -359,15 +363,15 @@ namespace LPGDataAnalyzer.Controls
             }
 
             // CELLS
-            for (int r = 0; r < cols; r++)
+            for (int c = 0; c < cols; c++)
             {
-                for (int c = 0; c < rows; c++)
+                for (int r = 0; r < rows; r++)
                 {
-                    var val = table[c, r];
+                    var val = table[r, c];
 
                     var rect = new Rectangle(
-                        gridX + c * cellW,
-                        startY + r * cellH,
+                        gridX + r * cellW,
+                        startY + c * cellH,
                         cellW,
                         cellH);
 

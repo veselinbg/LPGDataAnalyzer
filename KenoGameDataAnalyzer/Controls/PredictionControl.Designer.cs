@@ -355,7 +355,7 @@
             textBoxMaxBenzDiff.RightToLeft = RightToLeft.Yes;
             textBoxMaxBenzDiff.Size = new Size(44, 23);
             textBoxMaxBenzDiff.TabIndex = 26;
-            textBoxMaxBenzDiff.Text = "100";
+            textBoxMaxBenzDiff.Text = "6";
             // 
             // labelMinCount
             // 
@@ -453,10 +453,10 @@
             tableLayoutPanelLeft.Location = new Point(3, 3);
             tableLayoutPanelLeft.Name = "tableLayoutPanelLeft";
             tableLayoutPanelLeft.RowCount = 4;
-            tableLayoutPanelLeft.RowStyles.Add(new RowStyle(SizeType.Percent, 35F));
+            tableLayoutPanelLeft.RowStyles.Add(new RowStyle(SizeType.Percent, 37F));
             tableLayoutPanelLeft.RowStyles.Add(new RowStyle(SizeType.Absolute, 50F));
-            tableLayoutPanelLeft.RowStyles.Add(new RowStyle(SizeType.Percent, 35F));
-            tableLayoutPanelLeft.RowStyles.Add(new RowStyle(SizeType.Percent, 30F));
+            tableLayoutPanelLeft.RowStyles.Add(new RowStyle(SizeType.Percent, 37F));
+            tableLayoutPanelLeft.RowStyles.Add(new RowStyle(SizeType.Percent, 26F));
             tableLayoutPanelLeft.Size = new Size(590, 757);
             tableLayoutPanelLeft.TabIndex = 23;
             // 
@@ -466,9 +466,9 @@
             dataGridViewPrediction.AutoSizeMode = AutoSizeMode.GrowAndShrink;
             dataGridViewPrediction.Dock = DockStyle.Fill;
             dataGridViewPrediction.EnableTitle = false;
-            dataGridViewPrediction.Location = new Point(3, 300);
+            dataGridViewPrediction.Location = new Point(3, 314);
             dataGridViewPrediction.Name = "dataGridViewPrediction";
-            dataGridViewPrediction.Size = new Size(584, 241);
+            dataGridViewPrediction.Size = new Size(584, 255);
             dataGridViewPrediction.TabIndex = 18;
             dataGridViewPrediction.Title = "";
             // 
@@ -480,14 +480,14 @@
             dataGridViewOrig.EnableTitle = false;
             dataGridViewOrig.Location = new Point(3, 3);
             dataGridViewOrig.Name = "dataGridViewOrig";
-            dataGridViewOrig.Size = new Size(584, 241);
+            dataGridViewOrig.Size = new Size(584, 255);
             dataGridViewOrig.TabIndex = 17;
             dataGridViewOrig.Title = "";
             // 
             // panelLegend
             // 
             panelLegend.Dock = DockStyle.Fill;
-            panelLegend.Location = new Point(3, 250);
+            panelLegend.Location = new Point(3, 264);
             panelLegend.Name = "panelLegend";
             panelLegend.Size = new Size(584, 44);
             panelLegend.TabIndex = 9;
@@ -495,9 +495,9 @@
             // DataGridViewInvalidData
             // 
             DataGridViewInvalidData.Dock = DockStyle.Fill;
-            DataGridViewInvalidData.Location = new Point(3, 547);
+            DataGridViewInvalidData.Location = new Point(3, 575);
             DataGridViewInvalidData.Name = "DataGridViewInvalidData";
-            DataGridViewInvalidData.Size = new Size(584, 207);
+            DataGridViewInvalidData.Size = new Size(584, 179);
             DataGridViewInvalidData.TabIndex = 19;
             // 
             // PredictionControl
