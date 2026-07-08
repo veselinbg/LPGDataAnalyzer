@@ -66,6 +66,10 @@ namespace LPGDataAnalyzer.Controls
             if (grid.Columns.Count > 0)
                 return;
 
+            grid.Columns.Add(CreateCol(nameof(DataItem.RPM), "RPM"));
+            grid.Columns.Add(CreateCol(nameof(DataItem.BENZ_b1), "BENZ_b1"));
+            grid.Columns.Add(CreateCol(nameof(DataItem.BENZ_b2), "BENZ_b2"));
+
             grid.Columns.Add(CreateCol(nameof(DataItem.SLOW_b1), "Slow B1"));
             grid.Columns.Add(CreateCol(nameof(DataItem.FAST_b1), "Fast B1"));
             grid.Columns.Add(CreateCol(nameof(DataItem.SLOW_b2), "Slow B2"));
