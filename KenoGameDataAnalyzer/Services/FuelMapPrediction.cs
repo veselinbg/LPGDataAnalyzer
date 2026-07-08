@@ -529,10 +529,7 @@ namespace LPGDataAnalyzer.Services
                                 values.Add(newValue.Value);
                                 newValue = values.Median();
                             }
-                            if(newValue == 134)
-                            {
 
-                            }
                             if((currentValue != newValue.Value.Round(0)) || !showOnlyChanges)
                                 result[rpmIndex, injIndex] = newValue;
                         }
