@@ -252,138 +252,126 @@ namespace LPGDataAnalyzer.Services
         {
             int injLength = Settings.InjectionRanges.Length;
             int rpmLength = Settings.RpmColumns.Length;
-
             int cellCount = injLength * rpmLength;
 
-            // ---------------- FLAT BUCKETS ----------------
-            var gridB1Flat = new List<DataItem>[cellCount];
-            var gridB2Flat = new List<DataItem>[cellCount];
+            var gridB1 = new List<DataItem>[cellCount];
+            var gridB2 = new List<DataItem>[cellCount];
 
-            var injectionB1 = new List<DataItem>[injLength];
-            var injectionB2 = new List<DataItem>[injLength];
+            var injB1 = new List<DataItem>[injLength];
+            var injB2 = new List<DataItem>[injLength];
             var mapLogs = new List<DataItem>[injLength];
 
-            mapSpreadB1 = new double[cellCount];
-            mapSpreadB2 = new double[cellCount];
-
-            mapRanges = new (double Min, double Max)?[injLength];
-
-            // init
             for (int i = 0; i < injLength; i++)
             {
-                injectionB1[i] = new List<DataItem>();
-                injectionB2[i] = new List<DataItem>();
-                mapLogs[i] = new List<DataItem>();
+                injB1[i] = [];
+                injB2[i] = [];
+                mapLogs[i] = [];
             }
 
             for (int i = 0; i < cellCount; i++)
             {
-                gridB1Flat[i] = new List<DataItem>();
-                gridB2Flat[i] = new List<DataItem>();
+                gridB1[i] = [];
+                gridB2[i] = [];
             }
 
             // ---------------- FILL ----------------
-            for (int l = 0; l < logs.Length; l++)
+
+            foreach (var log in logs)
             {
-                var log = logs[l];
-
                 int rpmIndex = log.GetRpmIndex();
-                if (rpmIndex < 0) continue;
+                if (rpmIndex < 0)
+                    continue;
 
-                int injB1 = log.GetInjectionIndex(x => x.BENZ_b1);
-                int injB2 = log.GetInjectionIndex(x => x.BENZ_b2);
+                int b1 = log.GetInjectionIndex(x => x.BENZ_b1);
+                int b2 = log.GetInjectionIndex(x => x.BENZ_b2);
 
-                int idxB1 = injB1 >= 0 ? injB1 * rpmLength + rpmIndex : -1;
-                int idxB2 = injB2 >= 0 ? injB2 * rpmLength + rpmIndex : -1;
-
-                // B1
-                if (idxB1 >= 0)
+                if (b1 >= 0)
                 {
-                    gridB1Flat[idxB1].Add(log);
-                    injectionB1[injB1].Add(log);
+                    int idx = b1 * rpmLength + rpmIndex;
+                    gridB1[idx].Add(log);
+                    injB1[b1].Add(log);
+
+                    if (Math.Abs(log.BENZ_Diff) < benzDiffMax)
+                        mapLogs[b1].Add(log);
                 }
 
-                // B2
-                if (idxB2 >= 0)
+                if (b2 >= 0)
                 {
-                    gridB2Flat[idxB2].Add(log);
-                    injectionB2[injB2].Add(log);
-                }
+                    int idx = b2 * rpmLength + rpmIndex;
+                    gridB2[idx].Add(log);
+                    injB2[b2].Add(log);
 
-                if (Math.Abs(log.BENZ_Diff) < benzDiffMax)
-                {
-                    if (injB1 >= 0)
-                        mapLogs[injB1].Add(log);
-
-                    if (injB2 >= 0 && injB2 != injB1)
-                        mapLogs[injB2].Add(log);
+                    if (Math.Abs(log.BENZ_Diff) < benzDiffMax && b2 != b1)
+                        mapLogs[b2].Add(log);
                 }
             }
 
-            // ---------------- CONVERT TO ARRAYS ----------------
             logsGridB1 = new DataItem[cellCount][];
             logsGridB2 = new DataItem[cellCount][];
 
             logsByInjectionB1 = new DataItem[injLength][];
             logsByInjectionB2 = new DataItem[injLength][];
 
-            for (int i = 0; i < cellCount; i++)
-            {
-                logsGridB1[i] = gridB1Flat[i].ToArray();
-                logsGridB2[i] = gridB2Flat[i].ToArray();
-            }
+            mapSpreadB1 = new double[cellCount];
+            mapSpreadB2 = new double[cellCount];
 
-            for (int i = 0; i < injLength; i++)
-            {
-                logsByInjectionB1[i] = injectionB1[i].ToArray();
-                logsByInjectionB2[i] = injectionB2[i].ToArray();
+            mapRanges = new (double Min, double Max)?[injLength];
 
-                if (mapLogs[i].Count > 0)
+            // ---------------- CONVERT + MAP RANGES ----------------
+
+            for (int inj = 0; inj < injLength; inj++)
+            {
+                logsByInjectionB1[inj] = injB1[inj].ToArray();
+                logsByInjectionB2[inj] = injB2[inj].ToArray();
+
+                if (mapLogs[inj].Count > 0)
                 {
-                    mapRanges[i] = (
-                        mapLogs[i].Min(x => x.MAP),
-                        mapLogs[i].Max(x => x.MAP)
-                    );
+                    double min = double.MaxValue;
+                    double max = double.MinValue;
+
+                    foreach (var d in mapLogs[inj])
+                    {
+                        if (d.MAP < min) min = d.MAP;
+                        if (d.MAP > max) max = d.MAP;
+                    }
+
+                    mapRanges[inj] = (min, max);
                 }
             }
 
-            // ---------------- MAP SPREAD ----------------
-            for (int inj = 0; inj < injLength; inj++)
+            // ---------------- CONVERT + MAP SPREAD ----------------
+
+            for (int i = 0; i < cellCount; i++)
             {
-                for (int rpm = 0; rpm < rpmLength; rpm++)
+                logsGridB1[i] = gridB1[i].ToArray();
+                logsGridB2[i] = gridB2[i].ToArray();
+
+                if (gridB1[i].Count > 1)
                 {
-                    int idx = inj * rpmLength + rpm;
+                    double min = double.MaxValue;
+                    double max = double.MinValue;
 
-                    var b1 = gridB1Flat[idx];
-                    var b2 = gridB2Flat[idx];
-
-                    if (b1.Count > 1)
+                    foreach (var d in gridB1[i])
                     {
-                        double min = double.MaxValue;
-                        double max = double.MinValue;
-
-                        foreach (var d in b1)
-                        {
-                            if (d.MAP < min) min = d.MAP;
-                            if (d.MAP > max) max = d.MAP;
-                        }
-
-                        mapSpreadB1[idx] = max - min;
+                        if (d.MAP < min) min = d.MAP;
+                        if (d.MAP > max) max = d.MAP;
                     }
 
-                    if (b2.Count > 1)
+                    mapSpreadB1[i] = max - min;
+                }
+
+                if (gridB2[i].Count > 1)
+                {
+                    double min = double.MaxValue;
+                    double max = double.MinValue;
+
+                    foreach (var d in gridB2[i])
                     {
-                        double min = double.MaxValue;
-                        double max = double.MinValue;
-
-                        foreach (var d in b2)
-                        {
-                            if (d.MAP < min) min = d.MAP;
-                            if (d.MAP > max) max = d.MAP;
-                        }
-
-                        mapSpreadB2[idx] = max - min;
+                        if (d.MAP < min) min = d.MAP;
+                        if (d.MAP > max) max = d.MAP;
                     }
+
+                    mapSpreadB2[i] = max - min;
                 }
             }
         }
@@ -491,13 +479,13 @@ namespace LPGDataAnalyzer.Services
 
                     double multiplier = 0;
                     double trim = 1;
-                   
+
                     if (count > 0 && (hasEnoughLogs || !showOnlyMultiplier))
                     {
                         double medianB1 = bufferB1.AsSpan(0, countB1).MedianCore();
                         double medianB2 = bufferB2.AsSpan(0, countB2).MedianCore();
 
-                        multiplier = (medianB1 * countB1 + medianB2 * countB2) / (countB1 + countB2);
+                        multiplier = (medianB1 + medianB2 ) / 2;
                     }
                     if (hasEnoughLogs && !showOnlyMultiplier)
                         trim = TrimCalculation(multiplier, minChangeValue, allwaysApplyNegativeTrim);

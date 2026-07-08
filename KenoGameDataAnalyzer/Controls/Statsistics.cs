@@ -33,7 +33,7 @@ namespace LPGDataAnalyzer.Controls
                 Height = 50,
                 Text =
                     $"OVERALL → PRESS Min: {overall.MinPress:F2}  Avg: {overall.AvgPress:F2}  Max: {overall.MaxPress:F2} | " +
-                    $"MAP Min: {overall.MinMap:F2}  Avg: {overall.AvgMap:F2}  Max: {overall.MaxMap:F2}",
+                    $"MAP Min: {overall.MinMap:F2}  Avg: {overall.AvgMap:F2}  Max: {overall.MaxMap:F2}  Count: {overall.Count}",
                 TextAlign = ContentAlignment.MiddleCenter
             };
 
@@ -70,9 +70,9 @@ namespace LPGDataAnalyzer.Controls
             grid.Columns.Add(CreateCol(nameof(DataItem.BENZ_b1), "BENZ_b1"));
             grid.Columns.Add(CreateCol(nameof(DataItem.BENZ_b2), "BENZ_b2"));
 
-            grid.Columns.Add(CreateCol(nameof(DataItem.SLOW_b1), "Slow B1"));
+            //grid.Columns.Add(CreateCol(nameof(DataItem.SLOW_b1), "Slow B1"));
             grid.Columns.Add(CreateCol(nameof(DataItem.FAST_b1), "Fast B1"));
-            grid.Columns.Add(CreateCol(nameof(DataItem.SLOW_b2), "Slow B2"));
+            //grid.Columns.Add(CreateCol(nameof(DataItem.SLOW_b2), "Slow B2"));
             grid.Columns.Add(CreateCol(nameof(DataItem.FAST_b2), "Fast B2"));
 
             grid.Columns.Add(CreateCol(nameof(DataItem.Fast), "Fast"));
@@ -83,7 +83,7 @@ namespace LPGDataAnalyzer.Controls
             grid.Columns.Add(CreateCol(nameof(DataItem.Temp_GAS), "Gas Temp"));
             grid.Columns.Add(CreateCol(nameof(DataItem.Temp_RID), "Reducer Temp"));
 
-            grid.Columns.Add(CreateCol(nameof(DataItem.Trim), "Trim"));
+            //grid.Columns.Add(CreateCol(nameof(DataItem.Trim), "Trim"));
 
             foreach (DataGridViewColumn col in grid.Columns)
             {
@@ -186,7 +186,8 @@ namespace LPGDataAnalyzer.Controls
 
                 MinMap = data.Min(x => x.MAP).Round(),
                 AvgMap = data.Average(x => x.MAP).Round(),
-                MaxMap = data.Max(x => x.MAP).Round()
+                MaxMap = data.Max(x => x.MAP).Round(), 
+                Count = data.Count()
             };
         }
 
@@ -210,5 +211,6 @@ namespace LPGDataAnalyzer.Controls
         public double MinMap { get; set; }
         public double AvgMap { get; set; }
         public double MaxMap { get; set; }
+        public int Count { get; set; }
     }
 }

@@ -218,7 +218,7 @@ namespace LPGDataAnalyzer.Services
                             Pressure = range.Average(r => r.PRESS).Round(),
                             Temp_RID = range.Average(r => r.Temp_RID).Round(),
                             Temp_GAS = range.Average(r => r.Temp_GAS).Round(),
-                            IngAtChange = x.Current.BENZ_b1,
+                            IngAtChange = x.Current.BENZ_b2,
                             RPMAtChange = x.Current.RPM,
                             LPGInjectionAtChange = x.Current.GAS_b2.Round(),
                             TEMPO = x.Current.TEMPO
