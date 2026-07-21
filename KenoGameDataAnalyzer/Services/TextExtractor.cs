@@ -123,7 +123,11 @@ namespace LPGDataAnalyzer.Services
             {
                 string chunk = input.Substring(i * 3, 3);
                 result[i] = int.Parse(chunk);
-                if(result[i] > 255)
+                if (result[i] > 300)
+                    result[i] -= 200;
+                if (result[i] > 200)
+                    result[i] -= 100;
+                if (result[i] > 201)
                     throw new ArgumentException($"Input '{input}' has invalid number {result[i]}");
             }
 

@@ -485,7 +485,7 @@ namespace LPGDataAnalyzer.Services
                         double medianB1 = bufferB1.AsSpan(0, countB1).MedianCore();
                         double medianB2 = bufferB2.AsSpan(0, countB2).MedianCore();
 
-                        multiplier = (medianB1 + medianB2 ) / 2;
+                        multiplier = (medianB1 + medianB2 ) / 4;
                     }
                     if (hasEnoughLogs && !showOnlyMultiplier)
                         trim = TrimCalculation(multiplier, minChangeValue, allwaysApplyNegativeTrim);
