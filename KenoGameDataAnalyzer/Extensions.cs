@@ -133,7 +133,7 @@ namespace LPGDataAnalyzer
             {
                 for (int rpm = 0; rpm < rows; rpm++)
                 {
-                    if (rpm > 0) text.Append('\t');  // Column separator
+                    //if (rpm > 0) text.Append('\t');  // Column separator
                     text.Append(table[rpm, inj]);
                 }
                 text.AppendLine();
