@@ -18,6 +18,9 @@ namespace LPGDataAnalyzer.Controls
     }
     public static class ArrayConverter
     {
+        /// <summary>
+        /// Converts 2D rectangular array to jagged array with pre-allocation for better cache locality.
+        /// </summary>
         public static double?[][] ToJagged(double?[,] array)
         {
             int rows = array.GetLength(0);
@@ -25,16 +28,27 @@ namespace LPGDataAnalyzer.Controls
 
             double?[][] result = new double?[rows][];
 
+            // Pre-allocate all rows first for better cache locality
             for (int r = 0; r < rows; r++)
             {
                 result[r] = new double?[cols];
+            }
+
+            // Then copy data
+            for (int r = 0; r < rows; r++)
+            {
                 for (int c = 0; c < cols; c++)
+                {
                     result[r][c] = array[r, c];
+                }
             }
 
             return result;
         }
 
+        /// <summary>
+        /// Converts jagged array to 2D rectangular array.
+        /// </summary>
         public static double?[,] To2D(double?[][] jagged)
         {
             int rows = jagged.Length;

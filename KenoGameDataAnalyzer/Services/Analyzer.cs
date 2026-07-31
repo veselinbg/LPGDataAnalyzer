@@ -5,6 +5,20 @@ namespace LPGDataAnalyzer.Services
 {
     public class Analyzer
     {
+        /// <summary>
+        /// Checks if a value falls within any of the provided ranges.
+        /// Used for temperature filtering with int-based temperature ranges.
+        /// </summary>
+        private static bool IsInRangeArray(double value, (int Min, int Max, string Label)[] ranges)
+        {
+            foreach (var range in ranges)
+            {
+                if (value >= range.Min && value <= range.Max)
+                    return true;
+            }
+            return false;
+        }
+
         public static DataItem[] FilterByTemp(
             DataItem[] data,
             List<string> sLPGTempGroups,
@@ -22,28 +36,24 @@ namespace LPGDataAnalyzer.Services
 
             IEnumerable<DataItem> result = data;
 
-            // 🔹 Reductor filtering
+            // 🔹 Reductor filtering - use direct range checking instead of nested Any()
             if (!allRed)
             {
                 var reductorRanges = Settings.ReductorTemperatureRanges
                     .Where(r => sReductorTempGroups.Contains(r.Label))
-                    .ToList();
+                    .ToArray();  // Convert to array for efficient iteration
 
-                result = result.Where(d =>
-                    reductorRanges.Any(r =>
-                        d.Temp_RID >= r.Min && d.Temp_RID <= r.Max));
+                result = result.Where(d => IsInRangeArray(d.Temp_RID, reductorRanges));
             }
 
-            // 🔹 LPG filtering
+            // 🔹 LPG filtering - use direct range checking instead of nested Any()
             if (!allGas)
             {
                 var gasRanges = Settings.GasTemperatureRanges
                     .Where(r => sLPGTempGroups.Contains(r.Label))
-                    .ToList();
+                    .ToArray();  // Convert to array for efficient iteration
 
-                result = result.Where(d =>
-                    gasRanges.Any(r =>
-                        d.Temp_GAS >= r.Min && d.Temp_GAS <= r.Max));
+                result = result.Where(d => IsInRangeArray(d.Temp_GAS, gasRanges));
             }
 
             return result.ToArray();
@@ -62,8 +72,18 @@ namespace LPGDataAnalyzer.Services
 
             var table = new double?[rpmCount, injCount];
 
-            // Buckets for values
-            var buckets = new List<double>[rpmCount, injCount];            
+            // Buckets for values - pre-allocated for better cache locality
+            var buckets = new List<double>[rpmCount, injCount];
+
+            // Pre-allocate all bucket lists to avoid allocation during iteration
+            int estimatedItemsPerBucket = Math.Max(1, data.Length / (rpmCount * injCount));
+            for (int r = 0; r < rpmCount; r++)
+            {
+                for (int i = 0; i < injCount; i++)
+                {
+                    buckets[r, i] = new List<double>(capacity: estimatedItemsPerBucket);
+                }
+            }
 
             // 1️⃣ Single pass: distribute data into buckets
             foreach (var d in data)
@@ -78,10 +98,7 @@ namespace LPGDataAnalyzer.Services
 
                 int injIndex = d.GetInjectionIndex(injectionBankSelector);
 
-                if(buckets[rpmIndex, injIndex] is null)
-                    buckets[rpmIndex, injIndex] = [];
-                
-                buckets[rpmIndex, injIndex].Add(value.Value);
+                buckets[rpmIndex, injIndex].Add(value.Value);  // No null check needed - pre-allocated
             }
             Func<List<double>, double> aggregator = aggregation switch
             {
