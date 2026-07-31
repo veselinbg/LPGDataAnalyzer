@@ -56,7 +56,7 @@ namespace LPGDataAnalyzer.Services
                 .Skip(2)
                 .Where(line => !string.IsNullOrWhiteSpace(line))
                 .Select(ParseLine)
-                .Where(x =>x.RPM > 0 && x.GAS_b1 > 0 && x.GAS_b2 > 0).ToList();
+                .Where(x =>x.RPM > 0 && x.GAS_b1 > 0 && x.GAS_b2 > 0);
                 //.Where(x => x.RPM > 0 && x.GAS_b1 > 0 && x.GAS_b2 > 0 && x.FAST_b1 != 0 && x.FAST_b2 != 0);
         }
 
@@ -150,10 +150,6 @@ namespace LPGDataAnalyzer.Services
             double trim_b2 = slowB2 + fastB2;
             double trim = (trim_b1 + trim_b2) / 2;
 
-            // Cache ratio calculations to avoid recomputation
-            double ratio_b1 = gasB1 != 0 ? benzB1 / gasB1 : 0;
-            double ratio_b2 = gasB2 != 0 ? benzB2 / gasB2 : 0;
-
             return new DataItem
             {
                 TEMPO = span[ranges[0]].ToInt(),
@@ -190,9 +186,11 @@ namespace LPGDataAnalyzer.Services
 
                 BENZ_Diff = benzB1.RelDiff(benzB2),
 
-                Ratio_b1 = ratio_b1,  // Reuse cached value
-                Ratio_b2 = ratio_b2,  // Reuse cached value
-                RatioDifference = ratio_b1 - ratio_b2  // Reuse cached values
+                Ratio_b1 = benzB1 != 0 ? benzB1 / gasB1 : 0,
+                Ratio_b2 = benzB2 != 0 ? benzB2 / gasB2 : 0,
+                RatioDifference = (benzB1 != 0 && benzB2 != 0)
+                    ? (benzB1 / gasB1) - (benzB2 / gasB2)
+                    : 0
             };
         }
     }

@@ -1,15 +1,15 @@
-﻿using LPGDataAnalyzer.Models;
+using LPGDataAnalyzer.Models;
 using LPGDataAnalyzer.Models.Common;
 using LPGDataAnalyzer.Services;
 
 namespace LPGDataAnalyzer.Controls
 {
-    public partial class Statistics : Form
+    public partial class Statsistics : Form
     {
         private readonly Dictionary<string, (double Min, double Max)> _columnRanges = new();
         private readonly double? _valFactor;
 
-        public Statistics(List<DataItem> data, double? valFactor)
+        public Statsistics(List<DataItem> data, double? valFactor)
         {
             InitializeComponent();
 

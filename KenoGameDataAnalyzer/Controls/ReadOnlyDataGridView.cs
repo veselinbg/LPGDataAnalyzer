@@ -208,7 +208,7 @@ namespace LPGDataAnalyzer.Controls
 
         public static void ShowStatisticForm(IWin32Window? owner, List<DataItem> data, double? value)
         {
-            var form = new Statistics(data, value)
+            var form = new Statsistics(data, value)
             {
                 Text = "Detailed Statistics"
             };

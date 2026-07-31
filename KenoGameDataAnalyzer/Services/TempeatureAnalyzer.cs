@@ -1,8 +1,8 @@
-﻿using LPGDataAnalyzer.Models;
+using LPGDataAnalyzer.Models;
 
 namespace LPGDataAnalyzer.Services
 {
-    public class TemperatureAnalyzer
+    public class TempeatureAnalyzer
     {
         public static object GasTemperatureRanges(DataItem[] data)
         {

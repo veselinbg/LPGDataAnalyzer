@@ -1,9 +1,9 @@
-﻿using LPGDataAnalyzer.Models;
+using LPGDataAnalyzer.Models;
 using static LPGDataAnalyzer.Models.Settings;
 
 namespace LPGDataAnalyzer
 {
-    public static class DataItemExtensions
+    public static class DataItemExtentions
     {
         public static string[] GetExistGasTemperatureRanges(this DataItem[] data)
         {

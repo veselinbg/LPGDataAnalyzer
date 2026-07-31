@@ -1,4 +1,4 @@
-﻿using LPGDataAnalyzer.Models;
+using LPGDataAnalyzer.Models;
 using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -7,7 +7,7 @@ using static LPGDataAnalyzer.Models.Settings;
 
 namespace LPGDataAnalyzer
 {
-    public static class Extensions
+    public static class Extentions
     {
         public static double Round(this double value, int digits = 2)
         {
