@@ -1,6 +1,6 @@
 ﻿namespace LPGDataAnalyzer.Controls
 {
-    partial class Statsistics
+    partial class Statistics
     {
         /// <summary>
         /// Required designer variable.

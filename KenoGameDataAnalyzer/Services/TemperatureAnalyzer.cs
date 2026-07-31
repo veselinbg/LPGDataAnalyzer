@@ -2,7 +2,12 @@
 
 namespace LPGDataAnalyzer.Services
 {
-    public class TempeatureAnalyzer
+    /// <summary>
+    /// Provides temperature analysis functionality for engine data, including temperature range
+    /// categorization, thermal lag detection, and correlation analysis between temperature
+    /// and fuel injection parameters.
+    /// </summary>
+    public class TemperatureAnalyzer
     {
         public static object GasTemperatureRanges(DataItem[] data)
         {

@@ -7,7 +7,11 @@ using static LPGDataAnalyzer.Models.Settings;
 
 namespace LPGDataAnalyzer
 {
-    public static class Extentions
+    /// <summary>
+    /// Provides general-purpose extension methods for common data types including numeric operations,
+    /// median/average calculations, and field value mapping for DataItem objects.
+    /// </summary>
+    public static class Extensions
     {
         public static double Round(this double value, int digits = 2)
         {

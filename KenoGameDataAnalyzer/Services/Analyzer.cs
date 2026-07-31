@@ -85,10 +85,10 @@ namespace LPGDataAnalyzer.Services
             }
             Func<List<double>, double> aggregator = aggregation switch
             {
-                Aggregation.Average => Extentions.AverageFast,
-                Aggregation.Min => Extentions.MinFast,
-                Aggregation.Max => Extentions.MaxFast,
-                Aggregation.Median => Extentions.Median,
+                Aggregation.Average => Extensions.AverageFast,
+                Aggregation.Min => Extensions.MinFast,
+                Aggregation.Max => Extensions.MaxFast,
+                Aggregation.Median => Extensions.Median,
                 _ => throw new ArgumentOutOfRangeException()
             };
             // 2️⃣ Aggregate buckets into final table

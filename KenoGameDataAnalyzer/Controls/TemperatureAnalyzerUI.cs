@@ -121,20 +121,20 @@ namespace LPGDataAnalyzer.Controls
             if (data == null || data.Length == 0) return;
 
             // Gas Temperature Analysis
-            dataGridViewGasData.Grid.LoadData(TempeatureAnalyzer.GasTemperatureRanges(data));
-             
+            dataGridViewGasData.Grid.LoadData(TemperatureAnalyzer.GasTemperatureRanges(data));
+
             // Reductor Temperature Analysis
-            dataGridViewRIDData.Grid.LoadData(TempeatureAnalyzer.ReducerTemperatureRanges(data));
-             
-            dataGridViewReducerLag.Grid.LoadData(TempeatureAnalyzer.ReducerThermalLag(data));
+            dataGridViewRIDData.Grid.LoadData(TemperatureAnalyzer.ReducerTemperatureRanges(data));
 
-            dataGridViewInjectionVsTemp.Grid.LoadData(TempeatureAnalyzer.InjectionTimeByGasTemperature(data));
+            dataGridViewReducerLag.Grid.LoadData(TemperatureAnalyzer.ReducerThermalLag(data));
 
-            dataGridViewSlowAndGetMinMax.Grid.LoadData(TempeatureAnalyzer.TemperatureExtremesBySlowTrim(data));
+            dataGridViewInjectionVsTemp.Grid.LoadData(TemperatureAnalyzer.InjectionTimeByGasTemperature(data));
 
-            dataGridViewAverageTrimByTempGas.Grid.LoadData(TempeatureAnalyzer.AverageTrimByGasTemperature(data));
+            dataGridViewSlowAndGetMinMax.Grid.LoadData(TemperatureAnalyzer.TemperatureExtremesBySlowTrim(data));
 
-            dataGridViewSlowTrimChanges.Grid.LoadData(TempeatureAnalyzer.SlowTrimChanges(data));
+            dataGridViewAverageTrimByTempGas.Grid.LoadData(TemperatureAnalyzer.AverageTrimByGasTemperature(data));
+
+            dataGridViewSlowTrimChanges.Grid.LoadData(TemperatureAnalyzer.SlowTrimChanges(data));
         }
     }
 }
