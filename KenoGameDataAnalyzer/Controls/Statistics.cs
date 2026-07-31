@@ -4,6 +4,10 @@ using LPGDataAnalyzer.Services;
 
 namespace LPGDataAnalyzer.Controls
 {
+    /// <summary>
+    /// A dialog form that displays detailed statistical analysis of DataItem collections,
+    /// including min/max ranges, averages, and standard deviations for all numeric fields.
+    /// </summary>
     public partial class Statistics : Form
     {
         private readonly Dictionary<string, (double Min, double Max)> _columnRanges = new();

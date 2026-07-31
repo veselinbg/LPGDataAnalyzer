@@ -3,6 +3,10 @@ using static LPGDataAnalyzer.Models.Settings;
 
 namespace LPGDataAnalyzer
 {
+    /// <summary>
+    /// Provides extension methods specifically for DataItem arrays, including filtering
+    /// and range detection for temperature data analysis.
+    /// </summary>
     public static class DataItemExtensions
     {
         public static string[] GetExistGasTemperatureRanges(this DataItem[] data)

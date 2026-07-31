@@ -7,6 +7,10 @@ using static LPGDataAnalyzer.Models.Settings;
 
 namespace LPGDataAnalyzer
 {
+    /// <summary>
+    /// Provides general-purpose extension methods for common data types including numeric operations,
+    /// median/average calculations, and field value mapping for DataItem objects.
+    /// </summary>
     public static class Extensions
     {
         public static double Round(this double value, int digits = 2)
@@ -38,12 +42,24 @@ namespace LPGDataAnalyzer
 
             return MedianCore(numbers.ToArray());
         }
+        /// <summary>
+        /// Calculates median with optimizations for small arrays.
+        /// Avoids full sort when not necessary.
+        /// </summary>
         public static double MedianCore(this Span<double> span)
         {
             if (span.IsEmpty)
-                return 0;// throw new ArgumentException("Median of empty span is not defined.", nameof(span));
+                return 0;  // throw new ArgumentException("Median of empty span is not defined.", nameof(span));
 
-            span.Sort();  
+            if (span.Length == 1) 
+                return span[0];
+
+            // Fast path: no sort needed for 2 elements
+            if (span.Length == 2)
+                return (span[0] + span[1]) / 2.0;
+
+            // Sort only when necessary (3+ elements)
+            span.Sort();
 
             int mid = span.Length / 2;
             return (span.Length % 2 != 0)
@@ -68,33 +84,62 @@ namespace LPGDataAnalyzer
 
             return sum / span.Length;
         }
+        /// <summary>
+        /// Calculates standard deviation in a single pass (performance optimized).
+        /// Avoids multiple enumerations by accumulating sum, sum of squares, and count.
+        /// </summary>
         public static double StdDev(this IEnumerable<double> list)
         {
-            if (list is null || list.Count() == 0)
-                return 0;
+            ArgumentNullException.ThrowIfNull(list);
 
-            double avg = list.Average();
-            double sumSq = list.Sum(v => Math.Pow(v - avg, 2));
+            int count = 0;
+            double sum = 0;
+            double sumSquares = 0;
 
-            return Math.Sqrt(sumSq / list.Count());
+            // Single enumeration through all values
+            foreach (var value in list)
+            {
+                sum += value;
+                sumSquares += value * value;  // Sum of x² for variance calculation
+                count++;
+            }
+
+            if (count == 0) return 0;
+            if (count == 1) return 0;
+
+            // Variance = E[X²] - E[X]² = (Σx²/n) - (Σx/n)²
+            double mean = sum / count;
+            double variance = (sumSquares / count) - (mean * mean);
+
+            return Math.Sqrt(Math.Max(0, variance));  // Max(0) handles floating-point rounding errors
         }
+        /// <summary>
+        /// Converts 2D array to tab-separated text with optimized string building.
+        /// Pre-allocates StringBuilder capacity to reduce buffer reallocations.
+        /// </summary>
         public static string ToText(this double?[,] table)
         {
-            if(table != null)
-            {
-                var text = new StringBuilder();
+            if (table == null)
+                return string.Empty;
 
-                for (int inj = 0; inj < table.GetLength(1); inj++)
+            int rows = table.GetLength(0);
+            int cols = table.GetLength(1);
+
+            // Estimate final size: rows * (cols * ~12 chars per number + column separators + newline)
+            int estimatedSize = rows * cols * 15;
+            var text = new StringBuilder(capacity: estimatedSize);
+
+            for (int inj = 0; inj < cols; inj++)
+            {
+                for (int rpm = 0; rpm < rows; rpm++)
                 {
-                    for (int rpm = 0; rpm < table.GetLength(0); rpm++)
-                    {
-                        text.Append(table[rpm, inj]);
-                    }
-                    text.AppendLine();
+                    if (rpm > 0) text.Append('\t');  // Column separator
+                    text.Append(table[rpm, inj]);
                 }
-                return text.ToString();
+                text.AppendLine();
             }
-            return string.Empty;
+
+            return text.ToString();
         }
         // Helper to safely multiply nullable double
         public static double? SafeMultiply(this double? value, double factor)
