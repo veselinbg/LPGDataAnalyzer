@@ -1,16 +1,15 @@
 ﻿using LPGDataAnalyzer.Models;
-using System.ComponentModel;
 using System.Text.Json;
 
 namespace LPGDataAnalyzer.Controls
 {
     public class HistorySnapshot
     {
-        public DataItem[] Logs { get; set; }
+        public required DataItem[] Logs { get; set; }
 
-        public double?[][] CellMap { get; set; }
+        public required double?[][] CellMap { get; set; }
 
-        public double?[][] NewCellMap { get; set; }
+        public required double?[][] NewCellMap { get; set; }
 
         public DateTime Created { get; set; }
 
