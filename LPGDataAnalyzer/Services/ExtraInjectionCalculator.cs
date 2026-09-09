@@ -5,8 +5,10 @@ namespace LPGDataAnalyzer.Services
 {
     public class ExtraInjectionCalculator
     {
-        public static double CalculateIdentTime(ICollection<DataItem> data)
+        public static double CalculateIdentTime(ICollection<DataItem>? data)
         {
+            if (data is null) 
+                return 0;
             // 1️⃣ Filter steady-state data
             var benzValues = data
                 .Where(d => d.RPM > 0 && d.RPM < 3500)
@@ -45,8 +47,11 @@ namespace LPGDataAnalyzer.Services
 
             return identTime.Round();
         }
-        public static string PrintHistogram(ICollection<DataItem> data)
+        public static string PrintHistogram(ICollection<DataItem>? data)
         {
+            if(data is null)
+                return "No data available for histogram.";
+
             double binSize = 0.1;
 
             var values = data
@@ -82,9 +87,9 @@ namespace LPGDataAnalyzer.Services
         /// </summary>
         /// <param name="data"></param>
         /// <returns></returns>
-        public static double CalculateExtraInjectionTime(IList<DataItem> data)
+        public static double CalculateExtraInjectionTime(DataItem[]? data)
         {
-            if (data == null || data.Count < 2)
+            if (data is null || data.Length < 2)
                 return 0;
 
             double steadyRatio = -1; // Start with -1 to ensure first ratio initialization happens properly
@@ -93,7 +98,7 @@ namespace LPGDataAnalyzer.Services
             double alphaRatio = 0.05;
             double alphaExtra = 0.15;
 
-            for (int i = 1; i < data.Count; i++)
+            for (int i = 1; i < data.Length; i++)
             {
                 var prev = data[i - 1];
                 var curr = data[i];

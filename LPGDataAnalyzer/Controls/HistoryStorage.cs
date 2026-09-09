@@ -74,7 +74,7 @@ namespace LPGDataAnalyzer.Controls
             string json = JsonSerializer.Serialize(snapshot, options);
             File.WriteAllText(path, json);
         }
-        public static HistorySnapshot Load(string path)
+        public static HistorySnapshot? Load(string path)
         {
             string json = File.ReadAllText(path);
 
@@ -110,7 +110,7 @@ namespace LPGDataAnalyzer.Controls
         public HistorySnapshot Get(int index)
         {
             if (index < 0 || index >= history.Count)
-                return null;
+                throw new IndexOutOfRangeException($"Invalid index {index}.");
 
             return history[index];
         }

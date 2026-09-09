@@ -1,6 +1,7 @@
 ﻿using LPGDataAnalyzer.Controls;
 using LPGDataAnalyzer.Models;
 using System.Buffers;
+using System.Runtime.CompilerServices;
 
 namespace LPGDataAnalyzer.Services
 {
@@ -48,25 +49,43 @@ namespace LPGDataAnalyzer.Services
                 {
                     int lowerIdx = injIndex * rpmLength + lowerRpm;
 
-                    var lowerLogsB1 = gridB1[lowerIdx].Select(x => x.Trim_b1).ToArray();
+                    int total = gridB1[lowerIdx].Length + gridB2[lowerIdx].Length;
 
-                    var lowerLogsB2 = gridB2[lowerIdx].Select(x => x.Trim_b2).ToArray();
+                    double[]? rented = null;
 
-                    var lowerLogs = lowerLogsB1.Merge(lowerLogsB2);
+                    Span<double> values = total <= StackLimit
+                        ? stackalloc double[StackLimit]
+                        : (rented = ArrayPool<double>.Shared.Rent(total));
 
-                    if (lowerLogs.Length != 0)
+                    try
                     {
-                        double tNew = 1 + lowerLogs.MedianCore() / 100;
+                        int count = 0;
 
-                        if (tNew > t)
+                        foreach (var d in gridB1[lowerIdx])
+                            values[count++] = d.Trim_b1;
+
+                        foreach (var d in gridB2[lowerIdx])
+                            values[count++] = d.Trim_b2;
+
+                        if (count != 0)
                         {
-                            t = tNew;
-                            rpmSave = lowerRpm;
+                            double tNew = 1 + values[..count].MedianCore() / 100;
+
+                            if (tNew > t)
+                            {
+                                t = tNew;
+                                rpmSave = lowerRpm;
+                            }
+                            else
+                            {
+                                break;
+                            }
                         }
-                        else
-                        {
-                            break;
-                        }
+                    }
+                    finally
+                    {
+                        if (rented != null)
+                            ArrayPool<double>.Shared.Return(rented);
                     }
                 }
                 // Compute final value once
@@ -102,23 +121,27 @@ namespace LPGDataAnalyzer.Services
             return stability * spreadScore;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static int ProcessLogs(
                                         DataItem[] items,
                                         Func<DataItem, double> trimSelector,
                                         (double Min, double Max) mapRange,
                                         (int Min, int Max, int Label) rpmRange,
                                         double referencePressure,
-                                        double[] buffer,
+                                        Span<double> buffer,
                                         int startIndex,
                                         Dictionary<int, DataItem> invalidItems,
                                         MapRegression? regression)
         {
             int count = startIndex;
-
             double localQuality = 0;
-            if (regression is { Enabled: true }) 
-                localQuality = ComputeCellQuality(items);
+            double strength = 0;
 
+            if (regression is { Enabled: true })
+            {
+                localQuality = regression.Quality;
+                strength = regression.Confidence * localQuality * 0.8;
+            }
             foreach (var d in items)
             {
                 if (d.MAP < mapRange.Min || d.MAP > mapRange.Max)
@@ -135,10 +158,6 @@ namespace LPGDataAnalyzer.Services
                         regression.Slope *
                         (d.MAP - regression.CenterMap);
                     
-                    double strength =
-                        regression.Confidence *
-                        localQuality *
-                        0.8;
                     trim -= mapEffect * strength;
                 }
 
@@ -168,6 +187,7 @@ namespace LPGDataAnalyzer.Services
 
             public double MapSpread;
             public double CenterMap;
+            public double Quality;
         }
         private static MapRegression CalculateMapRegression(
                                     DataItem[] logs,
@@ -235,7 +255,8 @@ namespace LPGDataAnalyzer.Services
                 Confidence = confidence,
                 SampleCount = n,
                 MapSpread = mapSpread,
-                CenterMap = meanX
+                CenterMap = meanX,
+                 Quality = quality
             };
         }
 
@@ -375,6 +396,8 @@ namespace LPGDataAnalyzer.Services
                 }
             }
         }
+        private const int StackLimit = 32;
+
         public static (double?[,] result, List<DataItem> invalidItems) BuildTable(
             DataItem[] logs,
             double?[,] cellMap,
@@ -426,9 +449,6 @@ namespace LPGDataAnalyzer.Services
                 
                 var range = mapRange.Value;
 
-                var injLogsB1 = logsByInjectionB1[injIndex];
-                var injLogsB2 = logsByInjectionB2[injIndex];
-
                 for (int rpmIndex = 0; rpmIndex < rpmLength; rpmIndex++)
                 {
                     var rpm = Settings.RpmColumns[rpmIndex];
@@ -447,103 +467,133 @@ namespace LPGDataAnalyzer.Services
 
                     int countB1 = 0;
                     int countB2 = 0;
-                    double[] bufferB1 = ArrayPool<double>.Shared.Rent(cellB1.Length);
-                    double[] bufferB2 = ArrayPool<double>.Shared.Rent(cellB2.Length);
-                    // ✅ B1
-                    countB1 = ProcessLogs(
-                        cellB1,
-                        d => d.FAST_b1,
-                        range,
-                        rpm,
-                        referencePressure,
-                        bufferB1,
-                        countB1,
-                        invalidItems,
-                        mapRegB1);
 
-                    // ✅ B2
-                    countB2 = ProcessLogs(
-                        cellB2,
-                        d => d.FAST_b2,
-                        range,
-                        rpm,
-                        referencePressure,
-                        bufferB2,
-                        countB2,
-                        invalidItems,
-                        mapRegB2);
-
-                    int count = countB1 + countB2;
-
-                    bool hasEnoughLogs = count > minCount;
-
-                    double multiplier = 0;
-                    double trim = 1;
-
-                    if (count > 0 && (hasEnoughLogs || !showOnlyMultiplier))
+                    double[]? rentedB1 = null;
+                    double[]? rentedB2 = null;
+                    try
                     {
-                        double medianB1 = bufferB1.AsSpan(0, countB1).MedianCore();
-                        double medianB2 = bufferB2.AsSpan(0, countB2).MedianCore();
+#pragma warning disable CA2014
 
-                        multiplier = (medianB1 + medianB2 ) / 4;
-                    }
-                    if (hasEnoughLogs && !showOnlyMultiplier)
-                        trim = TrimCalculation(multiplier, minChangeValue, allwaysApplyNegativeTrim);
+                        Span<double> bufferB1 = cellB1.Length <= StackLimit
+                            ? stackalloc double[StackLimit]
+                            : (rentedB1 = ArrayPool<double>.Shared.Rent(cellB1.Length));
 
-                    bool shouldUpdate = !showOnlyChanges || trim != 1;
+                        Span<double> bufferB2 = cellB2.Length <= StackLimit
+                            ? stackalloc double[StackLimit]
+                            : (rentedB2 = ArrayPool<double>.Shared.Rent(cellB2.Length));
 
-                    if(showOnlyCount)
-                    {
-                        result[rpmIndex, injIndex] = count > 0 ? count:  null;
-                    }
-                    else if (hasEnoughLogs)
-                    {
-                        if (showOnlyMultiplier)
+#pragma warning restore CA2014
+                        // ✅ B1
+                        countB1 = ProcessLogs(
+                            cellB1,
+                            d => d.FAST_b1,
+                            range,
+                            rpm,
+                            referencePressure,
+                            bufferB1,
+                            countB1,
+                            invalidItems,
+                            mapRegB1);
+
+                        // ✅ B2
+                        countB2 = ProcessLogs(
+                            cellB2,
+                            d => d.FAST_b2,
+                            range,
+                            rpm,
+                            referencePressure,
+                            bufferB2,
+                            countB2,
+                            invalidItems,
+                            mapRegB2);
+
+                        int count = countB1 + countB2;
+
+                        bool hasEnoughLogs = count > minCount;
+
+                        double multiplier = 0;
+                        double trim = 1;
+
+                        if (count > 0 && (hasEnoughLogs || !showOnlyMultiplier))
                         {
-                            result[rpmIndex, injIndex] = multiplier;
+                            double medianB1 = countB1 > 0
+                                ? bufferB1[..countB1].MedianCore()
+                                : 0;
+
+                            double medianB2 = countB2 > 0
+                                ? bufferB2[..countB2].MedianCore()
+                                : 0;
+
+                            multiplier = (medianB1 + medianB2) / 4;
                         }
-                        else if (shouldUpdate)
-                        {
-                            var currentValue = cellMap[rpmIndex, injIndex];
-                            double? newValue = cellMap[rpmIndex, injIndex].SafeMultiply(trim);
 
-                            if (newValue.HasValue &&
-                                historySnapshots?.Count > 0 &&
-                                trim != 1)
+                        if (hasEnoughLogs && !showOnlyMultiplier)
+                            trim = TrimCalculation(multiplier, minChangeValue, allwaysApplyNegativeTrim);
+
+                        bool shouldUpdate = !showOnlyChanges || trim != 1;
+
+                        if (showOnlyCount)
+                        {
+                            result[rpmIndex, injIndex] = count > 0 ? count : null;
+                        }
+                        else if (hasEnoughLogs)
+                        {
+                            if (showOnlyMultiplier)
                             {
-                                var values = HistoryHelper.GetCellHistoryValues(
-                                    historySnapshots, rpmIndex, injIndex);
-
-                                values.Add(newValue.Value);
-                                newValue = values.Median();
+                                result[rpmIndex, injIndex] = multiplier;
                             }
+                            else if (shouldUpdate)
+                            {
+                                var currentValue = cellMap[rpmIndex, injIndex];
+                                double? newValue = cellMap[rpmIndex, injIndex].SafeMultiply(trim);
 
-                            if((currentValue != newValue.Value.Round(0)) || !showOnlyChanges)
-                                result[rpmIndex, injIndex] = newValue;
+                                if (newValue.HasValue &&
+                                    historySnapshots?.Count > 0 &&
+                                    trim != 1)
+                                {
+                                    var values = HistoryHelper.GetCellHistoryValues(
+                                        historySnapshots, rpmIndex, injIndex);
+
+                                    values.Add(newValue.Value);
+                                    newValue = values.Median();
+                                }
+
+                                if (newValue is double value)
+                                {
+                                    if ((currentValue != value.Round(0)) || !showOnlyChanges)
+                                        result[rpmIndex, injIndex] = value;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            if (enableInterpolation)
+                            {
+                                result[rpmIndex, injIndex] =
+                                    InterpolationFuelMap(
+                                        injIndex,
+                                        rpmIndex,
+                                        logsGridB1,
+                                        logsGridB2,
+                                        cellMap,
+                                        showOnlyChanges,
+                                        rpmLength);
+                            }
+                            else if (shouldUpdate)
+                            {
+                                result[rpmIndex, injIndex] =
+                                    cellMap[rpmIndex, injIndex].SafeMultiply(trim);
+                            }
                         }
                     }
-                    else
+                    finally
                     {
-                        if (enableInterpolation)
-                        {
-                            result[rpmIndex, injIndex] =
-                                InterpolationFuelMap(
-                                    injIndex,
-                                    rpmIndex,
-                                    logsGridB1,
-                                    logsGridB2,
-                                    cellMap,
-                                    showOnlyChanges,
-                                    rpmLength); 
-                        }
-                        else if (shouldUpdate)
-                        {
-                            result[rpmIndex, injIndex] =
-                                cellMap[rpmIndex, injIndex].SafeMultiply(trim);
-                        }
+                        if (rentedB1 != null)
+                            ArrayPool<double>.Shared.Return(rentedB1);
+
+                        if (rentedB2 != null)
+                            ArrayPool<double>.Shared.Return(rentedB2);
                     }
-                    ArrayPool<double>.Shared.Return(bufferB1);
-                    ArrayPool<double>.Shared.Return(bufferB2);
                 }
             }
 

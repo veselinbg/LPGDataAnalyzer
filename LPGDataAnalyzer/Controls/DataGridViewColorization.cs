@@ -6,8 +6,8 @@ namespace LPGDataAnalyzer.Controls
     {
         public static AxisSplit<int> HighlightDifferencesHeatmapWithValues(
             DataGridView dgv1,
-            DataGridView dgv2 = null,
-            string[,] markers = null,
+            DataGridView? dgv2 = null,
+            string[,]? markers = null,
             double tolerance = 0.01)
         {
             if (dgv2 != null && (dgv1.RowCount != dgv2.RowCount || dgv1.ColumnCount != dgv2.ColumnCount))
@@ -21,7 +21,7 @@ namespace LPGDataAnalyzer.Controls
         // -------------------------
         // Extract values (skip column 0 = InjectionTime)
         // -------------------------
-        private static double?[,] ExtractValues(DataGridView dgv1, DataGridView dgv2)
+        private static double?[,] ExtractValues(DataGridView dgv1, DataGridView? dgv2)
         {
             int rows = dgv1.RowCount;
             int cols = dgv1.ColumnCount;
@@ -114,7 +114,7 @@ namespace LPGDataAnalyzer.Controls
             DataGridView dgv1,
             DataGridView dgv2,
             double?[,] diffs,
-            string[,] markers,
+            string[,]? markers,
             double tolerance)
         {
             int colOffset = 1;

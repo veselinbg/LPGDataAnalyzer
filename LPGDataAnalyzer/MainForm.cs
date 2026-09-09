@@ -1,6 +1,7 @@
 using LPGDataAnalyzer.Controls;
 using LPGDataAnalyzer.Models;
 using LPGDataAnalyzer.Services;
+using System.Text;
 
 namespace LPGDataAnalyzer
 {
@@ -10,7 +11,7 @@ namespace LPGDataAnalyzer
 
         private readonly AppSettings _settings;
 
-        private DataItem[] CurrentData = [];
+        private DataItem[]? CurrentData;
         // Create a history manager
         private readonly HistoryManager historyManager = new();
         public MainForm(AppSettingManager appSettingManager)
@@ -71,20 +72,29 @@ namespace LPGDataAnalyzer
 
         private void UpdateSummary(DataItem[] data)
         {
-            toolStripSummary.Text =
-                $"Total Rows: {data.Length} " +
-                $"LPG: Min Temp: {data.Min(x => x.Temp_GAS)} " +
-                $"Max Temp: {data.Max(x => x.Temp_GAS)} " +
-                $"Min PRESS: {data.Min(x => x.PRESS)} " +
-                $"Max PRESS: {data.Max(x => x.PRESS)} " +
-                $"Average PRESS: {data.Average(x => x.PRESS).Round()} " +
-                $"% Change Min: {Helper.PercentageChange(data.Average(x => x.PRESS), data.Min(x => x.PRESS)).Round()} " +
-                $"Max: {Helper.PercentageChange(data.Average(x => x.PRESS), data.Max(x => x.PRESS)).Round()}";
+            var avgPress = data.Average(x => x.PRESS);
+            var minPress = data.Min(x => x.PRESS);
+            var maxPress = data.Max(x => x.PRESS);
+            var minTempGas = data.Min(x => x.Temp_GAS);
+            var maxTempGas = data.Max(x => x.Temp_GAS);
+
+            var sb = new StringBuilder();
+
+            sb.Append($"Total Rows: {data.Length} ")
+              .Append($"LPG: Min Temp: {minTempGas} ")
+              .Append($"Max Temp: {maxTempGas} ")
+              .Append($"Min PRESS: {minPress} ")
+              .Append($"Max PRESS: {maxPress} ")
+              .Append($"Average PRESS: {avgPress.Round()} ")
+              .Append($"% Change Min: {Helper.PercentageChange(avgPress, minPress).Round()} ")
+              .Append($"Max: {Helper.PercentageChange(avgPress, maxPress).Round()}");
+
+            toolStripSummary.Text = sb.ToString();
         }
 
         private void buttonExtraInjectionCalculator_Click(object sender, EventArgs e)
         {
-            if (CurrentData.Length == 0)
+            if (CurrentData?.Length == 0)
                 return;
 
             var res = ExtraInjectionCalculator.CalculateIdentTime(CurrentData);
@@ -95,7 +105,7 @@ namespace LPGDataAnalyzer
 
             MessageBox.Show(res2, "Histogram");
 
-            var res3 = ExtraInjectionCalculator.CalculateExtraInjectionTime(CurrentData.ToList());
+            var res3 = ExtraInjectionCalculator.CalculateExtraInjectionTime(CurrentData);
 
             MessageBox.Show(res3.ToString(), "ExtraInjectionTime");
         }

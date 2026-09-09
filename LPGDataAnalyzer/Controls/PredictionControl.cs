@@ -69,7 +69,7 @@ namespace LPGDataAnalyzer.Controls
         private void ButtonPredict_Click(object sender, EventArgs e)
         {
             var table = textExtractor.BuildFinalTable(textBoxParsedData.Text);
-            IReadOnlyList<HistorySnapshot> historySnapshots = null;
+            IReadOnlyList<HistorySnapshot>? historySnapshots = null;
             if (checkBoxUseHistory.Checked && HistorySnapshots != null)
             {
                 // Load all JSON files from that folder

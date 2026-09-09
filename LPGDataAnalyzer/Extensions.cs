@@ -42,6 +42,22 @@ namespace LPGDataAnalyzer
 
             return MedianCore(numbers.ToArray());
         }
+        public static void InsertionSort(this Span<double> span)
+        {
+            for (int i = 1; i < span.Length; i++)
+            {
+                double value = span[i];
+                int j = i - 1;
+
+                while (j >= 0 && span[j] > value)
+                {
+                    span[j + 1] = span[j];
+                    j--;
+                }
+
+                span[j + 1] = value;
+            }
+        }
         /// <summary>
         /// Calculates median with optimizations for small arrays.
         /// Avoids full sort when not necessary.
@@ -59,7 +75,10 @@ namespace LPGDataAnalyzer
                 return (span[0] + span[1]) / 2.0;
 
             // Sort only when necessary (3+ elements)
-            span.Sort();
+            if (span.Length <= 32)
+                InsertionSort(span);
+            else
+                span.Sort();
 
             int mid = span.Length / 2;
             return (span.Length % 2 != 0)

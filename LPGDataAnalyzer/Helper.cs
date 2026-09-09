@@ -7,7 +7,7 @@
             return ((newValue - baseValue) / baseValue) * 100;
         }
 
-        public static List<string> GetCheckedValues(CheckedListBox list)
+        public static List<string?> GetCheckedValues(CheckedListBox list)
         {
             return list.CheckedItems.Cast<object>()
                 .Select(x => x.ToString())

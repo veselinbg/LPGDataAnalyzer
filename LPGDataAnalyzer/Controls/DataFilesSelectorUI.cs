@@ -6,7 +6,7 @@ namespace LPGDataAnalyzer.Controls
 {
     public partial class DataFilesSelectorUI : UserControl
     {
-        private AppSettings _settings { get; set; }
+        private AppSettings? _settings;
         public event Action<DataItem[]>? DataLoaded;
         private ContextMenuStrip? _contextMenu;
         private int _clickedIndex = -1;
@@ -112,7 +112,7 @@ namespace LPGDataAnalyzer.Controls
         }
         private void StartWatcher()
         {
-            if (!Directory.Exists(_settings.DataFilesFolder))
+            if (_settings is null || !Directory.Exists(_settings.DataFilesFolder))
                 return;
 
             _watcher?.Dispose();

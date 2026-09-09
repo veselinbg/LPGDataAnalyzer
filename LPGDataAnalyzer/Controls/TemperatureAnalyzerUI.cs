@@ -9,19 +9,19 @@ namespace LPGDataAnalyzer.Controls
         // External data to analyze
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
 
-        private ReadOnlyDataGridView dataGridViewGasData;
-        private ReadOnlyDataGridView dataGridViewRIDData;
-        private ReadOnlyDataGridView dataGridViewReducerLag;
-        private ReadOnlyDataGridView dataGridViewInjectionVsTemp;
-        private ReadOnlyDataGridView dataGridViewSlowAndGetMinMax;
-        private ReadOnlyDataGridView dataGridViewAverageTrimByTempGas;
-        private ReadOnlyDataGridView dataGridViewSlowTrimChanges;
+        private ReadOnlyDataGridView? dataGridViewGasData;
+        private ReadOnlyDataGridView? dataGridViewRIDData;
+        private ReadOnlyDataGridView? dataGridViewReducerLag;
+        private ReadOnlyDataGridView? dataGridViewInjectionVsTemp;
+        private ReadOnlyDataGridView? dataGridViewSlowAndGetMinMax;
+        private ReadOnlyDataGridView? dataGridViewAverageTrimByTempGas;
+        private ReadOnlyDataGridView? dataGridViewSlowTrimChanges;
         public TemperatureAnalyzerUI()
         {
             InitializeComponent();
         }
 
-        private TabControl tabControl;
+        private TabControl? tabControl;
 
         private void InitializeComponent()
         {

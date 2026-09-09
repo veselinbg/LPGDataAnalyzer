@@ -7,7 +7,7 @@ namespace LPGDataAnalyzer.Controls
     public partial class AnalysisUC : UserControl
     {
         private readonly double?[][,] tables = new double?[6][,];
-        private DataItem[] Data;
+        private DataItem[]? Data;
         private DataItem[][] _filteredData = new DataItem[6][];
         public AnalysisUC()
         {
@@ -79,18 +79,22 @@ namespace LPGDataAnalyzer.Controls
         }
         public void LoadParcedData(DataItem[] data)
         {
+            if (data == null || data.Length == 0)
+                return;
+
             Data = data;
+
             checkedListGasTemperatureb1.Items.Clear();
-            checkedListGasTemperatureb1.Items.AddRange(data.GetExistGasTemperatureRanges());
+            checkedListGasTemperatureb1.Items.AddRange(Data.GetExistGasTemperatureRanges());
 
             checkedListGasTemperatureb2.Items.Clear();
-            checkedListGasTemperatureb2.Items.AddRange(data.GetExistGasTemperatureRanges());
+            checkedListGasTemperatureb2.Items.AddRange(Data.GetExistGasTemperatureRanges());
 
             checkedListReductorTempGroup1.Items.Clear();
-            checkedListReductorTempGroup1.Items.AddRange(data.GetExistReductorTempGroups());
+            checkedListReductorTempGroup1.Items.AddRange(Data.GetExistReductorTempGroups());
 
             checkedListReductorTempGroup2.Items.Clear();
-            checkedListReductorTempGroup2.Items.AddRange(data.GetExistReductorTempGroups());
+            checkedListReductorTempGroup2.Items.AddRange(Data.GetExistReductorTempGroups());
 
             checkedListGasTemperatureb1.SetItemChecked(0, true);
             checkedListGasTemperatureb2.SetItemChecked(0, true);
@@ -102,8 +106,8 @@ namespace LPGDataAnalyzer.Controls
             if (Data == null || Data.Length == 0)
                 return;
 
-            var fieldBank1 = (FieldsToShow)comboBoxFieldsToShowBank1.SelectedItem;
-            var fieldBank2 = (FieldsToShow)comboBoxFieldsToShowBank2.SelectedItem;
+            var fieldBank1 = (FieldsToShow)comboBoxFieldsToShowBank1.SelectedItem!;
+            var fieldBank2 = (FieldsToShow)comboBoxFieldsToShowBank2.SelectedItem!;
 
 
             BuildAnalysisTables(
@@ -147,8 +151,8 @@ namespace LPGDataAnalyzer.Controls
             if (Data == null || Data.Length == 0)
                 return;
 
-            var aggregationBank1 = (Aggregation)comboBoxAggregationBank1.SelectedItem;
-            var aggregationBank2 = (Aggregation)comboBoxAggregationBank2.SelectedItem;
+            var aggregationBank1 = (Aggregation)comboBoxAggregationBank1.SelectedItem!;
+            var aggregationBank2 = (Aggregation)comboBoxAggregationBank2.SelectedItem!;
 
             BuildAnalysisTables(
                 Data,
@@ -184,10 +188,10 @@ namespace LPGDataAnalyzer.Controls
                 Helper.GetCheckedValues(checkedListReductorTempGroup2)
             };
             var aggregations = new[] {
-                (Aggregation)comboBoxAggregationBank1.SelectedItem,
-                (Aggregation)comboBoxAggregationBank2.SelectedItem
+                (Aggregation)comboBoxAggregationBank1.SelectedItem!,
+                (Aggregation)comboBoxAggregationBank2.SelectedItem!
             };
-            BuildAnalises(lpgdata, injectionBankSelectors, valueSelectors, gasTemps, reductors, aggregations);
+            BuildAnalises(lpgdata, injectionBankSelectors, valueSelectors, gasTemps!, reductors!, aggregations);
         }
         private void BuildAnalises(
                                     DataItem[] lpgdata,

@@ -72,7 +72,7 @@
             checkBoxSaveSnapshot.AutoSize = true;
             checkBoxSaveSnapshot.Location = new Point(7, 150);
             checkBoxSaveSnapshot.Name = "checkBoxSaveSnapshot";
-            checkBoxSaveSnapshot.Size = new Size(102, 19);
+            checkBoxSaveSnapshot.Size = new Size(105, 20);
             checkBoxSaveSnapshot.TabIndex = 0;
             checkBoxSaveSnapshot.Text = "Save Snapshot";
             // 
@@ -109,7 +109,7 @@
             checkBoxRound.CheckState = CheckState.Checked;
             checkBoxRound.Location = new Point(7, 73);
             checkBoxRound.Name = "checkBoxRound";
-            checkBoxRound.Size = new Size(61, 19);
+            checkBoxRound.Size = new Size(61, 20);
             checkBoxRound.TabIndex = 4;
             checkBoxRound.Text = "Round";
             // 
@@ -118,7 +118,7 @@
             checkBoxOnlyChanges.AutoSize = true;
             checkBoxOnlyChanges.Location = new Point(7, 23);
             checkBoxOnlyChanges.Name = "checkBoxOnlyChanges";
-            checkBoxOnlyChanges.Size = new Size(98, 19);
+            checkBoxOnlyChanges.Size = new Size(99, 20);
             checkBoxOnlyChanges.TabIndex = 5;
             checkBoxOnlyChanges.Text = "Only changes";
             // 
@@ -127,7 +127,7 @@
             checkboxInterpolation.AutoSize = true;
             checkboxInterpolation.Location = new Point(77, 6);
             checkboxInterpolation.Name = "checkboxInterpolation";
-            checkboxInterpolation.Size = new Size(94, 19);
+            checkboxInterpolation.Size = new Size(95, 20);
             checkboxInterpolation.TabIndex = 6;
             checkboxInterpolation.Text = "Interpolation";
             // 
@@ -136,7 +136,7 @@
             checkboxEnableSmooth.AutoSize = true;
             checkboxEnableSmooth.Location = new Point(3, 6);
             checkboxEnableSmooth.Name = "checkboxEnableSmooth";
-            checkboxEnableSmooth.Size = new Size(68, 19);
+            checkboxEnableSmooth.Size = new Size(69, 20);
             checkboxEnableSmooth.TabIndex = 7;
             checkboxEnableSmooth.Text = "Smooth";
             // 
@@ -190,7 +190,7 @@
             checkBoxShowOnlyMiplayerChange.AutoSize = true;
             checkBoxShowOnlyMiplayerChange.Location = new Point(7, 48);
             checkBoxShowOnlyMiplayerChange.Name = "checkBoxShowOnlyMiplayerChange";
-            checkBoxShowOnlyMiplayerChange.Size = new Size(196, 19);
+            checkBoxShowOnlyMiplayerChange.Size = new Size(199, 20);
             checkBoxShowOnlyMiplayerChange.TabIndex = 19;
             checkBoxShowOnlyMiplayerChange.Text = "Show Only Multy Player Change";
             checkBoxShowOnlyMiplayerChange.UseVisualStyleBackColor = true;
@@ -209,7 +209,7 @@
             checkBoxUseHistory.AutoSize = true;
             checkBoxUseHistory.Location = new Point(3, 150);
             checkBoxUseHistory.Name = "checkBoxUseHistory";
-            checkBoxUseHistory.Size = new Size(86, 19);
+            checkBoxUseHistory.Size = new Size(87, 20);
             checkBoxUseHistory.TabIndex = 21;
             checkBoxUseHistory.Text = "Use History";
             checkBoxUseHistory.UseVisualStyleBackColor = true;
@@ -314,7 +314,7 @@
             checkBoxMapRegression.AutoSize = true;
             checkBoxMapRegression.Location = new Point(134, 121);
             checkBoxMapRegression.Name = "checkBoxMapRegression";
-            checkBoxMapRegression.Size = new Size(110, 19);
+            checkBoxMapRegression.Size = new Size(112, 20);
             checkBoxMapRegression.TabIndex = 30;
             checkBoxMapRegression.Text = "Map Regression";
             checkBoxMapRegression.UseVisualStyleBackColor = true;
@@ -324,7 +324,7 @@
             checkBoxShowOnlyCount.AutoSize = true;
             checkBoxShowOnlyCount.Location = new Point(4, 121);
             checkBoxShowOnlyCount.Name = "checkBoxShowOnlyCount";
-            checkBoxShowOnlyCount.Size = new Size(119, 19);
+            checkBoxShowOnlyCount.Size = new Size(120, 20);
             checkBoxShowOnlyCount.TabIndex = 29;
             checkBoxShowOnlyCount.Text = "Show Only Count";
             checkBoxShowOnlyCount.UseVisualStyleBackColor = true;
@@ -334,7 +334,7 @@
             checkBoxAllwaysApplyNegativeTrim.AutoSize = true;
             checkBoxAllwaysApplyNegativeTrim.Location = new Point(6, 97);
             checkBoxAllwaysApplyNegativeTrim.Name = "checkBoxAllwaysApplyNegativeTrim";
-            checkBoxAllwaysApplyNegativeTrim.Size = new Size(176, 19);
+            checkBoxAllwaysApplyNegativeTrim.Size = new Size(178, 20);
             checkBoxAllwaysApplyNegativeTrim.TabIndex = 28;
             checkBoxAllwaysApplyNegativeTrim.Text = "Allways Apply Negative Trim";
             checkBoxAllwaysApplyNegativeTrim.UseVisualStyleBackColor = true;
@@ -344,7 +344,7 @@
             labelMaxBenzDiff.AutoSize = true;
             labelMaxBenzDiff.Location = new Point(255, 141);
             labelMaxBenzDiff.Name = "labelMaxBenzDiff";
-            labelMaxBenzDiff.Size = new Size(106, 15);
+            labelMaxBenzDiff.Size = new Size(109, 16);
             labelMaxBenzDiff.TabIndex = 27;
             labelMaxBenzDiff.Text = "Max Benz Diff in %";
             // 
@@ -362,7 +362,7 @@
             labelMinCount.AutoSize = true;
             labelMinCount.Location = new Point(253, 106);
             labelMinCount.Name = "labelMinCount";
-            labelMinCount.Size = new Size(105, 15);
+            labelMinCount.Size = new Size(106, 16);
             labelMinCount.TabIndex = 25;
             labelMinCount.Text = "Min Count for Cell";
             // 
@@ -371,7 +371,7 @@
             labelPress.AutoSize = true;
             labelPress.Location = new Point(273, 72);
             labelPress.Name = "labelPress";
-            labelPress.Size = new Size(89, 15);
+            labelPress.Size = new Size(94, 16);
             labelPress.TabIndex = 24;
             labelPress.Text = "Reference Press";
             // 
@@ -380,7 +380,7 @@
             labelValueOfChange.AutoSize = true;
             labelValueOfChange.Location = new Point(233, 52);
             labelValueOfChange.Name = "labelValueOfChange";
-            labelValueOfChange.Size = new Size(125, 15);
+            labelValueOfChange.Size = new Size(127, 16);
             labelValueOfChange.TabIndex = 23;
             labelValueOfChange.Text = "Min Valid % of change";
             // 
@@ -453,10 +453,10 @@
             tableLayoutPanelLeft.Location = new Point(3, 3);
             tableLayoutPanelLeft.Name = "tableLayoutPanelLeft";
             tableLayoutPanelLeft.RowCount = 4;
-            tableLayoutPanelLeft.RowStyles.Add(new RowStyle(SizeType.Percent, 37F));
+            tableLayoutPanelLeft.RowStyles.Add(new RowStyle(SizeType.Percent, 40F));
             tableLayoutPanelLeft.RowStyles.Add(new RowStyle(SizeType.Absolute, 50F));
-            tableLayoutPanelLeft.RowStyles.Add(new RowStyle(SizeType.Percent, 37F));
-            tableLayoutPanelLeft.RowStyles.Add(new RowStyle(SizeType.Percent, 26F));
+            tableLayoutPanelLeft.RowStyles.Add(new RowStyle(SizeType.Percent, 40F));
+            tableLayoutPanelLeft.RowStyles.Add(new RowStyle(SizeType.Percent, 20F));
             tableLayoutPanelLeft.Size = new Size(590, 757);
             tableLayoutPanelLeft.TabIndex = 23;
             // 
@@ -466,9 +466,9 @@
             dataGridViewPrediction.AutoSizeMode = AutoSizeMode.GrowAndShrink;
             dataGridViewPrediction.Dock = DockStyle.Fill;
             dataGridViewPrediction.EnableTitle = false;
-            dataGridViewPrediction.Location = new Point(3, 314);
+            dataGridViewPrediction.Location = new Point(3, 335);
             dataGridViewPrediction.Name = "dataGridViewPrediction";
-            dataGridViewPrediction.Size = new Size(584, 255);
+            dataGridViewPrediction.Size = new Size(584, 276);
             dataGridViewPrediction.TabIndex = 18;
             dataGridViewPrediction.Title = "";
             // 
@@ -480,14 +480,14 @@
             dataGridViewOrig.EnableTitle = false;
             dataGridViewOrig.Location = new Point(3, 3);
             dataGridViewOrig.Name = "dataGridViewOrig";
-            dataGridViewOrig.Size = new Size(584, 255);
+            dataGridViewOrig.Size = new Size(584, 276);
             dataGridViewOrig.TabIndex = 17;
             dataGridViewOrig.Title = "";
             // 
             // panelLegend
             // 
             panelLegend.Dock = DockStyle.Fill;
-            panelLegend.Location = new Point(3, 264);
+            panelLegend.Location = new Point(3, 285);
             panelLegend.Name = "panelLegend";
             panelLegend.Size = new Size(584, 44);
             panelLegend.TabIndex = 9;
@@ -495,9 +495,9 @@
             // DataGridViewInvalidData
             // 
             DataGridViewInvalidData.Dock = DockStyle.Fill;
-            DataGridViewInvalidData.Location = new Point(3, 575);
+            DataGridViewInvalidData.Location = new Point(3, 617);
             DataGridViewInvalidData.Name = "DataGridViewInvalidData";
-            DataGridViewInvalidData.Size = new Size(584, 179);
+            DataGridViewInvalidData.Size = new Size(584, 137);
             DataGridViewInvalidData.TabIndex = 19;
             // 
             // PredictionControl
