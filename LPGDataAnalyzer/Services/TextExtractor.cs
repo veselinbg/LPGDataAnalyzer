@@ -20,15 +20,37 @@ namespace LPGDataAnalyzer.Services
             string text = page.GetText();
 
             // Normalize line endings
-            text = text.Replace("\r\n", "\n")
-                       .Replace("\r", "\n");
-
-            // Remove spaces around newlines and collapse multiple blank lines
-            text = Regex.Replace(text, @"[ \t]*\n[ \t]*", Environment.NewLine);
-            text = Regex.Replace(text, @"(\r?\n){2,}", Environment.NewLine);
-
-            return text.Trim();
+            return ExtractMatrix(text, Settings.RpmColumns.Count());
         }
+        public static string ExtractMatrix(string text, int columns = 13)
+        {
+            if (string.IsNullOrWhiteSpace(text))
+                return string.Empty;
+
+            var values = Regex.Matches(text, @"-?\d+")
+                              .Cast<Match>()
+                              .Select(m => m.Value)
+                              .ToArray();
+
+            if (values.Length == 0)
+                return string.Empty;
+
+            if (values.Length % columns != 0)
+                throw new FormatException(
+                    $"Found {values.Length} values, which cannot form rows of {columns} columns.");
+
+            return string.Join(
+                Environment.NewLine,
+                Enumerable.Range(0, values.Length / columns)
+                    .Select(row =>
+                        string.Concat(
+                            values.Skip(row * columns)
+                                  .Take(columns)
+                        )
+                    )
+            );
+        }
+
         public void Validate(string text)
         {
             var data = text.Split(Environment.NewLine, StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
