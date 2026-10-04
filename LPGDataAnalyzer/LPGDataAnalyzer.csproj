@@ -16,6 +16,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Remove="appSettings.json" />
+    <None Remove="DataFiles\12.08.2026g.txt" />
+    <None Remove="FuelTable\Capture.PNG" />
     <None Remove="tessdata\Configs\alto" />
     <None Remove="tessdata\Configs\ambigs.train" />
     <None Remove="tessdata\Configs\api_config" />
@@ -62,6 +65,12 @@
 
   <ItemGroup>
     <Content Include="C:\Users\veselin.ivanov\.nuget\packages\tesseract\5.2.0\build\\..\x64\leptonica-1.82.0.dll" />
+    <Content Include="DataFiles\12.08.2026g.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="FuelTable\Capture.PNG">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="tessdata\Configs\alto">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -198,6 +207,12 @@
 
   <ItemGroup>
     <None Remove="C:\Users\veselin.ivanov\.nuget\packages\tesseract\5.2.0\build\\..\x64\leptonica-1.82.0.dll" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="appSettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
 </Project>

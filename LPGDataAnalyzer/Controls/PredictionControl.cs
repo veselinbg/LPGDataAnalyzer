@@ -1,6 +1,7 @@
 ﻿using LPGDataAnalyzer.Models;
 using LPGDataAnalyzer.Services;
 using System.ComponentModel;
+using System.Globalization;
 
 namespace LPGDataAnalyzer.Controls
 {
@@ -76,7 +77,19 @@ namespace LPGDataAnalyzer.Controls
                 historySnapshots = HistorySnapshots;
                 historyControl1.ClearAddSnapshots(HistorySnapshots);
             }
-            var referencePressure = double.Parse(textBoxRefPress.Text.Trim());
+            var text = textBoxRefPress.Text.Trim();
+
+            text = text.Replace(',', '.');
+
+            if (!double.TryParse(
+                    text,
+                    NumberStyles.Float,
+                    CultureInfo.InvariantCulture,
+                    out var referencePressure))
+            {
+                MessageBox.Show("Invalid reference pressure.");
+                return;
+            }
 
             var tableNew = FuelMapPrediction.BuildTable(Data, table, referencePressure, historySnapshots, textBoxMinCount.Text.Trim().ToInt(),
                 checkboxEnableSmooth.Checked, checkboxInterpolation.Checked, checkBoxOnlyChanges.Checked,
