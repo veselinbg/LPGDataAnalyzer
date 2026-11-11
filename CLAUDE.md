@@ -18,13 +18,18 @@ dotnet run --project LPGDataAnalyzer
 dotnet run --project FTDIDataReceiver
 ```
 
-- In the solution, LPGDataAnalyzer maps to the `x64` platform. The Tesseract native libs are x64.
-- `LPGDataAnalyzer.csproj` contains a hard-coded `Content Include` that points to `leptonica-1.82.0.dll` in another user's NuGet cache (`C:\Users\veselin.ivanov\.nuget\...`). If the build or the OCR fails over a missing leptonica, that path is the reason. Don't "fix" it silently, because it is machine-specific.
+- In the solution, LPGDataAnalyzer maps to the `x64` platform.
+- The Tesseract native DLLs (`leptonica-1.82.0.dll`, `tesseract50.dll`) are copied to `x64\` and `x86\` in the output by the Tesseract package's own `build/Tesseract.targets`. Don't add manual references to them in the csproj.
 - There is no test project and no lint configuration.
 
 ## Architecture (LPGDataAnalyzer)
 
-**Startup**: `Program.cs` builds a minimal `Microsoft.Extensions.DependencyInjection` container (`AppSettingManager` singleton, `MainForm`). `MainForm` loads `AppSettings` from `appSettings.json` (in the working/output directory). It then loads history snapshots and wires up the user controls.
+**Startup**: `Program.cs` builds a minimal `Microsoft.Extensions.DependencyInjection` container (`AppSettingManager` singleton, `MainForm`). `MainForm` loads `AppSettings` through `AppSettingManager`, then loads history snapshots and wires up the user controls.
+
+**Settings** (`appSettings.json` → `Models/AppSettings`, managed by `AppSettingManager`):
+- `AppSettingManager` reads `appSettings.json` when the app starts. All settings validation belongs in `AppSettingManager.Validate`, which runs in `Load()` and `Save()` and throws `InvalidOperationException` for missing required values. Currently `ImagePath` is required.
+- Don't hard-code machine- or user-specific paths in `appSettings.json` or in `AppSettings` defaults. Use paths relative to the app's output folder (`HistoryFolder`, `DataFilesFolder`, `ImagePath`).
+- `ImagePath` points to `FuelTable/Capture.PNG`, a screenshot of the fuel map taken from the ECU software. It is copied to output and OCR'd by `PredictionControl`. `AppSettings.ResolvedImagePath` resolves it against `AppContext.BaseDirectory`.
 
 **Data flow**:
 1. `Controls/DataFilesSelectorUI` lists `*.txt` logs in `AppSettings.DataFilesFolder`, with a `FileSystemWatcher` for live updates. For each checked file it runs `Services/Parser` and raises `DataLoaded(DataItem[])`.
@@ -48,6 +53,13 @@ dotnet run --project FTDIDataReceiver
 
 **Performance conventions**: the hot paths use `Span`, `stackalloc`/`ArrayPool`, and custom `Median`/`Average` helpers in `Extensions.cs`. Recent commits focus on this, so keep it that way.
 
-## Sample data
+## Domain data
 
-`DataFiles/12.08.2026g.txt` (also under `LPGDataAnalyzer/DataFiles/`, copied to output) is a real log for manual testing. Point `DataFilesFolder` in `appSettings.json` at it.
+- **`DataFiles/`** (repo root and `LPGDataAnalyzer/DataFiles/`, copied to output; `DataFilesFolder` setting): real-time engine fuel logs (`*.txt`) recorded from the LPG ECU while driving. These are the input for every analysis. `12.08.2026g.txt` is a real log for manual testing.
+- **`LPGDataAnalyzer/FuelTable/`** (`ImagePath` setting): `Capture.PNG` is a screenshot of the **current** fuel table (gas multiplier map) from the ECU software. It is OCR'd into the map that `FuelMapPrediction` corrects.
+- **Fuel map axes** are currently hard-coded in `Models/Settings.cs` to match the ECU's table:
+  - `RpmColumns`: RPM breakpoints (currently 12, 700 to 6200). Each column has a `(Min, Max]` range.
+  - `InjectionRanges`: petrol injection-time breakpoints in ms (currently 12, 1.9 to 15).
+  - **Planned change**: both axes will become dynamic and be read from the fuel-table image together with the cell values, so the count and the values can differ per car or map. In new code, take map dimensions from the axis arrays or from the map itself (`GetLength`), never from literal `12` or fixed breakpoint values. Don't spread new direct dependencies on the static `Settings.RpmColumns`/`InjectionRanges`.
+  - A sample is mapped to a cell by `Extensions.GetRpmIndex` (`RPM`) and `GetInjectionIndex` (`BENZ`, the average petrol injection time, unless a selector is passed). These use a binary search over `(Min, Max]` ranges and throw `ArgumentOutOfRangeException` when a value is outside every range.
+  - Until the axes are dynamic, change these arrays if the ECU table layout changes. OCR column count, map sizes and cell lookup all come from them.

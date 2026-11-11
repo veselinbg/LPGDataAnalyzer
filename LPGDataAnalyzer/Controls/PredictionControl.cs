@@ -113,7 +113,7 @@ namespace LPGDataAnalyzer.Controls
 
         private void ButtonParceSelectedImage_Click(object sender, EventArgs e)
         {
-            textBoxParsedData.Text = textExtractor.Parcer(AppSettings.ImagePath);
+            textBoxParsedData.Text = textExtractor.Parcer(AppSettings.ResolvedImagePath);
         }
         private void PreviewPrediction(double?[,] table, double?[,] tableNew)
         {

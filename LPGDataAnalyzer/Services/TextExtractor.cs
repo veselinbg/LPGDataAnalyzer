@@ -22,7 +22,7 @@ namespace LPGDataAnalyzer.Services
             // Normalize line endings
             return ExtractMatrix(text, Settings.RpmColumns.Count());
         }
-        public static string ExtractMatrix(string text, int columns = 13)
+        public static string ExtractMatrix(string text, int columns)
         {
             if (string.IsNullOrWhiteSpace(text))
                 return string.Empty;

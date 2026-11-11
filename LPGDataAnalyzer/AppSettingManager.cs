@@ -15,7 +15,14 @@ namespace LPGDataAnalyzer
 
         public AppSettings Load()
         {
-            return _settings ??= Loadpublic();
+            if (_settings is null)
+            {
+                var settings = Loadpublic();
+                Validate(settings);
+                _settings = settings;
+            }
+
+            return _settings;
         }
 
         public void Save(AppSettings appSettings)
@@ -23,10 +30,23 @@ namespace LPGDataAnalyzer
             if (appSettings is null)
                 throw new ArgumentNullException(nameof(appSettings));
 
+            Validate(appSettings);
+
             var text = JsonSerializer.Serialize(appSettings);
             File.WriteAllText(_filePath, text);
 
             _settings = appSettings;
+        }
+
+        /// <summary>
+        /// Checks that required settings are present.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">When a required setting is missing.</exception>
+        public void Validate(AppSettings appSettings)
+        {
+            if (string.IsNullOrWhiteSpace(appSettings.ImagePath))
+                throw new InvalidOperationException(
+                    $"'{nameof(AppSettings.ImagePath)}' is not set in '{_filePath}'.");
         }
 
         private AppSettings Loadpublic()

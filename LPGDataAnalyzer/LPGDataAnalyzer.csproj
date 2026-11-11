@@ -64,7 +64,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="C:\Users\veselin.ivanov\.nuget\packages\tesseract\5.2.0\build\\..\x64\leptonica-1.82.0.dll" />
     <Content Include="DataFiles\12.08.2026g.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -203,10 +202,6 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.3" />
     <PackageReference Include="Tesseract" Version="5.2.0" />
     <PackageReference Include="WinForms.DataVisualization" Version="1.10.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Remove="C:\Users\veselin.ivanov\.nuget\packages\tesseract\5.2.0\build\\..\x64\leptonica-1.82.0.dll" />
   </ItemGroup>
 
   <ItemGroup>
