@@ -363,3 +363,8 @@ MigrationBackup/
 FodyWeavers.xsd
 /LPGDataAnalyzer/History
 /KenoGameDataAnalyzer/History
+
+# SQLite temporary files (the LPGDbAnalyzer database itself, LPGDbAnalyzer/Data/lpg.db, is committed)
+*.db-journal
+*.db-wal
+*.db-shm

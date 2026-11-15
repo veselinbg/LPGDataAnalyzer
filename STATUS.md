@@ -9,8 +9,9 @@ Last update: **2026-11-14**.
 ## The car and the data
 
 - Car: **Mercedes M272 3.0 V6** (two banks), LPG ECU AEB MP6C-type, petrol trims over OBD.
-- Database: `LPGDbAnalyzer/bin/Debug/net10.0-windows/Data/lpg.db` (backup before the October import:
-  `lpg.db.bak-before-october-import` next to it).
+- Database: `LPGDbAnalyzer/Data/lpg.db`, **committed to git** (since 2026-11-15; commit it after every import
+  session, with the app closed). The old copy in `LPGDbAnalyzer/bin/Debug/net10.0-windows/Data/` is no longer
+  used; the backup from before the October import, `lpg.db.bak-before-october-import`, is still there (not in git).
 - Fuel table **1 "Capture2"**: the map in the ECU since at least 12 August 2026. Its stored date is
   2026-11-13 (when it was entered); the user should set it to 2026-08-12 or earlier, so that it sorts
   before any newer map in comparisons.
