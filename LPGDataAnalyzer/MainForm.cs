@@ -24,11 +24,11 @@ namespace LPGDataAnalyzer
 
             dataFilesSelectorUI1.Initialize(_settings);
 
-            historyManager.ClearAndLoadFromDirectory(_settings.HistoryFolder);
+            historyManager.ClearAndLoadFromDirectory(_settings.ResolvedHistoryFolder);
 
             showAllStoredData.LoadSnapshots(historyManager.Items);
             
-            _ = showAllFileDataui1.LoadAsync(_settings.DataFilesFolder);
+            _ = showAllFileDataui1.LoadAsync(_settings.ResolvedDataFilesFolder);
 
             dataFilesSelectorUI1.DataLoaded += DataFilesSelectorui1_DataLoaded;
         }

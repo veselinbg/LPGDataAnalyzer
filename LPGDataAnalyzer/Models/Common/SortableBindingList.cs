@@ -5,14 +5,14 @@ namespace LPGDataAnalyzer.Models.Common
     {
         private bool _isSorted;
         private ListSortDirection _sortDirection;
-        private PropertyDescriptor _sortProperty;
+        private PropertyDescriptor? _sortProperty;
 
         public SortableBindingList() : base() { }
         public SortableBindingList(IList<T> list) : base(list) { }
 
         protected override bool SupportsSortingCore => true;
         protected override bool IsSortedCore => _isSorted;
-        protected override PropertyDescriptor SortPropertyCore => _sortProperty;
+        protected override PropertyDescriptor? SortPropertyCore => _sortProperty;
         protected override ListSortDirection SortDirectionCore => _sortDirection;
 
         protected override void ApplySortCore(PropertyDescriptor prop, ListSortDirection direction)

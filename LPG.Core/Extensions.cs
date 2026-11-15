@@ -1,0 +1,510 @@
+﻿using LPGDataAnalyzer.Models;
+using System.Globalization;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using System.Text;
+using static LPGDataAnalyzer.Models.Settings;
+
+namespace LPGDataAnalyzer
+{
+    /// <summary>
+    /// Provides general-purpose extension methods for common data types including numeric operations,
+    /// median/average calculations, and field value mapping for DataItem objects.
+    /// </summary>
+    public static class Extensions
+    {
+        public static double Round(this double value, int digits = 2)
+        {
+            return Math.Round(value, digits); 
+        }
+        public static int ToInt(this ReadOnlySpan<char> value)
+        {
+            return int.TryParse(value, out int result) ? result : 0;
+        }
+
+        /// <summary>
+        /// Parses a number with '.' or ',' as decimal separator (log files use '.', users may type ',').
+        /// Returns 0 when the text is not a number.
+        /// </summary>
+        public static double ToDouble(this ReadOnlySpan<char> value)
+        {
+            if (double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out double result))
+                return result;
+
+            int comma = value.IndexOf(',');
+            if (comma < 0 || value.Length > 64)
+                return 0.0;
+
+            Span<char> copy = stackalloc char[value.Length];
+            value.CopyTo(copy);
+            copy[comma] = '.';
+
+            return double.TryParse(copy, NumberStyles.Float, CultureInfo.InvariantCulture, out result)
+                ? result
+                : 0.0;
+        }
+        public static double Median(this List<double> values)
+        {
+            return MedianCore(CollectionsMarshal.AsSpan(values));
+        }
+        public static double Median(this double[] values)
+        {
+            return MedianCore(values);
+        }
+        public static double Median(this IEnumerable<double> numbers)
+        {
+            ArgumentNullException.ThrowIfNull(numbers);
+
+            return MedianCore(numbers.ToArray());
+        }
+        public static void InsertionSort(this Span<double> span)
+        {
+            for (int i = 1; i < span.Length; i++)
+            {
+                double value = span[i];
+                int j = i - 1;
+
+                while (j >= 0 && span[j] > value)
+                {
+                    span[j + 1] = span[j];
+                    j--;
+                }
+
+                span[j + 1] = value;
+            }
+        }
+        /// <summary>
+        /// Calculates median with optimizations for small arrays.
+        /// Avoids full sort when not necessary.
+        /// </summary>
+        public static double MedianCore(this Span<double> span)
+        {
+            if (span.IsEmpty)
+                return 0;  // throw new ArgumentException("Median of empty span is not defined.", nameof(span));
+
+            if (span.Length == 1) 
+                return span[0];
+
+            // Fast path: no sort needed for 2 elements
+            if (span.Length == 2)
+                return (span[0] + span[1]) / 2.0;
+
+            // Sort only when necessary (3+ elements)
+            if (span.Length <= 32)
+                InsertionSort(span);
+            else
+                span.Sort();
+
+            int mid = span.Length / 2;
+            return (span.Length % 2 != 0)
+                ? span[mid]
+                : (span[mid - 1] + span[mid]) / 2.0;
+        }
+
+        /// <summary>
+        /// Weighted median: the value where the cumulative weight reaches half of the total.
+        /// When it lands exactly on half, the two neighbouring values are averaged, so equal
+        /// weights give the same result as <see cref="MedianCore"/>. Sorts both spans in place.
+        /// Non-positive weights are ignored.
+        /// </summary>
+        public static double WeightedMedian(this Span<double> values, Span<double> weights)
+        {
+            if (values.Length != weights.Length)
+                throw new ArgumentException("Values and weights must have the same length.", nameof(weights));
+
+            if (values.IsEmpty)
+                return 0;
+
+            values.Sort(weights);
+
+            double total = 0;
+            foreach (var w in weights)
+                if (w > 0)
+                    total += w;
+
+            if (total <= 0)
+                return 0;
+
+            double half = total / 2;
+            double eps = total * 1e-9;
+            double cumulative = 0;
+
+            for (int i = 0; i < values.Length; i++)
+            {
+                if (weights[i] <= 0)
+                    continue;
+
+                cumulative += weights[i];
+
+                if (cumulative > half + eps)
+                    return values[i];
+
+                if (cumulative >= half - eps)
+                {
+                    // Exactly half: average with the next value that has weight.
+                    for (int j = i + 1; j < values.Length; j++)
+                        if (weights[j] > 0)
+                            return (values[i] + values[j]) / 2.0;
+
+                    return values[i];
+                }
+            }
+
+            return values[^1];
+        }
+        public static double Average(this ReadOnlySpan<double> span)
+        {
+            if (span.IsEmpty)
+                throw new ArgumentException("Average of empty span is not defined.", nameof(span));
+
+            double sum = 0;
+            double compensation = 0;
+
+            foreach (double value in span)
+            {
+                double y = value - compensation;
+                double t = sum + y;
+                compensation = (t - sum) - y;
+                sum = t;
+            }
+
+            return sum / span.Length;
+        }
+        /// <summary>
+        /// Calculates standard deviation in a single pass (performance optimized).
+        /// Avoids multiple enumerations by accumulating sum, sum of squares, and count.
+        /// </summary>
+        public static double StdDev(this IEnumerable<double> list)
+        {
+            ArgumentNullException.ThrowIfNull(list);
+
+            int count = 0;
+            double sum = 0;
+            double sumSquares = 0;
+
+            // Single enumeration through all values
+            foreach (var value in list)
+            {
+                sum += value;
+                sumSquares += value * value;  // Sum of x² for variance calculation
+                count++;
+            }
+
+            if (count == 0) return 0;
+            if (count == 1) return 0;
+
+            // Variance = E[X²] - E[X]² = (Σx²/n) - (Σx/n)²
+            double mean = sum / count;
+            double variance = (sumSquares / count) - (mean * mean);
+
+            return Math.Sqrt(Math.Max(0, variance));  // Max(0) handles floating-point rounding errors
+        }
+        /// <summary>
+        /// Converts 2D array to tab-separated text with optimized string building.
+        /// Pre-allocates StringBuilder capacity to reduce buffer reallocations.
+        /// </summary>
+        public static string ToText(this double?[,] table)
+        {
+            if (table == null)
+                return string.Empty;
+
+            int rows = table.GetLength(0);
+            int cols = table.GetLength(1);
+
+            // Estimate final size: rows * (cols * ~12 chars per number + column separators + newline)
+            int estimatedSize = rows * cols * 15;
+            var text = new StringBuilder(capacity: estimatedSize);
+
+            for (int inj = 0; inj < cols; inj++)
+            {
+                for (int rpm = 0; rpm < rows; rpm++)
+                {
+                    //if (rpm > 0) text.Append('\t');  // Column separator
+                    text.Append(table[rpm, inj]);
+                }
+                text.AppendLine();
+            }
+
+            return text.ToString();
+        }
+        // Helper to safely multiply nullable double
+        public static double? SafeMultiply(this double? value, double factor)
+        {
+            return value.HasValue ? value.Value * factor : null;
+        }
+        public static Func<DataItem, double?> GetFieldValue(this FieldsToShow field, Banks bank = Banks.ALL) 
+        {
+            return bank switch
+            {
+                Banks.ALL => field switch
+                {
+                    FieldsToShow.Trim => item => item.Trim,
+                    FieldsToShow.FastTrim => item => item.Fast,
+                    FieldsToShow.Ratio => item=> item.RatioDifference,
+                    FieldsToShow.AFR => item => item.AFR,
+                    FieldsToShow.GasTime => item => item.GAS,
+                    FieldsToShow.Press => item => item.PRESS,
+                    _ => throw new ArgumentOutOfRangeException(nameof(field), field, null)
+                },
+                Banks.B1 => field switch
+                {
+                    FieldsToShow.Trim => item => item.Trim_b1,
+                    FieldsToShow.FastTrim => item => item.FAST_b1,
+                    FieldsToShow.Ratio => item => item.Ratio_b1,
+                    FieldsToShow.AFR => item => item.AFR_b1,
+                    FieldsToShow.GasTime => item => item.GAS_b1,
+                    FieldsToShow.Press => item => item.PRESS,
+                    _ => throw new ArgumentOutOfRangeException(nameof(field), field, null)
+                },
+                Banks.B2 => field switch
+                {
+                    FieldsToShow.Trim => item => item.Trim_b2,
+                    FieldsToShow.FastTrim => item => item.FAST_b2,
+                    FieldsToShow.Ratio => item => item.Ratio_b2,
+                    FieldsToShow.AFR => item => item.AFR_b2,
+                    FieldsToShow.GasTime => item => item.GAS_b2,
+                    FieldsToShow.Press => item => item.PRESS,
+                    _ => throw new ArgumentOutOfRangeException(nameof(field), field, null)
+                },
+                _ => throw new ArgumentOutOfRangeException(nameof(bank), bank, null)
+            };
+        }
+
+        public static double Average<T>(this IEnumerable<T> arr,Func<T, double> selector)
+        {
+            double sum = 0;
+            int count = 0;
+
+            foreach (var item in arr)
+            {
+                double v = selector(item);
+
+                if (double.IsNaN(v))
+                    continue;
+
+                sum += v;
+                count++;
+            }
+
+            return count == 0 ? double.NaN : sum / count;
+        }
+
+        public static double Min<T>(this IEnumerable<T> arr, Func<T, double> selector)
+        {
+            double min = double.PositiveInfinity;
+            bool found = false;
+
+            foreach (var item in arr)
+            {
+                double v = selector(item);
+
+                if (double.IsNaN(v))
+                    continue;
+
+                if (!found || v < min)
+                {
+                    min = v;
+                    found = true;
+                }
+            }
+
+            return found ? min : double.NaN;
+        }
+        public static double Max<T>(this IEnumerable<T> arr, Func<T, double> selector)
+        {
+            double max = double.NegativeInfinity;
+            bool found = false;
+
+            foreach (var item in arr)
+            {
+                double v = selector(item);
+
+                if (double.IsNaN(v))
+                    continue;
+
+                if (!found || v > max)
+                {
+                    max = v;
+                    found = true;
+                }
+            }
+
+            return found ? max : double.NaN;
+        }
+        public static double RelDiff(this double a, double b)
+            => (a == 0 && b == 0) ? 0d : (((a - b) / ((a + b) / 2.0)) * 100).Round();
+        public static T[] Merge<T>(this T[] a, T[] b)
+        {
+            T[] result = new T[a.Length + b.Length];
+
+            Array.Copy(a, result, a.Length);
+            Array.Copy(b, 0, result, a.Length, b.Length);
+
+            return result;
+        }
+        public static bool TryGetDouble(this object v, out double result)
+        {
+            switch (v)
+            {
+                case int i: result = i; return true;
+                case long l: result = l; return true;
+                case float f: result = f; return true;
+                case double d: result = d; return true;
+                case decimal m: result = (double)m; return true;
+                case short s: result = s; return true;
+                case byte b: result = b; return true;
+                default:
+                    result = 0;
+                    return false;
+            }
+        }
+        /// <summary>
+        /// Index of the temperature band that contains <paramref name="value"/>.
+        /// Bands are (Min, Max], matching labels like "Temp_31_40" (40 belongs to 31–40).
+        /// Values below the first band or above the last band go to the edge band.
+        /// This is the only place that defines the band boundary rule.
+        /// </summary>
+        public static int GetTempBandIndex(this double value, ReadOnlySpan<(int Min, int Max, string Label)> ranges)
+        {
+            for (int i = 0; i < ranges.Length - 1; i++)
+            {
+                if (value <= ranges[i].Max)
+                    return i;
+            }
+
+            return ranges.Length - 1;
+        }
+
+        public static int GetRpmIndex(this DataItem d)
+        {
+            return FindIndex(d.RPM, RpmColumns);
+        }
+        public static int GetInjectionIndex(this DataItem d)
+        {
+            return FindIndex(d.BENZ, InjectionRanges);
+        }
+        public static int GetInjectionIndex(this DataItem d, Func<DataItem, double> injectorSelector)
+        {
+            return FindIndex(injectorSelector(d), InjectionRanges);
+        }
+        /// <summary>RPM column of a raw RPM value, -1 outside the axis.</summary>
+        public static int GetRpmIndex(int rpm)
+        {
+            return FindIndex(rpm, RpmColumns);
+        }
+        /// <summary>Injection row of a raw petrol injection time, -1 outside the axis.</summary>
+        public static int GetInjectionIndex(double benz)
+        {
+            return FindIndex(benz, InjectionRanges);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static int FindIndex(int value, ReadOnlySpan<(int Min, int Max, int Label)> ranges)
+        {
+            int lo = 0;
+            int hi = ranges.Length - 1;
+
+            while (lo <= hi)
+            {
+                int mid = lo + ((hi - lo) >> 1);
+
+                var range = ranges[mid];
+
+                if (value <= range.Min)
+                    hi = mid - 1;
+                else if (value > range.Max)
+                    lo = mid + 1;
+                else
+                    return mid;
+            }
+
+            return -1; // outside the axis; callers skip such samples
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static int FindIndex(double value, ReadOnlySpan<(double Min, double Max, double Label)> ranges)
+        {
+            int lo = 0;
+            int hi = ranges.Length - 1;
+
+            while (lo <= hi)
+            {
+                int mid = lo + ((hi - lo) >> 1);
+
+                var range = ranges[mid];
+
+                if (value <= range.Min)
+                    hi = mid - 1;
+                else if (value > range.Max)
+                    lo = mid + 1;
+                else
+                    return mid;
+            }
+
+            return -1; // outside the axis; callers skip such samples
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static double AverageFast(this List<double> values)
+        {
+            var span = CollectionsMarshal.AsSpan(values);
+
+            double sum = 0;
+            int count = 0;
+
+            foreach (var v in span)
+            {
+                if (double.IsNaN(v))
+                    continue;
+
+                sum += v;
+                count++;
+            }
+
+            return count == 0 ? double.NaN : sum / count;
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static double MinFast(this List<double> values)
+        {
+            var span = CollectionsMarshal.AsSpan(values);
+
+            double min = double.MaxValue;
+            bool found = false;
+
+            foreach (var v in span)
+            {
+                if (double.IsNaN(v))
+                    continue;
+
+                if (!found || v < min)
+                {
+                    min = v;
+                    found = true;
+                }
+            }
+
+            return found ? min : double.NaN;
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static double MaxFast(this List<double> values)
+        {
+            var span = CollectionsMarshal.AsSpan(values);
+
+            double max = double.MinValue;
+            bool found = false;
+
+            foreach (var v in span)
+            {
+                if (double.IsNaN(v))
+                    continue;
+
+                if (!found || v > max)
+                {
+                    max = v;
+                    found = true;
+                }
+            }
+
+            return found ? max : double.NaN;
+        }
+    }
+}

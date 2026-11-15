@@ -17,7 +17,7 @@
 
   <ItemGroup>
     <None Remove="appSettings.json" />
-    <None Remove="DataFiles\12.08.2026g.txt" />
+    <None Remove="DataFiles\**\*" />
     <None Remove="FuelTable\Capture.PNG" />
     <None Remove="tessdata\Configs\alto" />
     <None Remove="tessdata\Configs\ambigs.train" />
@@ -64,7 +64,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="DataFiles\12.08.2026g.txt">
+    <Content Include="DataFiles\**\*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="FuelTable\Capture.PNG">

@@ -73,7 +73,7 @@ namespace LPGDataAnalyzer.Controls
 
         private static void SetCellColor(
                                         DataGridView dgv1,
-                                        DataGridView dgv2,
+                                        DataGridView? dgv2,
                                         int r,
                                         int c,
                                         Color color)
@@ -112,7 +112,7 @@ namespace LPGDataAnalyzer.Controls
         // -------------------------
         private static AxisSplit<int> ApplyHeatmap(
             DataGridView dgv1,
-            DataGridView dgv2,
+            DataGridView? dgv2,
             double?[,] diffs,
             string[,]? markers,
             double tolerance)

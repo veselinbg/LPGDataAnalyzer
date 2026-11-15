@@ -106,10 +106,10 @@ namespace LPGDataAnalyzer.Controls
     }
     public class ReadOnlyDataGridView : UserControl
     {
-        private Label titleLabel;
-        private DataGridViewUC dataGridView;
-        private DataItem[] data;
-        private double?[,] currentTable;
+        private Label titleLabel = null!;
+        private DataGridViewUC dataGridView = null!;
+        private DataItem[]? data;
+        private double?[,]? currentTable;
         private Func<DataItem, double>[] _InjectionSelectors = Array.Empty<Func<DataItem, double>>();
         public ReadOnlyDataGridView()
         {
@@ -169,14 +169,14 @@ namespace LPGDataAnalyzer.Controls
         }
         private void DataGridView_CellFormatting(object? sender, DataGridViewCellFormattingEventArgs e)
         {
-            if (dataGridView.Columns.Contains("InjectionTime") && e.ColumnIndex == dataGridView.Columns["InjectionTime"].Index)
+            if (dataGridView.Columns.Contains("InjectionTime") && e.ColumnIndex == dataGridView.Columns["InjectionTime"]!.Index)
             {
                 dataGridView.ApplyLightHeaderStyle(e.CellStyle);
             }
         }
         private void DataGridView_CellDoubleClick(object? sender, DataGridViewCellEventArgs e)
         {
-            if (data is null || e.ColumnIndex == 0 || e.RowIndex < 0)
+            if (data is null || currentTable is null || e.ColumnIndex == 0 || e.RowIndex < 0)
                 return;
 
             var range = Settings.InjectionRanges[e.RowIndex];

@@ -7,7 +7,7 @@ using FTD2XX_NET;
 public class FtdiLogger
 {
     private FTDI ftdi = new FTDI();
-    private Thread workerThread;
+    private Thread? workerThread;
     private bool isRunning = false;
 
     public void Start(int deviceIndex = 0)

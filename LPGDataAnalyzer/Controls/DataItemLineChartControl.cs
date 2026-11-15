@@ -149,7 +149,7 @@ namespace LPGDataAnalyzer.Controls
             chart.MouseClick += Chart_MouseClick;
         }
 
-        private void Chart_MouseClick(object sender, MouseEventArgs e)
+        private void Chart_MouseClick(object? sender, MouseEventArgs e)
         {
             var hit = chart.HitTest(e.X, e.Y);
 
@@ -351,7 +351,7 @@ namespace LPGDataAnalyzer.Controls
 
         // ---------------- TOOLTIP ----------------
 
-        private void Chart_MouseMove(object sender, MouseEventArgs e)
+        private void Chart_MouseMove(object? sender, MouseEventArgs e)
         {
             if (_xValues.Length == 0)
                 return;

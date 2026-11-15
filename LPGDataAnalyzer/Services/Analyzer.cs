@@ -21,8 +21,8 @@ namespace LPGDataAnalyzer.Services
 
         public static DataItem[] FilterByTemp(
             DataItem[] data,
-            List<string> sLPGTempGroups,
-            List<string> sReductorTempGroups)
+            List<string>? sLPGTempGroups,
+            List<string>? sReductorTempGroups)
         {
             if (data is null)
                 return [];
@@ -40,7 +40,7 @@ namespace LPGDataAnalyzer.Services
             if (!allRed)
             {
                 var reductorRanges = Settings.ReductorTemperatureRanges
-                    .Where(r => sReductorTempGroups.Contains(r.Label))
+                    .Where(r => sReductorTempGroups!.Contains(r.Label))
                     .ToArray();  // Convert to array for efficient iteration
 
                 result = result.Where(d => IsInRangeArray(d.Temp_RID, reductorRanges));
@@ -50,7 +50,7 @@ namespace LPGDataAnalyzer.Services
             if (!allGas)
             {
                 var gasRanges = Settings.GasTemperatureRanges
-                    .Where(r => sLPGTempGroups.Contains(r.Label))
+                    .Where(r => sLPGTempGroups!.Contains(r.Label))
                     .ToArray();  // Convert to array for efficient iteration
 
                 result = result.Where(d => IsInRangeArray(d.Temp_GAS, gasRanges));
@@ -142,8 +142,8 @@ namespace LPGDataAnalyzer.Services
             {
                 for (int j = 0; j < colsA; j++)
                 {
-                    if (a[i, j].HasValue && b[i, j].HasValue && a[i, j].Value != b[i, j].Value)
-                        result[i, j] = ((a[i, j].Value + b[i, j].Value)/2).Round();
+                    if (a[i, j] is double av && b[i, j] is double bv && av != bv)
+                        result[i, j] = ((av + bv)/2).Round();
                     else
                         result[i, j] = null; // preserve missing data
                 }

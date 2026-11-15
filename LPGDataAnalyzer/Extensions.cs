@@ -199,6 +199,7 @@ namespace LPGDataAnalyzer
                     FieldsToShow.Press => item => item.PRESS,
                     _ => throw new ArgumentOutOfRangeException(nameof(field), field, null)
                 },
+                _ => throw new ArgumentOutOfRangeException(nameof(bank), bank, null)
             };
         }
 

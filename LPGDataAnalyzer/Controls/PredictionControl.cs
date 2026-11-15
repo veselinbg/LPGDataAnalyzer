@@ -9,14 +9,15 @@ namespace LPGDataAnalyzer.Controls
     {
         private readonly TextExtractor textExtractor = new();
 
-        private AppSettings AppSettings { get; set; }
-        private AppSettingManager AppSettingManager { get; set; }
+        // Set by LoadSettings, which MainForm calls when data is loaded.
+        private AppSettings AppSettings { get; set; } = null!;
+        private AppSettingManager AppSettingManager { get; set; } = null!;
 
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        private DataItem[] Data { get; set; }
-        private string[,] Markers { get; set; }
+        private DataItem[] Data { get; set; } = null!;
+        private string[,] Markers { get; set; } = null!;
 
-        private IReadOnlyList<HistorySnapshot> HistorySnapshots { get; set; }
+        private IReadOnlyList<HistorySnapshot>? HistorySnapshots { get; set; }
         public PredictionControl()
         {
             InitializeComponent();

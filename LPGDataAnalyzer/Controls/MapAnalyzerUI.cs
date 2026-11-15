@@ -5,13 +5,13 @@ namespace LPGDataAnalyzer.Controls
 {
     internal class MapAnalyzerUI : UserControl
     {
-        private ReadOnlyDataGridView dataGridViewMapAnalysis;
-        private ReadOnlyDataGridView dataGridViewBankToBank;
-        private ReadOnlyDataGridView dataGridViewInjectionTimeAnalysis;
-        private ReadOnlyDataGridView dataGridViewDeadTime;
-        private ReadOnlyDataGridView dataGridViewEnhancedBank;
+        private ReadOnlyDataGridView dataGridViewMapAnalysis = null!;
+        private ReadOnlyDataGridView dataGridViewBankToBank = null!;
+        private ReadOnlyDataGridView dataGridViewInjectionTimeAnalysis = null!;
+        private ReadOnlyDataGridView dataGridViewDeadTime = null!;
+        private ReadOnlyDataGridView dataGridViewEnhancedBank = null!;
 
-        private TableLayoutPanel layout;
+        private TableLayoutPanel layout = null!;
 
         public MapAnalyzerUI()
         {

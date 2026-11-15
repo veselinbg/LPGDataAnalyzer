@@ -2,7 +2,7 @@
 {
     public class PanelLegendBuilder
     {
-        public static void PanelLegend_Paint(object sender, PaintEventArgs e)
+        public static void PanelLegend_Paint(object? sender, PaintEventArgs e)
         {
             if (sender is not Panel panel)
                 return;

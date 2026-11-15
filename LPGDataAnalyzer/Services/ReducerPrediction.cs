@@ -26,7 +26,7 @@ namespace LPGDataAnalyzer.Services
             var errorsByRange = ordered
                 .Select((d, i) =>
                 {
-                    DataItem previous = i > 0 ? ordered[i - 1] : null;
+                    DataItem? previous = i > 0 ? ordered[i - 1] : null;
 
                     double totalError = CalculateError(d, previous, referencePressure, referenceMAP, maxRPM);
 
@@ -76,7 +76,7 @@ namespace LPGDataAnalyzer.Services
         // ---------------- Core Error Calculation ----------------
         private static double CalculateError(
             DataItem d,
-            DataItem previous,
+            DataItem? previous,
             double referencePressure,
             double referenceMAP,
             double maxRPM)
@@ -139,7 +139,7 @@ namespace LPGDataAnalyzer.Services
             var errorsByRange = ordered
                 .Select((d, i) =>
                 {
-                    DataItem previous = i > 0 ? ordered[i - 1] : null;
+                    DataItem? previous = i > 0 ? ordered[i - 1] : null;
 
                     double totalError = CalculateError(d, previous, referencePressure, referenceMAP, maxRPM);
 
@@ -192,7 +192,7 @@ namespace LPGDataAnalyzer.Services
         // ---------------- Core Error Calculation ----------------
         private static double CalculateError(
             DataItem d,
-            DataItem previous,
+            DataItem? previous,
             double referencePressure,
             double referenceMAP,
             double maxRPM)

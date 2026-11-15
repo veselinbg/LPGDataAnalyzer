@@ -112,12 +112,12 @@ namespace LPGDataAnalyzer.Controls
         }
         private void StartWatcher()
         {
-            if (_settings is null || !Directory.Exists(_settings.DataFilesFolder))
+            if (_settings is null || !Directory.Exists(_settings.ResolvedDataFilesFolder))
                 return;
 
             _watcher?.Dispose();
 
-            _watcher = new FileSystemWatcher(_settings.DataFilesFolder, "*.txt")
+            _watcher = new FileSystemWatcher(_settings.ResolvedDataFilesFolder, "*.txt")
             {
                 NotifyFilter =
                     NotifyFilters.FileName |
@@ -154,11 +154,11 @@ namespace LPGDataAnalyzer.Controls
 
             _fullPaths.Clear();
 
-            if (!Directory.Exists(_settings.DataFilesFolder))
+            if (_settings is null || !Directory.Exists(_settings.ResolvedDataFilesFolder))
                 return;
 
             var files = Directory
-                .GetFiles(_settings.DataFilesFolder, "*.txt")
+                .GetFiles(_settings.ResolvedDataFilesFolder, "*.txt")
                 .OrderByDescending(File.GetCreationTime)
                 .ToArray();
 

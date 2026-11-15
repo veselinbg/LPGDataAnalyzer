@@ -10,7 +10,8 @@ namespace LPGDataAnalyzer
 
         public AppSettingManager(string filePath = "appSettings.json")
         {
-            _filePath = filePath;
+            // Relative to the app's output folder, not the current directory.
+            _filePath = Path.GetFullPath(filePath, AppContext.BaseDirectory);
         }
 
         public AppSettings Load()

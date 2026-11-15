@@ -7,10 +7,10 @@ namespace LPGDataAnalyzer.Controls
     {
         public HistoryManager Manager { get; } = new();
 
-        public event Action<HistorySnapshot> HistorySelected;
+        public event Action<HistorySnapshot>? HistorySelected;
 
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public AppSettings AppSettings { get; set; }
+        public AppSettings AppSettings { get; set; } = null!; // set by MainForm/PredictionControl
 
         ListBox listHistory = new();
         Button btnSave = new();
@@ -74,7 +74,7 @@ namespace LPGDataAnalyzer.Controls
             listHistory.Items.Add(Manager.Items.Last().Name);
         }
 
-        private void ListHistory_SelectedIndexChanged(object sender, EventArgs e)
+        private void ListHistory_SelectedIndexChanged(object? sender, EventArgs e)
         {
             int index = listHistory.SelectedIndex;
 
@@ -83,14 +83,14 @@ namespace LPGDataAnalyzer.Controls
             HistorySelected?.Invoke(snapshot);
         }
 
-        private void BtnSave_Click(object sender, EventArgs e)
+        private void BtnSave_Click(object? sender, EventArgs e)
         {
             if (listHistory.SelectedIndex < 0) return;
 
             var snapshot = Manager.Get(listHistory.SelectedIndex);
 
             using SaveFileDialog dlg = new();
-            dlg.InitialDirectory = AppSettings.HistoryFolder;
+            dlg.InitialDirectory = AppSettings.ResolvedHistoryFolder;
             dlg.FileName = $"snapshot_{DateTime.Now:yyyyMMdd_HHmmss}.json";
             dlg.Filter = "History|*.json";
 
@@ -100,16 +100,18 @@ namespace LPGDataAnalyzer.Controls
             }
         }
 
-        private void BtnLoad_Click(object sender, EventArgs e)
+        private void BtnLoad_Click(object? sender, EventArgs e)
         {
             using OpenFileDialog dlg = new();
-            dlg.InitialDirectory = AppSettings.HistoryFolder;
+            dlg.InitialDirectory = AppSettings.ResolvedHistoryFolder;
             dlg.Filter = "History|*.json";
 
             if (dlg.ShowDialog() == DialogResult.OK)
             {
 
                 var snapshot = HistoryStorage.Load(dlg.FileName);
+                if (snapshot == null)
+                    return;
 
                 Manager.Add(snapshot);
 

@@ -14,9 +14,9 @@ namespace LPGDataAnalyzer.Controls
         private double _min = double.MaxValue;
         private double _max = double.MinValue;
 
-        private Canvas viewport;
-        private VScrollBar vScroll;
-        private System.Windows.Forms.Timer smoothTimer;
+        private Canvas viewport = null!;
+        private VScrollBar vScroll = null!;
+        private System.Windows.Forms.Timer smoothTimer = null!;
 
         private int targetScroll;
         private float currentScroll;
@@ -397,7 +397,7 @@ namespace LPGDataAnalyzer.Controls
         // =====================================================
         private class Canvas : Panel
         {
-            public Action<Graphics> PaintScene;
+            public Action<Graphics>? PaintScene;
 
             public Canvas()
             {
@@ -417,11 +417,11 @@ namespace LPGDataAnalyzer.Controls
         // =====================================================
         public class FileResult
         {
-            public string File;
-            public DataItem[] Data;
-            public double?[,] T1;
-            public double?[,] T2;
-            public double?[,] Diff;
+            public required string File;
+            public required DataItem[] Data;
+            public required double?[,] T1;
+            public required double?[,] T2;
+            public required double?[,] Diff;
         }
     }
 }

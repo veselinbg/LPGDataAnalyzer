@@ -26,18 +26,23 @@ namespace LPGDataAnalyzer.Models
         /// <summary>
         /// Point to the folder where your JSON snapshots are stored.
         /// </summary>
-        public string HistoryFolder { get; set; } =
-            Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-                "Downloads",
-                "LPGDataAnalyzer",
-                "LPGDataAnalyzer",
-                "History");
+        public string HistoryFolder { get; set; } = "History";
 
-        public string DataFilesFolder { get; set; } =
-            Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
-                "MultipointInj",
-                "Acquisition");
+        /// <summary>
+        /// <see cref="HistoryFolder"/> as an absolute path (relative paths resolve against the app's output folder).
+        /// </summary>
+        [JsonIgnore]
+        public string ResolvedHistoryFolder => Path.GetFullPath(HistoryFolder, AppContext.BaseDirectory);
+
+        /// <summary>
+        /// Folder with the *.txt logs. Relative paths resolve against the app's output folder.
+        /// </summary>
+        public string DataFilesFolder { get; set; } = "DataFiles";
+
+        /// <summary>
+        /// <see cref="DataFilesFolder"/> as an absolute path.
+        /// </summary>
+        [JsonIgnore]
+        public string ResolvedDataFilesFolder => Path.GetFullPath(DataFilesFolder, AppContext.BaseDirectory);
     }
 }

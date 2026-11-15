@@ -15,12 +15,12 @@ namespace LPGDataAnalyzer.Controls
     {
         class ColumnFilter
         {
-            public Func<T, object> Getter { get; set; }
-            public Func<object, bool> Filter { get; set; }
+            public required Func<T, object> Getter { get; set; }
+            public required Func<object, bool> Filter { get; set; }
         }
         class ValueItem
         {
-            public object Value { get; set; }
+            public required object Value { get; set; }
             public int Count { get; set; }
 
             public override string ToString()
@@ -30,7 +30,7 @@ namespace LPGDataAnalyzer.Controls
         }
         private bool isUpdatingUI = false;
         private string baseTitle = "";
-        private string sortColumn;
+        private string? sortColumn;
         private bool sortAsc = true;
 
         private Panel titleBar = new();
@@ -58,7 +58,7 @@ namespace LPGDataAnalyzer.Controls
         private Button applyButton = new() { Text = "Apply" };
         private Button resetButton = new() { Text = "Reset" };
         private Button closeButton = new() { Text = "X" };
-        private string currentColumn;
+        private string? currentColumn;
         private Dictionary<string, Rectangle> headerButtonRectangles = new();
         private CheckBox selectAllCheckBox = new CheckBox();
         private BindingSource bindingSource = new();
@@ -75,7 +75,7 @@ namespace LPGDataAnalyzer.Controls
             double? max = double.TryParse(maxBox.Text, out var maxVal) ? maxVal : null;
             return (min, max);
         }
-        private bool PassesRange(object val, double? min, double? max)
+        private bool PassesRange(object? val, double? min, double? max)
         {
             if (!min.HasValue && !max.HasValue)
                 return true;
@@ -105,7 +105,7 @@ namespace LPGDataAnalyzer.Controls
                 }
                 else
                 {
-                    valueMatch = val != null && sel.SelectedValues.Contains(val);
+                    valueMatch = val != null && sel.SelectedValues?.Contains(val) == true;
                 }
 
                 // RANGE FILTER
@@ -205,11 +205,11 @@ namespace LPGDataAnalyzer.Controls
             {
                 if (grid.Columns.Contains(colName))
                 {
-                    grid.Columns[colName].DisplayIndex = index++;
+                    grid.Columns[colName]!.DisplayIndex = index++;
                 }
             }
         }
-        private void Grid_ColumnDisplayIndexChanged(object sender, DataGridViewColumnEventArgs e)
+        private void Grid_ColumnDisplayIndexChanged(object? sender, DataGridViewColumnEventArgs e)
         {
             // Example: store column order
             var order = grid.Columns
@@ -220,9 +220,9 @@ namespace LPGDataAnalyzer.Controls
 
             headerButtonRectangles.Clear(); // fix filter button hit detection
         }
-        private void Grid_CellPainting(object sender, DataGridViewCellPaintingEventArgs e)
+        private void Grid_CellPainting(object? sender, DataGridViewCellPaintingEventArgs e)
         {
-            if (e.RowIndex != -1 || e.ColumnIndex < 0 || e.ColumnIndex >= grid.Columns.Count)
+            if (e.RowIndex != -1 || e.ColumnIndex < 0 || e.ColumnIndex >= grid.Columns.Count || e.Graphics == null)
                 return;
 
             e.PaintBackground(e.CellBounds, true);
@@ -261,7 +261,7 @@ namespace LPGDataAnalyzer.Controls
                 getters[prop.Name] = Expression.Lambda<Func<T, object>>(body, param).Compile();
             }
         }
-        private void Grid_ColumnHeaderMouseClick(object sender, DataGridViewCellMouseEventArgs e)
+        private void Grid_ColumnHeaderMouseClick(object? sender, DataGridViewCellMouseEventArgs e)
         {
             if (e.ColumnIndex < 0 || e.ColumnIndex >= grid.Columns.Count)
                 return;
@@ -340,7 +340,7 @@ namespace LPGDataAnalyzer.Controls
             resetButton.Click += async (_, __) => await ResetFilterPanel();
             filterPanel.Controls.Add(resetButton);
         }
-        private void LogicModeChanged(object sender, EventArgs e)
+        private void LogicModeChanged(object? sender, EventArgs e)
         {
             if (isUpdatingUI || currentColumn == null) return;
 
@@ -423,9 +423,9 @@ namespace LPGDataAnalyzer.Controls
             RefreshBinding(filtered);
             UpdateTitleInfo();
         }
-        private void MinMaxBox_TextChanged(object sender, EventArgs e)
+        private void MinMaxBox_TextChanged(object? sender, EventArgs e)
         {
-            if (isUpdatingUI)
+            if (isUpdatingUI || currentColumn == null)
                 return;
             if (columnSelections.TryGetValue(currentColumn, out var set))
             {
@@ -609,7 +609,7 @@ namespace LPGDataAnalyzer.Controls
             UpdateColumnHeaderStyles();
             UpdateTitleInfo();
         }
-        private void Grid_CellMouseDown(object sender, DataGridViewCellMouseEventArgs e)
+        private void Grid_CellMouseDown(object? sender, DataGridViewCellMouseEventArgs e)
         {
             if (e.RowIndex != -1 || e.Button != MouseButtons.Right) return;
 
@@ -627,7 +627,7 @@ namespace LPGDataAnalyzer.Controls
             menu.Show(Cursor.Position);
         }
 
-        private void ValueList_ItemCheck(object sender, ItemCheckEventArgs e)
+        private void ValueList_ItemCheck(object? sender, ItemCheckEventArgs e)
         {
             if (isUpdatingUI)
                 return;
@@ -650,13 +650,16 @@ namespace LPGDataAnalyzer.Controls
                     selectAllCheckBox.Checked = allChecked;
                 });
 
+                if (currentColumn == null)
+                    return;
+
                 if (!columnSelections.ContainsKey(currentColumn))
                     columnSelections[currentColumn] = new ColumnFilterSelection();
 
                 columnSelections[currentColumn].SelectedValues = GetCheckedValues();
             }));
         }   
-        private void SelectAllCheckBox_CheckedChanged(object sender, EventArgs e)
+        private void SelectAllCheckBox_CheckedChanged(object? sender, EventArgs e)
         {
             if (isUpdatingUI || currentColumn == null)
                 return;
@@ -750,7 +753,7 @@ namespace LPGDataAnalyzer.Controls
 
             foreach (var item in data)
             {
-                var v = getters[currentColumn](item);
+                var v = getters[currentColumn!](item);
                 if (v == null) continue;
                 if (min.HasValue || max.HasValue)
                 {

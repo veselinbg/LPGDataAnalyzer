@@ -41,6 +41,7 @@ namespace LPGDataAnalyzer.Services
             }
             else
             {
+                Span<double> stackBuffer = stackalloc double[StackLimit];
                 double t = 1.0;
                 int rpmSave = rpmIndex;
 
@@ -54,7 +55,7 @@ namespace LPGDataAnalyzer.Services
                     double[]? rented = null;
 
                     Span<double> values = total <= StackLimit
-                        ? stackalloc double[StackLimit]
+                        ? stackBuffer
                         : (rented = ArrayPool<double>.Shared.Rent(total));
 
                     try

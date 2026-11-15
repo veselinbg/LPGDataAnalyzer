@@ -168,7 +168,7 @@ namespace LPGDataAnalyzer.Services
                 {
                     var changes = new List<object>();
 
-                    if (x.Previous.SLOW_b1 != x.Current.SLOW_b1)
+                    if (x.Previous!.SLOW_b1 != x.Current.SLOW_b1)
                     {
                         var range = data.Skip(lastB1).Take(x.Index - lastB1 + 1).ToList();
 

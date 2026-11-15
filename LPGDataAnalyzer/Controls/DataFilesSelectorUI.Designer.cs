@@ -1,16 +1,17 @@
-﻿namespace LPGDataAnalyzer.Controls
+﻿#nullable enable
+namespace LPGDataAnalyzer.Controls
 {
     partial class DataFilesSelectorUI
     {
         /// <summary> 
         /// Required designer variable.
         /// </summary>
-        private System.ComponentModel.IContainer components = null;
+        private System.ComponentModel.IContainer? components = null;
 
-        private CheckedListBox checkedListBoxFiles;
-        private Button buttonLoad;
-        private Label labelTitle;
-        private Panel panelBottom;
+        private CheckedListBox checkedListBoxFiles = null!;
+        private Button buttonLoad = null!;
+        private Label labelTitle = null!;
+        private Panel panelBottom = null!;
         private FileSystemWatcher? _watcher;
 
         /// <summary> 

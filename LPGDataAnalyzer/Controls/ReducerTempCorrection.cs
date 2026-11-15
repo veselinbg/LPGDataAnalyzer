@@ -14,8 +14,8 @@ namespace LPGDataAnalyzer.Controls
             textBoxReducerTempValues.Text = string.Join(",", Settings.ReductorTemperatureCorrectionCoef);
         }
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public DataItem[] Data { get; set; }
-        private void buttonReducerPrediction_Click(object sender, EventArgs e)
+        public DataItem[]? Data { get; set; }
+        private void buttonReducerPrediction_Click(object? sender, EventArgs e)
         {
             if (Data is null) return;
 
@@ -34,7 +34,7 @@ namespace LPGDataAnalyzer.Controls
 
             MessageBox.Show(string.Join(",", result.Select(x => x.Value)), "LPG Reducer correction");
         }
-        private void buttonGasTempCorr_Click(object sender, EventArgs e)
+        private void buttonGasTempCorr_Click(object? sender, EventArgs e)
         {
             if (Data is null) return;
 
@@ -154,14 +154,14 @@ namespace LPGDataAnalyzer.Controls
             ResumeLayout(false);
             PerformLayout();
         }
-        private TextBox textBoxReducerTempValues;
-        private Label labelCurrent;
-        private TextBox textBoxReferencePressure;
-        private Label labelRefPressure;
-        private CheckBox checkBoxEnableSmooth;
-        private TextBox textBox1;
-        private Button buttonGasTempCorr;
-        private Button buttonReducerPrediction;
+        private TextBox textBoxReducerTempValues = null!;
+        private Label labelCurrent = null!;
+        private TextBox textBoxReferencePressure = null!;
+        private Label labelRefPressure = null!;
+        private CheckBox checkBoxEnableSmooth = null!;
+        private TextBox textBox1 = null!;
+        private Button buttonGasTempCorr = null!;
+        private Button buttonReducerPrediction = null!;
 
     }
 }
