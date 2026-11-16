@@ -210,7 +210,7 @@ def score(method, **kw):
     return (1 - after / now) * 100
 
 
-CUR_G = [-7, -5, -4, -2, 0, 2, 3, 4, 5]; CUR_R = [-7, -4, -1, 0, 0, 0, 0, 0, 0]
+CUR_G, CUR_R = loo.logs()[-1][2], loo.logs()[-1][3]   # tables of the newest log (all logs are brought to them)
 
 def m_current(train, err, **kw):
     return current_method(train, CUR_G, CUR_R, **kw)

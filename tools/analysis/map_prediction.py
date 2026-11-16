@@ -6,16 +6,16 @@ On 2026-11-14 it reproduced the app exactly (4.75 % before the filter, per-file 
 
     python tools/analysis/map_prediction.py            # score with the app's settings
 
-Environment: LPG_DB = database file (default: the LPGDbAnalyzer Debug output), LPG_TABLE = fuel table id (default 1).
-Limits: all logs of the table are used as they are; it does NOT bring logs with other temperature tables
-to the same tables (TrimNormalizer), so use it only on logs with equal tables or extend it first.
+Environment: LPG_DB = database file (default: LPGDbAnalyzer/Data/lpg.db), LPG_TABLE = fuel table id (default 1).
+Like the app, load_all() brings every log's FAST trims to the newest log's temperature tables (TrimNormalizer,
+temperature part only: all logs of one fuel table share the map). load_all(normalize_tables=False) skips that.
 Keep it in step with the C# code when the algorithm changes.
 """
 import bisect, json, math, os, sqlite3, statistics, sys
 from collections import defaultdict
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
-DB = os.environ.get('LPG_DB', os.path.join(ROOT, 'LPGDbAnalyzer', 'bin', 'Debug', 'net10.0-windows', 'Data', 'lpg.db'))
+DB = os.environ.get('LPG_DB', os.path.join(ROOT, 'LPGDbAnalyzer', 'Data', 'lpg.db'))
 TABLE = int(os.environ.get('LPG_TABLE', '1'))
 GAIN = 0.8
 TOL = 0.1
@@ -86,6 +86,8 @@ def load_file(log_id, name, delay_ms=850):
         it.dpos = d
         it.drows = dr
         it.idx = g[0]
+        it.tg = r2(sum(rows[k]['TempGas'] for k in g) / n)
+        it.tr = r2(sum(rows[k]['TempReducer'] for k in g) / n)
         out.append(it)
     return out, rows
 
@@ -215,10 +217,53 @@ def score(data, **kw):
     return 1 - tot_after / tot_now, per
 
 
-def load_all(delay_ms=850):
+G_PTS = [0, 10, 20, 30, 40, 50, 60, 70, 80]   # gas table breakpoints (band upper temperatures, last + 10)
+R_PTS = [20, 25, 30, 35, 40, 50, 60, 70, 80]   # reducer table breakpoints
+
+
+def table_at(t, pts, vals):
+    """TemperatureCorrectionPrediction.TableValueAt: linear between breakpoints, clamped at the ends."""
+    if t <= pts[0]:
+        return vals[0]
+    if t >= pts[-1]:
+        return vals[-1]
+    j = bisect.bisect_left(pts, t)
+    if pts[j] == t:
+        return vals[j]
+    f = (t - pts[j - 1]) / (pts[j] - pts[j - 1])
+    return vals[j - 1] * (1 - f) + vals[j] * f
+
+
+def normalize(items, rec_g, rec_r, tgt_g, tgt_r):
+    """TrimNormalizer, temperature part: FAST -= (target factor / recorded factor - 1) * 100."""
+    if rec_g == tgt_g and rec_r == tgt_r:
+        return
+    for it in items:
+        if it.fast1 == 0 and it.fast2 == 0:
+            continue
+        def factor(g, r):
+            return (1 + table_at(it.tg, G_PTS, g) / 100) * (1 + table_at(it.tr, R_PTS, r) / 100)
+        extra = (factor(tgt_g, tgt_r) / factor(rec_g, rec_r) - 1) * 100
+        it.fast1 = r2(it.fast1 - extra); it.fast2 = r2(it.fast2 - extra)
+
+
+def logs():
+    """(id, file name, gas table, reducer table) of the fuel table's logs in recording order."""
+    return [(i, n, json.loads(g), json.loads(r)) for i, n, g, r in con.execute(
+        'select Id, FileName, GasTempCoef, ReducerTempCoef from LogFile where FuelTableId=? order by RecordedAt, Id', (TABLE,))]
+
+
+def load_all(delay_ms=850, normalize_tables=True, only=None):
+    """All readings of the fuel table; only = optional set of file names."""
+    lst = logs()
+    tgt_g, tgt_r = lst[-1][2], lst[-1][3]
     data = []
-    for log_id, name in con.execute('select Id, FileName from LogFile where FuelTableId=? order by RecordedAt, Id', (TABLE,)):
+    for log_id, name, g, r in lst:
+        if only is not None and name not in only:
+            continue
         items, _ = load_file(log_id, name, delay_ms)
+        if normalize_tables:
+            normalize(items, g, r, tgt_g, tgt_r)
         data += items
     return data
 

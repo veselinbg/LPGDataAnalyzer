@@ -46,6 +46,10 @@ namespace LPGDataAnalyzer.Controls
             panelLegend.Paint += PanelLegendBuilder.PanelLegend_Paint;
             historyControl1.HistorySelected += HistoryControl1_HistorySelected;
             SetOptionToolTips();
+
+            // The reference pressure is only used while the pressure correction is on.
+            checkBoxPressureCorrection.CheckedChanged += (_, _) =>
+                labelPress.Enabled = textBoxRefPress.Enabled = checkBoxPressureCorrection.Checked;
         }
 
         /// <summary>All prediction options as they are set in the controls.</summary>

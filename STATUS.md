@@ -4,7 +4,7 @@ Read this first when a new session starts. `CLAUDE.md` describes the code and th
 **where the tuning stands**, what was measured, what was decided and what comes next. Update it at the
 end of every working session.
 
-Last update: **2026-11-14**.
+Last update: **2026-11-16**.
 
 ## The car and the data
 
@@ -25,11 +25,13 @@ Last update: **2026-11-14**.
   | 5 | 06.10.2026g2.txt | 2026-10-06 11:32 | 2 064 |
   | 6 | 08.10.2026g1.txt | 2026-10-08 14:25 | 21 912 |
   | 1 | 13.11.2026g.txt | 2026-11-13 | 16 965 |
+  | 7 | 16.11.2026g1.txt | 2026-11-16 07:03 | 18 194 |
 
   `12.08.2026g.txt` (same map) is not imported on purpose. The October files were renamed to their header
   dates and imported with `tools/analysis/import_logs.py` (same parsing and hash as the app).
 - Temperature tables stored for all six logs: LPG `-7,-5,-4,-2,0,2,3,4,5`, reducer `-7,-4,-1,0,0,0,0,0,0`.
   These are the tables of 13.11; the real October tables are **unknown** (assumed equal).
+  Log 7 (16.11) was recorded with the **new reducer table `-9,-3,-1,1,0,0,0,0,0`** (LPG table unchanged).
 
 ## Map prediction: what was measured (leave one file out, the 6 Capture2 logs)
 
@@ -64,18 +66,26 @@ High-Load Cells, Use History, Always Apply Negative Trim, Map Regression.
 - **User's decision (2026-11-14):** set the reducer table in the ECU to **`-9,-3,-1,1,0,0,0,0,0`**,
   LPG table unchanged (`-7,-5,-4,-2,0,2,3,4,5`), map unchanged (Capture2).
 
+## Check of the new reducer table (2026-11-16, 7 logs, `tools/analysis`)
+
+- **Temperature normalization works**: the 16.11 log (not changed by the normalization) is predicted at
+  9.46 % with the old logs brought to its tables vs. 8.28 % without. All files: 9.51 % vs. 8.15 %.
+- Residual FAST (after the map error) per reducer band, old logs (normalized) | new log:
+  ≤20 −4.3 (n 50) | no data; 21–25 −0.2 | −2.6 (n 54); 26–30 −0.2 | −0.1; 31–35 +0.6 | −1.7 (n 128);
+  36–40 0.0 | +0.2; 41–50 +0.2 | −0.1. The new log hints that 21–25 and 31–35 are now slightly rich,
+  but it is one cold-morning drive with few readings there.
+- Temperature fit (shrinkage 200): new log alone suggests no change; all 7 suggest reducer ≤20 −1, 21–25 +1
+  (driven by the old logs), LPG 11–20 −1 (borderline, −0.69, again). Leave-one-file-out of the temperature
+  method is now −0.05 %, i.e. no reliable signal. **Recommendation: leave both temperature tables as they are.**
+- Map prediction from all 7 logs: 92 of 144 cells change, median |change| 2 %, largest −17 % (high load,
+  8.3–12 ms at 700–1000 and 4000–4700 rpm).
+
 ## Next steps
 
-1. The user changes the reducer table in the ECU and records new logs with the **same map (Capture2)**.
-2. Import them under fuel table **Capture2** with reducer table `-9,-3,-1,1,0,0,0,0,0` and LPG table
-   `-7,-5,-4,-2,0,2,3,4,5`. Do **not** use "same as previous" for the first new log: that would copy the
-   old reducer table.
-3. Analyze old + new logs together ("Analyze checked" on Capture2): every log's trims are brought to the
-   newest log's temperature tables (`TrimNormalizer`). Then:
-   - Temperature prediction: did the reducer bands ≤20, 21–25, 31–35 move towards 0? Anything new?
-   - Compare the prediction accuracy of all logs vs. only the new logs (validates the temperature normalization).
-4. Only then predict the new fuel map (gain 0.8) and load it into the ECU as a new fuel table.
-5. After logs with the new map exist:
+1. (Done 16.11: one log with the new reducer table.) Decide: more logs with Capture2 first (cold reducer
+   ≤20 and 21–25 °C are thin), or
+2. predict the new fuel map (gain 0.8) and load it into the ECU as a new fuel table.
+3. After logs with the new map exist:
    - Check that changed cells did not overshoot (sign flips) — the risk of gain 0.8. If they do, go back to 0.6–0.7.
    - "Analyze together" (old map logs brought to the new map) vs. only new-map logs: the prediction
      accuracy shows whether the map normalization helps.
@@ -93,8 +103,9 @@ High-Load Cells, Use History, Always Apply Negative Trim, Map Regression.
 Python copies of the app's algorithms, for trying changes before they go into C# (no numpy needed):
 
 - `map_prediction.py` — parser grouping + map prediction + leave-one-file-out score. Reproduces the app.
-  `LPG_DB` / `LPG_TABLE` environment variables select the database and fuel table. Does not normalize
-  temperature tables yet: extend it before using logs with different tables.
+  `LPG_DB` / `LPG_TABLE` environment variables select the database (default `LPGDbAnalyzer/Data/lpg.db`) and
+  fuel table. Brings every log to the newest log's temperature tables like `TrimNormalizer` (since 2026-11-16;
+  `load_all(normalize_tables=False)` to skip). Map normalization (logs of several maps) is not in it yet.
 - `temperature_tables.py` — old vs. new temperature-table method, leave one file out (~1–2 minutes).
 - `ecu_temperature_model.py` — shows from GAS how the ECU applies the temperature tables.
 - `import_logs.py` — imports log files into the database exactly like the app (`<db> <fuelTableId> <gasJson> <reducerJson> <files...>`).

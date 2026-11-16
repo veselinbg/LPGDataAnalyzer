@@ -33,16 +33,17 @@
             tableLayoutPanelMain = new TableLayoutPanel();
             tableLayoutPanelRight = new TableLayoutPanel();
             tableLayoutPanelManagement = new TableLayoutPanel();
-            panel3 = new FlowLayoutPanel();
             checkBoxShowOnlyCount = new CheckBox();
             labelMaxBenzDiff = new Label();
             textBoxMaxBenzDiff = new TextBox();
             labelMinCount = new Label();
             labelPress = new Label();
             labelValueOfChange = new Label();
-            panel4 = new FlowLayoutPanel();
             flowActions = new FlowLayoutPanel();
-            flowChecks = new FlowLayoutPanel();
+            flowDisplay = new FlowLayoutPanel();
+            flowGroups = new FlowLayoutPanel();
+            groupPrediction = new GroupBox();
+            groupDisplay = new GroupBox();
             tableNumbers = new TableLayoutPanel();
             buttonExport = new Button();
             tableLayoutPanelTopLine = new TableLayoutPanel();
@@ -57,8 +58,8 @@
             tableLayoutPanelMain.SuspendLayout();
             tableLayoutPanelRight.SuspendLayout();
             tableLayoutPanelManagement.SuspendLayout();
-            panel3.SuspendLayout();
-            panel4.SuspendLayout();
+            groupPrediction.SuspendLayout();
+            groupDisplay.SuspendLayout();
             tableLayoutPanelTopLine.SuspendLayout();
             tableLayoutPanelLeft.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)DataGridViewInvalidData).BeginInit();
@@ -240,89 +241,6 @@
             tableLayoutPanelRight.Size = new Size(811, 757);
             tableLayoutPanelRight.TabIndex = 25;
             // 
-            // tableLayoutPanelManagement
-            // 
-            tableLayoutPanelManagement.ColumnCount = 2;
-            tableLayoutPanelManagement.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
-            tableLayoutPanelManagement.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
-            tableLayoutPanelManagement.Controls.Add(panel3, 0, 0);
-            tableLayoutPanelManagement.Controls.Add(panel4, 1, 0);
-            tableLayoutPanelManagement.AutoSize = true;
-            tableLayoutPanelManagement.AutoSizeMode = AutoSizeMode.GrowAndShrink;
-            tableLayoutPanelManagement.Dock = DockStyle.Fill;
-            tableLayoutPanelManagement.Location = new Point(3, 38);
-            tableLayoutPanelManagement.Name = "tableLayoutPanelManagement";
-            tableLayoutPanelManagement.RowCount = 1;
-            // The options take the height they need; the history list below gets the rest.
-            tableLayoutPanelManagement.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-            tableLayoutPanelManagement.Size = new Size(805, 355);
-            tableLayoutPanelManagement.TabIndex = 11;
-            // 
-            // panel3
-            // 
-            // Three groups that wrap as a whole: the actions line on its own row, then the
-            // checkboxes column and the number fields side by side (stacked when narrow).
-            flowActions.AutoSize = true;
-            flowActions.AutoSizeMode = AutoSizeMode.GrowAndShrink;
-            flowActions.WrapContents = false;
-            flowActions.Margin = new Padding(0);
-            flowActions.Controls.Add(buttonContinue);
-            flowActions.Controls.Add(checkBoxSaveSnapshot);
-            checkBoxSaveSnapshot.Anchor = AnchorStyles.Left;
-            checkBoxSaveSnapshot.Margin = new Padding(9, 3, 3, 3);
-
-            flowChecks.AutoSize = true;
-            flowChecks.AutoSizeMode = AutoSizeMode.GrowAndShrink;
-            flowChecks.FlowDirection = FlowDirection.TopDown;
-            flowChecks.WrapContents = false;
-            flowChecks.Margin = new Padding(0, 0, 12, 0);
-            flowChecks.Controls.Add(checkBoxOnlyChanges);
-            flowChecks.Controls.Add(checkBoxShowOnlyMiplayerChange);
-            flowChecks.Controls.Add(checkBoxRound);
-            flowChecks.Controls.Add(checkBoxShowOnlyCount);
-
-            tableNumbers.AutoSize = true;
-            tableNumbers.AutoSizeMode = AutoSizeMode.GrowAndShrink;
-            tableNumbers.ColumnCount = 2;
-            tableNumbers.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
-            tableNumbers.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
-            tableNumbers.RowCount = 4;
-            for (int r = 0; r < 4; r++)
-                tableNumbers.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-            tableNumbers.Margin = new Padding(0);
-            tableNumbers.Controls.Add(labelValueOfChange, 0, 0);
-            tableNumbers.Controls.Add(textBoxMinValueOfChange, 1, 0);
-            tableNumbers.Controls.Add(labelPress, 0, 1);
-            tableNumbers.Controls.Add(textBoxRefPress, 1, 1);
-            tableNumbers.Controls.Add(labelMinCount, 0, 2);
-            tableNumbers.Controls.Add(textBoxMinCount, 1, 2);
-            tableNumbers.Controls.Add(labelMaxBenzDiff, 0, 3);
-            tableNumbers.Controls.Add(textBoxMaxBenzDiff, 1, 3);
-            foreach (var label in new[] { labelValueOfChange, labelPress, labelMinCount, labelMaxBenzDiff })
-            {
-                label.Anchor = AnchorStyles.Left;
-                label.Margin = new Padding(3);
-            }
-            foreach (var box in new[] { textBoxMinValueOfChange, textBoxRefPress, textBoxMinCount, textBoxMaxBenzDiff })
-            {
-                box.RightToLeft = RightToLeft.No;
-                box.TextAlign = HorizontalAlignment.Right;
-                box.Size = new Size(55, 23);
-            }
-
-            panel3.Controls.Add(flowActions);
-            panel3.SetFlowBreak(flowActions, true);
-            panel3.Controls.Add(flowChecks);
-            panel3.Controls.Add(tableNumbers);
-            panel3.AutoSize = true;
-            panel3.AutoSizeMode = AutoSizeMode.GrowAndShrink;
-            panel3.AutoScroll = true;
-            panel3.Dock = DockStyle.Fill;
-            panel3.Location = new Point(3, 180);
-            panel3.Name = "panel3";
-            panel3.Size = new Size(396, 172);
-            panel3.TabIndex = 9;
-            // 
             // checkBoxShowOnlyCount
             // 
             checkBoxShowOnlyCount.AutoSize = true;
@@ -381,23 +299,6 @@
             labelValueOfChange.Size = new Size(127, 16);
             labelValueOfChange.TabIndex = 23;
             labelValueOfChange.Text = "Min Valid % of change";
-            // 
-            // panel4
-            // 
-            panel4.Controls.Add(checkBoxPressureCorrection);
-            panel4.Controls.Add(checkBoxInterpolationWeights);
-            panel4.Controls.Add(checkBoxTrimDelay);
-            panel4.Controls.Add(buttonExport);
-            panel4.AutoSize = true;
-            panel4.AutoSizeMode = AutoSizeMode.GrowAndShrink;
-            panel4.AutoScroll = true;
-            panel4.FlowDirection = FlowDirection.TopDown;
-            panel4.WrapContents = false;
-            panel4.Dock = DockStyle.Fill;
-            panel4.Location = new Point(405, 180);
-            panel4.Name = "panel4";
-            panel4.Size = new Size(397, 172);
-            panel4.TabIndex = 10;
             // 
             // buttonExport
             // 
@@ -502,6 +403,110 @@
             DataGridViewInvalidData.Name = "DataGridViewInvalidData";
             DataGridViewInvalidData.Size = new Size(584, 137);
             DataGridViewInvalidData.TabIndex = 19;
+            //
+            // Options layout: actions on top, then "Prediction options" (everything that changes the
+            // predicted map and its accuracy) beside "Show" (display only). The two boxes wrap below each
+            // other when the panel is narrow.
+            //
+            flowActions.AutoSize = true;
+            flowActions.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+            flowActions.WrapContents = true;
+            flowActions.Dock = DockStyle.Fill;
+            flowActions.Margin = new Padding(0, 0, 0, 3);
+            flowActions.Controls.Add(buttonContinue);
+            flowActions.Controls.Add(checkBoxSaveSnapshot);
+            flowActions.Controls.Add(buttonExport);
+            buttonContinue.Font = new Font(buttonContinue.Font, FontStyle.Bold);
+            buttonContinue.Size = new Size(90, 27);
+            checkBoxSaveSnapshot.Anchor = AnchorStyles.Left;
+            checkBoxSaveSnapshot.Margin = new Padding(12, 3, 12, 3);
+            buttonExport.Anchor = AnchorStyles.Left;
+
+            tableNumbers.AutoSize = true;
+            tableNumbers.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+            tableNumbers.Dock = DockStyle.Fill;
+            tableNumbers.ColumnCount = 2;
+            tableNumbers.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+            tableNumbers.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+            tableNumbers.RowCount = 8;
+            for (int r = 0; r < 8; r++)
+                tableNumbers.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            tableNumbers.Margin = new Padding(0);
+            tableNumbers.Controls.Add(checkBoxPressureCorrection, 0, 0);
+            tableNumbers.SetColumnSpan(checkBoxPressureCorrection, 2);
+            tableNumbers.Controls.Add(labelPress, 0, 1);
+            tableNumbers.Controls.Add(textBoxRefPress, 1, 1);
+            tableNumbers.Controls.Add(checkBoxInterpolationWeights, 0, 2);
+            tableNumbers.SetColumnSpan(checkBoxInterpolationWeights, 2);
+            tableNumbers.Controls.Add(checkBoxTrimDelay, 0, 3);
+            tableNumbers.SetColumnSpan(checkBoxTrimDelay, 2);
+            tableNumbers.Controls.Add(checkBoxRound, 0, 4);
+            tableNumbers.SetColumnSpan(checkBoxRound, 2);
+            tableNumbers.Controls.Add(labelValueOfChange, 0, 5);
+            tableNumbers.Controls.Add(textBoxMinValueOfChange, 1, 5);
+            tableNumbers.Controls.Add(labelMinCount, 0, 6);
+            tableNumbers.Controls.Add(textBoxMinCount, 1, 6);
+            tableNumbers.Controls.Add(labelMaxBenzDiff, 0, 7);
+            tableNumbers.Controls.Add(textBoxMaxBenzDiff, 1, 7);
+            foreach (var check in new[] { checkBoxPressureCorrection, checkBoxInterpolationWeights, checkBoxTrimDelay, checkBoxRound })
+                check.Margin = new Padding(3);
+            labelPress.Text = "Reference Press (bar)";
+            foreach (var label in new[] { labelValueOfChange, labelPress, labelMinCount, labelMaxBenzDiff })
+            {
+                label.Anchor = AnchorStyles.Left;
+                label.Margin = new Padding(3);
+            }
+            labelPress.Margin = new Padding(21, 3, 3, 3); // indented under its checkbox
+            foreach (var box in new[] { textBoxMinValueOfChange, textBoxRefPress, textBoxMinCount, textBoxMaxBenzDiff })
+            {
+                box.RightToLeft = RightToLeft.No;
+                box.TextAlign = HorizontalAlignment.Right;
+                box.Size = new Size(55, 23);
+                box.Anchor = AnchorStyles.Left;
+            }
+
+            groupPrediction.Text = "Prediction options";
+            groupPrediction.AutoSize = true;
+            groupPrediction.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+            groupPrediction.Padding = new Padding(6, 3, 6, 6);
+            groupPrediction.Controls.Add(tableNumbers);
+
+            checkBoxShowOnlyMiplayerChange.Text = "Show Only Multiplier Change";
+            flowDisplay.AutoSize = true;
+            flowDisplay.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+            flowDisplay.Dock = DockStyle.Fill;
+            flowDisplay.FlowDirection = FlowDirection.TopDown;
+            flowDisplay.WrapContents = false;
+            flowDisplay.Controls.Add(checkBoxOnlyChanges);
+            flowDisplay.Controls.Add(checkBoxShowOnlyMiplayerChange);
+            flowDisplay.Controls.Add(checkBoxShowOnlyCount);
+
+            groupDisplay.Text = "Show";
+            groupDisplay.AutoSize = true;
+            groupDisplay.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+            groupDisplay.Padding = new Padding(6, 3, 6, 6);
+            groupDisplay.Controls.Add(flowDisplay);
+
+            flowGroups.AutoSize = true;
+            flowGroups.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+            flowGroups.Dock = DockStyle.Fill;
+            flowGroups.Margin = new Padding(0);
+            flowGroups.Controls.Add(groupPrediction);
+            flowGroups.Controls.Add(groupDisplay);
+
+            tableLayoutPanelManagement.ColumnCount = 1;
+            tableLayoutPanelManagement.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            tableLayoutPanelManagement.RowCount = 2;
+            // The options take the height they need; the accuracy and the history list below get the rest.
+            tableLayoutPanelManagement.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            tableLayoutPanelManagement.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            tableLayoutPanelManagement.Controls.Add(flowActions, 0, 0);
+            tableLayoutPanelManagement.Controls.Add(flowGroups, 0, 1);
+            tableLayoutPanelManagement.AutoSize = true;
+            tableLayoutPanelManagement.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+            tableLayoutPanelManagement.Dock = DockStyle.Fill;
+            tableLayoutPanelManagement.Name = "tableLayoutPanelManagement";
+            tableLayoutPanelManagement.TabIndex = 11;
             // 
             // PredictionControl
             // 
@@ -513,10 +518,10 @@
             tableLayoutPanelRight.ResumeLayout(false);
             tableLayoutPanelManagement.ResumeLayout(false);
             tableLayoutPanelManagement.PerformLayout();
-            panel3.ResumeLayout(false);
-            panel3.PerformLayout();
-            panel4.ResumeLayout(false);
-            panel4.PerformLayout();
+            groupPrediction.ResumeLayout(false);
+            groupPrediction.PerformLayout();
+            groupDisplay.ResumeLayout(false);
+            groupDisplay.PerformLayout();
             tableLayoutPanelTopLine.ResumeLayout(false);
             tableLayoutPanelTopLine.PerformLayout();
             tableLayoutPanelLeft.ResumeLayout(false);
@@ -547,10 +552,11 @@
         private HistoryControl historyControl1;
         private TableLayoutPanel tableLayoutPanelRight;
         private TableLayoutPanel tableLayoutPanelManagement;
-        private FlowLayoutPanel panel3;
-        private FlowLayoutPanel panel4;
         private FlowLayoutPanel flowActions;
-        private FlowLayoutPanel flowChecks;
+        private FlowLayoutPanel flowDisplay;
+        private FlowLayoutPanel flowGroups;
+        private GroupBox groupPrediction;
+        private GroupBox groupDisplay;
         private TableLayoutPanel tableNumbers;
         private Label labelMinCount;
         private Label labelPress;
