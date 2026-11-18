@@ -106,7 +106,7 @@ High-Load Cells, Use History, Always Apply Negative Trim, Map Regression.
   (GAS2/BENZ2 ÷ GAS1/BENZ1 should go ~1.000 → ~0.980 if the unit is %). Optional: a file with different values per rpm
   to see whether the ECU uses the 12 values separately.
 - Try the restructured Data tab in the running app (tree, Download, check screen, analysis of v2.92 + v2.93, Export .ml8),
-  then commit (everything since ecaaff9 is uncommitted, incl. the migrated database).
+  (committed untried in 85bd554 at the user's request, with the migrated database).
 
 1. **User's decision (2026-11-17):** reducer table → **`-8,-3,-1,1,0,0,0,0,0`** (≤20 back by 1), LPG table
    unchanged, and deploy a new fuel map predicted from all 9 Capture2 logs.
