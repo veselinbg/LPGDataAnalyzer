@@ -14,7 +14,7 @@ namespace LPGDbAnalyzer.Forms
 
     /// <summary>
     /// Tabs over the whole window, as in LPGDataAnalyzer. The first tab, "Data", holds the database tree
-    /// (Car -> Fuel table -> Log files, with checkboxes) and the selected item's details: its fields,
+    /// (Car -> .ml8 configuration (or a fuel table from a screenshot) -> Log files, with checkboxes) and the selected item's details: its fields,
     /// the fuel table (coloured) and the screenshot. "Analyze checked" loads the checked logs:
     /// logs of one fuel table enable the analysis tabs (the screens of LPG.Core), logs of two fuel
     /// tables enable "Compare". Tabs without loaded data are disabled.
@@ -23,6 +23,7 @@ namespace LPGDbAnalyzer.Forms
     {
         private const string CarIcon = "car";
         private const string TableIcon = "table";
+        private const string ConfigIcon = "config";
         private const string LogIcon = "log";
 
         private readonly Database _database;
@@ -40,6 +41,8 @@ namespace LPGDbAnalyzer.Forms
         private readonly ToolStripButton _editButton;
         private readonly ToolStripButton _deleteButton;
         private readonly ToolStripButton _deleteImageButton;
+        private readonly ToolStripButton _downloadButton;
+        private readonly ToolStripMenuItem _downloadMenu;
         private readonly ToolStripMenuItem _editMenu;
         private readonly ToolStripMenuItem _deleteMenu;
         private readonly ToolStripMenuItem _deleteImageMenu;
@@ -97,6 +100,7 @@ namespace LPGDbAnalyzer.Forms
 
             _icons.Images.Add(CarIcon, Stock(StockIconId.Folder));
             _icons.Images.Add(TableIcon, Stock(StockIconId.ImageFiles));
+            _icons.Images.Add(ConfigIcon, Stock(StockIconId.DocumentWithAssociation));
             _icons.Images.Add(LogIcon, Stock(StockIconId.DocumentNoAssociation));
             _tree.ImageList = _icons;
             _tree.CheckBoxes = true;
@@ -105,11 +109,13 @@ namespace LPGDbAnalyzer.Forms
             // ---- Toolbar and context menu ----
             var toolbar = new ToolStrip { ImageScalingSize = new Size(16, 16) };
             toolbar.Items.Add(Button("Import logs...", StockIconId.FolderOpen, (_, _) => OpenImport()));
+            toolbar.Items.Add(Button("Import .ml8...", StockIconId.DocumentWithAssociation, (_, _) => ImportConfig()));
             toolbar.Items.Add(Button("New car...", StockIconId.Folder, (_, _) => NewCar()));
             toolbar.Items.Add(new ToolStripSeparator());
             toolbar.Items.Add(_editButton = Button("Edit...", StockIconId.Rename, (_, _) => EditSelected()));
             toolbar.Items.Add(_deleteButton = Button("Delete", StockIconId.Delete, (_, _) => DeleteSelected()));
             toolbar.Items.Add(_deleteImageButton = Button("Delete image", StockIconId.Recycler, (_, _) => DeleteImage()));
+            toolbar.Items.Add(_downloadButton = Button("Download...", StockIconId.DriveFixed, (_, _) => DownloadSelected()));
             toolbar.Items.Add(new ToolStripSeparator());
             toolbar.Items.Add(Button("Refresh", StockIconId.Stack, (_, _) => LoadTree()));
             toolbar.Items.Add(new ToolStripSeparator());
@@ -131,8 +137,10 @@ namespace LPGDbAnalyzer.Forms
             menu.Items.Add(_editMenu = MenuItem("Edit...", StockIconId.Rename, (_, _) => EditSelected()));
             menu.Items.Add(_deleteMenu = MenuItem("Delete", StockIconId.Delete, (_, _) => DeleteSelected()));
             menu.Items.Add(_deleteImageMenu = MenuItem("Delete image", StockIconId.Recycler, (_, _) => DeleteImage()));
+            menu.Items.Add(_downloadMenu = MenuItem("Download...", StockIconId.DriveFixed, (_, _) => DownloadSelected()));
             menu.Items.Add(new ToolStripSeparator());
             menu.Items.Add(MenuItem("Import logs here...", StockIconId.FolderOpen, (_, _) => OpenImport()));
+            menu.Items.Add(MenuItem("Import .ml8 configuration...", StockIconId.DocumentWithAssociation, (_, _) => ImportConfig()));
             _tree.ContextMenuStrip = menu;
 
             // Right click selects the node first, so the menu acts on it.
@@ -335,7 +343,7 @@ namespace LPGDbAnalyzer.Forms
 
                 foreach (var table in _database.GetFuelTables(car.Id))
                 {
-                    var tableNode = AddNode(carNode.Nodes, table.ToString(), table, TableIcon);
+                    var tableNode = AddNode(carNode.Nodes, table.ToString(), table, table.HasConfig ? ConfigIcon : TableIcon);
 
                     foreach (var log in _database.GetLogFiles(table.Id))
                         AddNode(tableNode.Nodes, log.ToString(), log, LogIcon).Checked = checkedLogs.Contains(log.Id);
@@ -393,6 +401,7 @@ namespace LPGDbAnalyzer.Forms
             _editButton.Enabled = _editMenu.Enabled = item is Car or FuelTable or LogFile;
             _deleteButton.Enabled = _deleteMenu.Enabled = item is not null;
             _deleteImageButton.Enabled = _deleteImageMenu.Enabled = item is FuelTable { HasImage: true };
+            _downloadButton.Enabled = _downloadMenu.Enabled = item is FuelTable { HasConfig: true } or FuelTable { HasImage: true } or LogFile { HasContent: true };
 
             var fields = item switch
             {
@@ -446,8 +455,10 @@ namespace LPGDbAnalyzer.Forms
                 ("Injection", $"{Num(t.InjectionAxis.FirstOrDefault())} - {Num(t.InjectionAxis.LastOrDefault())} ms"),
                 ("Values", all.Length > 0 ? $"{Num(all.Min())} - {Num(all.Max())}, average {all.Average():0.0}" : ""),
                 ("Logs", t.LogCount.ToString()),
-                ("Stored predictions", t.PredictionCount.ToString()),
                 ("Image", t.HasImage ? t.ImageFileName ?? "yes" : "none"),
+                ("Configuration", t.HasConfig ? $"{t.ConfigFileName}, saved {t.ConfigSavedAt:yyyy-MM-dd HH:mm}" : "none"),
+                ("Config LPG temp", t.ConfigGasTempCoef is null ? "" : string.Join(", ", t.ConfigGasTempCoef)),
+                ("Config reducer temp", t.ConfigReducerTempCoef is null ? "" : string.Join(", ", t.ConfigReducerTempCoef)),
                 ("Notes", t.Notes ?? ""),
             ];
         }
@@ -460,6 +471,7 @@ namespace LPGDbAnalyzer.Forms
                 ("Recorded", l.RecordedAt.ToString("yyyy-MM-dd HH:mm:ss")),
                 ("Imported", l.ImportedAt.ToString("yyyy-MM-dd HH:mm:ss")),
                 ("Rows", l.RowCount.ToString()),
+                ("Original file", l.HasContent ? "stored (Download...)" : "not stored (imported before it was kept)"),
                 ("SHA-256", l.FileHash),
             ];
 
@@ -623,10 +635,15 @@ namespace LPGDbAnalyzer.Forms
             }
             else
             {
+                // Configurations with the same map (e.g. only a temperature table changed) are analyzed as one map:
+                // the frame is the newest of them, each log keeps its own temperature tables.
                 groups = nodes
-                    .GroupBy(n => n.Parent!)
-                    .Select(g => (Table: (FuelTable)g.Key.Tag!, Car: (Car)g.Key.Parent!.Tag!,
-                                  Logs: g.Select(n => (LogFile)n.Tag!).ToList()))
+                    .GroupBy(n => MapKey((FuelTable)n.Parent!.Tag!))
+                    .Select(g =>
+                    {
+                        var table = g.Select(n => (FuelTable)n.Parent!.Tag!).OrderBy(t => t.CreatedAt).ThenBy(t => t.Id).Last();
+                        return (Table: table, Car: (Car)g.First().Parent!.Parent!.Tag!, Logs: g.Select(n => (LogFile)n.Tag!).ToList());
+                    })
                     .OrderBy(g => g.Table.CreatedAt)
                     .ToList();
 
@@ -635,7 +652,7 @@ namespace LPGDbAnalyzer.Forms
                     MessageBox.Show(this,
                         groups.Count == 0
                             ? "Check the logs to analyze first (checking a fuel table checks all its logs)."
-                            : $"Logs of {groups.Count} fuel tables are checked. Check the logs of one fuel table to analyze it, or of two " +
+                            : $"Logs of {groups.Count} different fuel maps are checked. Check the logs of one map to analyze it, or of two " +
                               "to compare them, or use \"Analyze together\" to analyze them all as one.",
                         "Analyze", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return;
@@ -663,7 +680,7 @@ namespace LPGDbAnalyzer.Forms
                         return (d, n);
                     });
 
-                    int tableCount = g.Logs.Select(l => l.FuelTableId).Distinct().Count();
+                    int tableCount = g.Logs.Select(l => MapKey(tables[l.FuelTableId])).Distinct().Count();
                     loaded.Add(new Loaded(g.Table, g.Car, data, g.Logs, normalized, tableCount));
                 }
 
@@ -690,12 +707,17 @@ namespace LPGDbAnalyzer.Forms
             }
         }
 
+        /// <summary>Same key = same map (axes and values), whatever the configuration's temperature tables.</summary>
+        private static string MapKey(FuelTable t) =>
+            string.Join(";", t.RpmAxis) + "|" + string.Join(";", t.InjectionAxis) + "|" +
+            string.Join("/", t.Values.Select(r => string.Join(";", r)));
+
         private static EcuSetup Setup(FuelTable table, LogFile log) =>
             new(table.RpmAxis, table.InjectionAxis, table.Values, log.GasTempCoef, log.ReducerTempCoef);
 
         /// <summary>Checked logs loaded for analysis, with their trims brought to <see cref="Table"/> and the newest log's temperature tables.</summary>
         /// <param name="NormalizedLogs">Logs whose trims were changed (other temperature tables or another map).</param>
-        /// <param name="TableCount">Fuel tables the logs were recorded with (more than 1 with "Analyze together").</param>
+        /// <param name="TableCount">Different maps the logs were recorded with (more than 1 with "Analyze together").</param>
         private sealed record Loaded(FuelTable Table, Car Car, DataItem[] Data, List<LogFile> Logs, int NormalizedLogs, int TableCount)
         {
             public int LogCount => Logs.Count;
@@ -729,7 +751,7 @@ namespace LPGDbAnalyzer.Forms
 
             ShowPages(compare: false);
 
-            string tableNote = l.TableCount > 1 ? $" from {l.TableCount} fuel tables" : "";
+            string tableNote = l.TableCount > 1 ? $" from {l.TableCount} fuel maps" : "";
             UpdateSummary($"{l.Car.Name} / {l.Table.Name}, {l.LogCount} log(s){tableNote}{l.NormalizedNote}", l.Data);
         }
 
@@ -783,91 +805,14 @@ namespace LPGDbAnalyzer.Forms
             }
         }
 
-        // ---------------- Stored predictions ----------------
+        // ---------------- Prediction ----------------
 
-        /// <summary>
-        /// Feeds the prediction screen: the fuel table, the stored predictions of this car with the same
-        /// axes (listed, newest first).
-        /// Every new prediction is stored with its options and the checked logs.
-        /// </summary>
+        /// <summary>Feeds the prediction screen with the fuel table; a predicted map can be exported as a .ml8.</summary>
         private void LoadPrediction(Loaded l)
         {
-            List<Prediction> stored;
-            try
-            {
-                stored = _database.GetPredictions(l.Car.Id)
-                    .Where(p => p.RpmAxis.SequenceEqual(l.Table.RpmAxis) && p.InjectionAxis.SequenceEqual(l.Table.InjectionAxis))
-                    .ToList();
-            }
-            catch (Exception ex)
-            {
-                stored = [];
-                MessageBox.Show(this, ex.Message, "Stored predictions could not be read", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-            }
-
-            _prediction.SavePrediction = record =>
-            {
-                var p = new Prediction
-                {
-                    FuelTableId = l.Table.Id,
-                    CreatedAt = DateTime.Now,
-                    LogIds = l.Logs.Select(x => x.Id).ToArray(),
-                    ReadingCount = record.ReadingCount,
-                    Options = record.Options,
-                    RpmAxis = l.Table.RpmAxis,
-                    InjectionAxis = l.Table.InjectionAxis,
-                    BaseMap = ArrayConverter.ToJagged(record.BaseMap),
-                    NewMap = ArrayConverter.ToJagged(record.NewMap),
-                    Counts = ToJagged(record.Counts),
-                    FuelTableName = l.Table.Name,
-                    FuelTableCreatedAt = l.Table.CreatedAt,
-                };
-                _database.SavePrediction(p);
-                LoadTree(); // prediction count of the fuel table
-                return ToSnapshot(p);
-            };
-
-            _prediction.DeletePrediction = snapshot =>
-            {
-                try
-                {
-                    _database.DeletePrediction(snapshot.Id);
-                    LoadTree();
-                    return true;
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show(this, ex.Message, "Delete failed", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return false;
-                }
-            };
-
-            _prediction.LoadFuelTable(l.Data, l.Table.Values, l.Car.ReferencePressure, l.Car.TrimDelayMs,
-                stored.Select(ToSnapshot).ToList());
-        }
-
-        private static HistorySnapshot ToSnapshot(Prediction p) => new()
-        {
-            Id = p.Id,
-            Logs = [],
-            CellMap = p.BaseMap,
-            NewCellMap = p.NewMap,
-            Counts = p.Counts,
-            Created = p.CreatedAt,
-            Options = p.Options,
-            Title = $"{p.CreatedAt:yyyy-MM-dd HH:mm}  {p.FuelTableName}  ({p.LogIds.Length} log(s), {p.ReadingCount} readings)",
-        };
-
-        private static int[][] ToJagged(int[,] values)
-        {
-            var result = new int[values.GetLength(0)][];
-            for (int r = 0; r < result.Length; r++)
-            {
-                result[r] = new int[values.GetLength(1)];
-                for (int c = 0; c < result[r].Length; c++)
-                    result[r][c] = values[r, c];
-            }
-            return result;
+            // Written into a copy of the fuel table's stored .ml8 (Ml8Export explains when there is none).
+            _prediction.ExportPrediction = map => Ml8Export.Run(this, _database, l.Table, map);
+            _prediction.LoadFuelTable(l.Data, l.Table.Values, l.Car.ReferencePressure, l.Car.TrimDelayMs);
         }
 
         // ---------------- Commands ----------------
@@ -973,6 +918,77 @@ namespace LPGDbAnalyzer.Forms
             using var form = new ImportForm(_database, carId, tableId);
             form.ShowDialog(this);
             LoadTree();
+        }
+
+        /// <summary>Imports an AEB .ml8 configuration for the selected car (or the only car).</summary>
+        private void ImportConfig()
+        {
+            Car? car = null;
+            for (var n = _tree.SelectedNode; n is not null && car is null; n = n.Parent)
+                car = n.Tag as Car;
+
+            if (car is null)
+            {
+                var cars = _database.GetCars();
+                if (cars.Count != 1)
+                {
+                    MessageBox.Show(this, cars.Count == 0 ? "Add a car first." : "Select the car (or one of its fuel tables) in the tree first.",
+                        "Import .ml8", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+                car = cars[0];
+            }
+
+            if (Ml8Import.Run(this, _database, car) is not null)
+                LoadTree();
+        }
+
+        /// <summary>
+        /// Saves the stored original of the selected item: a configuration's .ml8 (or the screenshot of a table
+        /// without one) or a log's .txt.
+        /// </summary>
+        private void DownloadSelected()
+        {
+            byte[]? content;
+            string fileName, filter;
+
+            switch (_tree.SelectedNode?.Tag)
+            {
+                case FuelTable { HasConfig: true } t:
+                    content = _database.GetFuelTableConfig(t.Id);
+                    fileName = t.ConfigFileName!;
+                    filter = "AEB configuration (*.ml8)|*.ml8";
+                    break;
+                case FuelTable { HasImage: true } t:
+                    content = _database.GetFuelTableImage(t.Id);
+                    fileName = t.ImageFileName ?? t.Name + ".png";
+                    filter = "Image|*" + Path.GetExtension(fileName);
+                    break;
+                case LogFile { HasContent: true } l:
+                    content = _database.GetLogFileContent(l.Id);
+                    fileName = l.FileName;
+                    filter = "Log (*.txt)|*.txt";
+                    break;
+                default:
+                    return;
+            }
+
+            if (content is null)
+                return;
+
+            using var dialog = new SaveFileDialog { Title = "Download", FileName = fileName, Filter = filter + "|All files (*.*)|*.*", OverwritePrompt = true };
+            if (dialog.ShowDialog(this) != DialogResult.OK)
+                return;
+
+            try
+            {
+                File.WriteAllBytes(dialog.FileName, content);
+                _summary.Text = $"Saved {dialog.FileName}";
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                MessageBox.Show(this, ex.Message, "Download failed", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         private void NewCar()

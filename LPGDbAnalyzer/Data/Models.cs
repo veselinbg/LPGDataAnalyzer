@@ -80,14 +80,26 @@ namespace LPGDbAnalyzer.Data
         /// <summary>True when a screenshot is stored (filled by list queries; the image itself is loaded separately).</summary>
         public bool HasImage { get; set; }
 
+        /// <summary>
+        /// The AEB configuration file (.ml8) the table was read from or belongs to, as saved by the ECU software.
+        /// Set only when saving; list queries load the name, date and tables, not the bytes.
+        /// </summary>
+        public byte[]? ConfigFile { get; set; }
+        public string? ConfigFileName { get; set; }
+        /// <summary>When the .ml8 was saved (file time): its temperature tables were in the ECU from then on.</summary>
+        public DateTime? ConfigSavedAt { get; set; }
+        /// <summary>LPG and reducer temperature tables of the .ml8 (one value per Settings band), or null.</summary>
+        public int[]? ConfigGasTempCoef { get; set; }
+        public int[]? ConfigReducerTempCoef { get; set; }
+        public bool HasConfig => ConfigFileName is not null;
+
         /// <summary>Number of imported log files (filled by list queries).</summary>
         public int LogCount { get; set; }
 
-        /// <summary>Number of stored predictions made from this table (filled by list queries).</summary>
-        public int PredictionCount { get; set; }
 
-        public override string ToString() =>
-            $"{CreatedAt:yyyy-MM-dd} {Name} ({RpmAxis.Length}x{InjectionAxis.Length}, {LogCount} logs)";
+        public override string ToString() => HasConfig
+            ? $"{ConfigFileName} (saved {ConfigSavedAt:yyyy-MM-dd HH:mm}, {LogCount} logs)"
+            : $"{CreatedAt:yyyy-MM-dd} {Name} ({RpmAxis.Length}x{InjectionAxis.Length}, {LogCount} logs)";
     }
 
     /// <summary>
@@ -114,41 +126,15 @@ namespace LPGDbAnalyzer.Data
         /// <summary>Reducer temperature correction table in the ECU, one per band of Settings.ReductorTemperatureRanges.</summary>
         public int[] ReducerTempCoef { get; set; } = [];
 
+        /// <summary>The original file bytes; set only when importing (stored gzip, read with Database.GetLogFileContent).</summary>
+        public byte[]? Content { get; set; }
+
+        /// <summary>True when the original file is stored (filled by list queries).</summary>
+        public bool HasContent { get; set; }
+
         public override string ToString() => $"{RecordedAt:yyyy-MM-dd HH:mm} {FileName} ({RowCount} rows)";
     }
 
-    /// <summary>
-    /// A stored fuel map prediction: the fuel table it started from, the logs it used, every option,
-    /// and the result. Maps and counts are [rpm][injection], as LPG.Core's prediction works with them.
-    /// </summary>
-    public sealed class Prediction
-    {
-        public long Id { get; set; }
-        public long FuelTableId { get; set; }
-        public DateTime CreatedAt { get; set; } = DateTime.Now;
-
-        /// <summary>The logs (LogFile ids) the prediction was made from.</summary>
-        public long[] LogIds { get; set; } = [];
-
-        /// <summary>Readings (grouped samples) used.</summary>
-        public int ReadingCount { get; set; }
-
-        public PredictionOptions Options { get; set; } = new();
-
-        public double[] RpmAxis { get; set; } = [];
-        public double[] InjectionAxis { get; set; } = [];
-
-        /// <summary>The fuel table as it was in the prediction screen (it may have been edited there).</summary>
-        public double?[][] BaseMap { get; set; } = [];
-        public double?[][] NewMap { get; set; } = [];
-        public int[][] Counts { get; set; } = [];
-
-        public string? Notes { get; set; }
-
-        // Filled by queries.
-        public string FuelTableName { get; set; } = "";
-        public DateTime FuelTableCreatedAt { get; set; }
-    }
 
     /// <summary>
     /// One raw row of a log, all 22 columns as logged. Nothing is filtered or grouped on import,

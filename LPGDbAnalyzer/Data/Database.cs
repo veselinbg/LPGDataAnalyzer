@@ -1,6 +1,7 @@
 using LPGDataAnalyzer.Models;
 using Microsoft.Data.Sqlite;
 using System.Globalization;
+using System.IO.Compression;
 using System.Text.Json;
 
 namespace LPGDbAnalyzer.Data
@@ -15,8 +16,11 @@ namespace LPGDbAnalyzer.Data
         /// 1: Car, FuelTable, LogFile, LogRow.
         /// 2: LogFile.GasTempCoef / ReducerTempCoef (ECU temperature tables in use while the log was recorded).
         /// 3: Prediction (stored fuel map predictions with their options).
+        /// 4: FuelTable.ConfigFile / ConfigFileName / ConfigSavedAt / ConfigGasTempCoef / ConfigReducerTempCoef
+        ///    (the AEB .ml8 configuration of the table).
+        /// 5: LogFile.Content (the original log file, gzip); the Prediction table is dropped (stored predictions were removed).
         /// </summary>
-        private const int SchemaVersion = 3;
+        private const int SchemaVersion = 5;
 
         private readonly string _connectionString;
 
@@ -144,6 +148,25 @@ namespace LPGDbAnalyzer.Data
                     """, tx);
             }
 
+            if (version < 4)
+            {
+                Execute(c, """
+                    ALTER TABLE FuelTable ADD COLUMN ConfigFile BLOB;
+                    ALTER TABLE FuelTable ADD COLUMN ConfigFileName TEXT;
+                    ALTER TABLE FuelTable ADD COLUMN ConfigSavedAt TEXT;
+                    ALTER TABLE FuelTable ADD COLUMN ConfigGasTempCoef TEXT;     -- JSON int array
+                    ALTER TABLE FuelTable ADD COLUMN ConfigReducerTempCoef TEXT; -- JSON int array
+                    """, tx);
+            }
+
+            if (version < 5)
+            {
+                Execute(c, """
+                    ALTER TABLE LogFile ADD COLUMN Content BLOB;   -- the original .txt, gzip
+                    DROP TABLE IF EXISTS Prediction;
+                    """, tx);
+            }
+
             Execute(c, $"PRAGMA user_version = {SchemaVersion}", tx);
             tx.Commit();
         }
@@ -249,7 +272,7 @@ namespace LPGDbAnalyzer.Data
                        t.ImageFileName, t.Notes,
                        (SELECT COUNT(*) FROM LogFile l WHERE l.FuelTableId = t.Id) AS LogCount,
                        t.Image IS NOT NULL AS HasImage,
-                       (SELECT COUNT(*) FROM Prediction p WHERE p.FuelTableId = t.Id) AS PredictionCount
+                       t.ConfigFileName, t.ConfigSavedAt, t.ConfigGasTempCoef, t.ConfigReducerTempCoef
                 FROM FuelTable t
                 WHERE t.CarId = $CarId
                 ORDER BY t.CreatedAt DESC, t.Id DESC
@@ -274,11 +297,65 @@ namespace LPGDbAnalyzer.Data
                     Notes = NullableString(r, "Notes"),
                     LogCount = r.GetInt32(9),
                     HasImage = r.GetBoolean(10),
-                    PredictionCount = r.GetInt32(11),
+                    ConfigFileName = NullableString(r, "ConfigFileName"),
+                    ConfigSavedAt = NullableString(r, "ConfigSavedAt") is null ? null : ReadDate(r, "ConfigSavedAt"),
+                    ConfigGasTempCoef = NullableCoefficients(r, "ConfigGasTempCoef"),
+                    ConfigReducerTempCoef = NullableCoefficients(r, "ConfigReducerTempCoef"),
                 });
             }
 
             return list;
+        }
+
+        public byte[]? GetFuelTableConfig(long fuelTableId)
+        {
+            using var c = Open();
+            using var cmd = Command(c, "SELECT ConfigFile FROM FuelTable WHERE Id = $Id");
+            Add(cmd, "$Id", fuelTableId);
+            return cmd.ExecuteScalar() as byte[];
+        }
+
+        /// <summary>Stores (or replaces) the .ml8 configuration of an existing fuel table.</summary>
+        public void AttachConfig(long fuelTableId, byte[] file, string fileName, DateTime savedAt, int[] gas, int[] reducer)
+        {
+            using var c = Open();
+            using var cmd = Command(c, """
+                UPDATE FuelTable SET ConfigFile = $File, ConfigFileName = $Name, ConfigSavedAt = $SavedAt,
+                       ConfigGasTempCoef = $Gas, ConfigReducerTempCoef = $Reducer
+                WHERE Id = $Id
+                """);
+            Add(cmd, "$Id", fuelTableId);
+            Add(cmd, "$File", file);
+            Add(cmd, "$Name", fileName);
+            Add(cmd, "$SavedAt", WriteDate(savedAt));
+            Add(cmd, "$Gas", JsonSerializer.Serialize(ValidCoefficients(gas, Settings.GasTemperatureRanges.Length, "LPG")));
+            Add(cmd, "$Reducer", JsonSerializer.Serialize(ValidCoefficients(reducer, Settings.ReductorTemperatureRanges.Length, "reducer")));
+            cmd.ExecuteNonQuery();
+        }
+
+        /// <summary>The original log file as imported, or null for logs imported before schema version 5 without it.</summary>
+        public byte[]? GetLogFileContent(long logFileId)
+        {
+            using var c = Open();
+            using var cmd = Command(c, "SELECT Content FROM LogFile WHERE Id = $Id");
+            Add(cmd, "$Id", logFileId);
+            return cmd.ExecuteScalar() is byte[] packed ? Gunzip(packed) : null;
+        }
+
+        private static byte[] Gzip(byte[] data)
+        {
+            using var output = new MemoryStream();
+            using (var gzip = new GZipStream(output, CompressionLevel.SmallestSize))
+                gzip.Write(data);
+            return output.ToArray();
+        }
+
+        private static byte[] Gunzip(byte[] packed)
+        {
+            using var input = new GZipStream(new MemoryStream(packed), CompressionMode.Decompress);
+            using var output = new MemoryStream();
+            input.CopyTo(output);
+            return output.ToArray();
         }
 
         public byte[]? GetFuelTableImage(long fuelTableId)
@@ -291,11 +368,21 @@ namespace LPGDbAnalyzer.Data
 
         /// <summary>
         /// Inserts a new fuel table (Id 0) or updates an existing one. On update the image is
-        /// kept unless <see cref="FuelTable.Image"/> is set.
+        /// kept unless <see cref="FuelTable.Image"/> is set; the .ml8 configuration is stored only
+        /// when <see cref="FuelTable.ConfigFile"/> is set (see also <see cref="AttachConfig"/>).
         /// </summary>
         public void SaveFuelTable(FuelTable table)
         {
             Validate(table);
+            SaveFuelTableValues(table);
+
+            if (table.ConfigFile is not null && table.ConfigFileName is not null && table.ConfigSavedAt is DateTime savedAt &&
+                table.ConfigGasTempCoef is not null && table.ConfigReducerTempCoef is not null)
+                AttachConfig(table.Id, table.ConfigFile, table.ConfigFileName, savedAt, table.ConfigGasTempCoef, table.ConfigReducerTempCoef);
+        }
+
+        private void SaveFuelTableValues(FuelTable table)
+        {
 
             using var c = Open();
             using var cmd = Command(c, table.Id == 0
@@ -359,7 +446,8 @@ namespace LPGDbAnalyzer.Data
         {
             using var c = Open();
             using var cmd = Command(c, """
-                SELECT Id, FuelTableId, FileName, RecordedAt, ImportedAt, RowCount, FileHash, GasTempCoef, ReducerTempCoef
+                SELECT Id, FuelTableId, FileName, RecordedAt, ImportedAt, RowCount, FileHash, GasTempCoef, ReducerTempCoef,
+                       Content IS NOT NULL AS HasContent
                 FROM LogFile WHERE FuelTableId = $Id ORDER BY RecordedAt
                 """);
             Add(cmd, "$Id", fuelTableId);
@@ -380,6 +468,7 @@ namespace LPGDbAnalyzer.Data
                     FileHash = r.GetString(6),
                     GasTempCoef = ReadCoefficients(r, 7, DefaultGasCoefficients),
                     ReducerTempCoef = ReadCoefficients(r, 8, DefaultReducerCoefficients),
+                    HasContent = r.GetBoolean(9),
                 });
             }
 
@@ -464,6 +553,37 @@ namespace LPGDbAnalyzer.Data
             return list;
         }
 
+        /// <summary>
+        /// Save time and temperature tables of every .ml8 configuration of a car (for "same as previous":
+        /// the tables of a configuration were in the ECU from the moment it was saved).
+        /// </summary>
+        public List<(DateTime SavedAt, int[] Gas, int[] Reducer)> GetCarConfigCoefficients(long carId)
+        {
+            using var c = Open();
+            using var cmd = Command(c, """
+                SELECT ConfigSavedAt, ConfigGasTempCoef, ConfigReducerTempCoef
+                FROM FuelTable
+                WHERE CarId = $CarId AND ConfigSavedAt IS NOT NULL
+                  AND ConfigGasTempCoef IS NOT NULL AND ConfigReducerTempCoef IS NOT NULL
+                ORDER BY ConfigSavedAt
+                """);
+            Add(cmd, "$CarId", carId);
+
+            using var r = cmd.ExecuteReader();
+            var list = new List<(DateTime, int[], int[])>();
+            while (r.Read())
+                list.Add((ReadDate(r, "ConfigSavedAt"),
+                          ReadCoefficients(r, 1, DefaultGasCoefficients),
+                          ReadCoefficients(r, 2, DefaultReducerCoefficients)));
+            return list;
+        }
+
+        private static int[]? NullableCoefficients(SqliteDataReader r, string column)
+        {
+            int i = r.GetOrdinal(column);
+            return r.IsDBNull(i) ? null : JsonSerializer.Deserialize<int[]>(r.GetString(i));
+        }
+
         private static int[] ReadCoefficients(SqliteDataReader r, int ordinal, int[] fallback) =>
             r.IsDBNull(ordinal) ? fallback : JsonSerializer.Deserialize<int[]>(r.GetString(ordinal)) ?? fallback;
 
@@ -499,8 +619,8 @@ namespace LPGDbAnalyzer.Data
             using var tx = c.BeginTransaction();
 
             using (var cmd = Command(c, """
-                INSERT INTO LogFile (FuelTableId, FileName, RecordedAt, ImportedAt, RowCount, FileHash, GasTempCoef, ReducerTempCoef)
-                VALUES ($FuelTableId, $FileName, $RecordedAt, $ImportedAt, $RowCount, $FileHash, $GasTempCoef, $ReducerTempCoef)
+                INSERT INTO LogFile (FuelTableId, FileName, RecordedAt, ImportedAt, RowCount, FileHash, GasTempCoef, ReducerTempCoef, Content)
+                VALUES ($FuelTableId, $FileName, $RecordedAt, $ImportedAt, $RowCount, $FileHash, $GasTempCoef, $ReducerTempCoef, $Content)
                 RETURNING Id
                 """, tx))
             {
@@ -512,6 +632,7 @@ namespace LPGDbAnalyzer.Data
                 Add(cmd, "$FileHash", log.FileHash);
                 Add(cmd, "$GasTempCoef", JsonSerializer.Serialize(ValidCoefficients(log.GasTempCoef, Settings.GasTemperatureRanges.Length, "LPG")));
                 Add(cmd, "$ReducerTempCoef", JsonSerializer.Serialize(ValidCoefficients(log.ReducerTempCoef, Settings.ReductorTemperatureRanges.Length, "reducer")));
+                Add(cmd, "$Content", log.Content is null ? null : Gzip(log.Content));
                 log.Id = (long)cmd.ExecuteScalar()!;
                 log.RowCount = rows.Count;
             }
@@ -564,72 +685,6 @@ namespace LPGDbAnalyzer.Data
             tx.Commit();
         }
 
-        // ---------------- Predictions ----------------
-
-        public void SavePrediction(Prediction p)
-        {
-            using var c = Open();
-            using var cmd = Command(c, """
-                INSERT INTO Prediction (FuelTableId, CreatedAt, LogIds, ReadingCount, Options, RpmAxis, InjectionAxis, BaseMap, NewMap, Counts, Notes)
-                VALUES ($FuelTableId, $CreatedAt, $LogIds, $ReadingCount, $Options, $RpmAxis, $InjectionAxis, $BaseMap, $NewMap, $Counts, $Notes);
-                SELECT last_insert_rowid();
-                """);
-            Add(cmd, "$FuelTableId", p.FuelTableId);
-            Add(cmd, "$CreatedAt", WriteDate(p.CreatedAt));
-            Add(cmd, "$LogIds", JsonSerializer.Serialize(p.LogIds));
-            Add(cmd, "$ReadingCount", p.ReadingCount);
-            Add(cmd, "$Options", JsonSerializer.Serialize(p.Options));
-            Add(cmd, "$RpmAxis", JsonSerializer.Serialize(p.RpmAxis));
-            Add(cmd, "$InjectionAxis", JsonSerializer.Serialize(p.InjectionAxis));
-            Add(cmd, "$BaseMap", JsonSerializer.Serialize(p.BaseMap));
-            Add(cmd, "$NewMap", JsonSerializer.Serialize(p.NewMap));
-            Add(cmd, "$Counts", JsonSerializer.Serialize(p.Counts));
-            Add(cmd, "$Notes", p.Notes);
-            p.Id = (long)cmd.ExecuteScalar()!;
-        }
-
-        /// <summary>Stored predictions of all fuel tables of a car, newest first.</summary>
-        public List<Prediction> GetPredictions(long carId)
-        {
-            using var c = Open();
-            using var cmd = Command(c, """
-                SELECT p.Id, p.FuelTableId, p.CreatedAt, p.LogIds, p.ReadingCount, p.Options, p.RpmAxis, p.InjectionAxis,
-                       p.BaseMap, p.NewMap, p.Counts, p.Notes, t.Name AS FuelTableName, t.CreatedAt AS FuelTableCreatedAt
-                FROM Prediction p
-                JOIN FuelTable t ON t.Id = p.FuelTableId
-                WHERE t.CarId = $CarId
-                ORDER BY p.CreatedAt DESC, p.Id DESC
-                """);
-            Add(cmd, "$CarId", carId);
-
-            using var r = cmd.ExecuteReader();
-            var list = new List<Prediction>();
-
-            while (r.Read())
-            {
-                list.Add(new Prediction
-                {
-                    Id = r.GetInt64(0),
-                    FuelTableId = r.GetInt64(1),
-                    CreatedAt = ReadDate(r, "CreatedAt"),
-                    LogIds = JsonSerializer.Deserialize<long[]>(r.GetString(3)) ?? [],
-                    ReadingCount = r.GetInt32(4),
-                    Options = JsonSerializer.Deserialize<PredictionOptions>(r.GetString(5)) ?? new(),
-                    RpmAxis = JsonSerializer.Deserialize<double[]>(r.GetString(6)) ?? [],
-                    InjectionAxis = JsonSerializer.Deserialize<double[]>(r.GetString(7)) ?? [],
-                    BaseMap = JsonSerializer.Deserialize<double?[][]>(r.GetString(8)) ?? [],
-                    NewMap = JsonSerializer.Deserialize<double?[][]>(r.GetString(9)) ?? [],
-                    Counts = JsonSerializer.Deserialize<int[][]>(r.GetString(10)) ?? [],
-                    Notes = NullableString(r, "Notes"),
-                    FuelTableName = r.GetString(12),
-                    FuelTableCreatedAt = ReadDate(r, "FuelTableCreatedAt"),
-                });
-            }
-
-            return list;
-        }
-
-        public void DeletePrediction(long predictionId) => Delete("DELETE FROM Prediction WHERE Id = $Id", predictionId);
 
         // ---------------- Delete ----------------
         // Foreign keys cascade: a car takes its fuel tables, a fuel table its logs, a log its rows.

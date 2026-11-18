@@ -6,7 +6,8 @@ On 2026-11-14 it reproduced the app exactly (4.75 % before the filter, per-file 
 
     python tools/analysis/map_prediction.py            # score with the app's settings
 
-Environment: LPG_DB = database file (default: LPGDbAnalyzer/Data/lpg.db), LPG_TABLE = fuel table id (default 1).
+Environment: LPG_DB = database file (default: LPGDbAnalyzer/Data/lpg.db), LPG_TABLE = fuel table id (default 1);
+the logs of every fuel table (.ml8 configuration) of the car with the same map are used, as "Analyze checked" does.
 Like the app, load_all() brings every log's FAST trims to the newest log's temperature tables (TrimNormalizer,
 temperature part only: all logs of one fuel table share the map). load_all(normalize_tables=False) skips that.
 Keep it in step with the C# code when the algorithm changes.
@@ -250,7 +251,10 @@ def normalize(items, rec_g, rec_r, tgt_g, tgt_r):
 def logs():
     """(id, file name, gas table, reducer table) of the fuel table's logs in recording order."""
     return [(i, n, json.loads(g), json.loads(r)) for i, n, g, r in con.execute(
-        'select Id, FileName, GasTempCoef, ReducerTempCoef from LogFile where FuelTableId=? order by RecordedAt, Id', (TABLE,))]
+        '''select l.Id, l.FileName, l.GasTempCoef, l.ReducerTempCoef from LogFile l join FuelTable t on t.Id = l.FuelTableId
+           join FuelTable s on s.Id = ? and s.CarId = t.CarId and s.RpmAxis = t.RpmAxis and s.InjectionAxis = t.InjectionAxis
+                and s.CellValues = t.CellValues
+           order by l.RecordedAt, l.Id''', (TABLE,))]
 
 
 def load_all(delay_ms=850, normalize_tables=True, only=None, target=None):

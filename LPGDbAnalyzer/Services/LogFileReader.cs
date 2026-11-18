@@ -37,6 +37,7 @@ namespace LPGDbAnalyzer.Services
                 FileName = Path.GetFileName(path),
                 RecordedAt = ReadRecordedAt(lines.FirstOrDefault(), path),
                 FileHash = Hash(path),
+                Content = File.ReadAllBytes(path),
             };
 
             int lpgRows = rows.Count(r => r.Rpm > 0 && r.Gas1 > 0);

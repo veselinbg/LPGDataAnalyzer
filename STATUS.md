@@ -96,6 +96,18 @@ High-Load Cells, Use History, Always Apply Negative Trim, Map Regression.
 
 ## Next steps
 
+**To do next session (2026-11-19, user checks in AEB / the app):**
+- **4 ms extra-injection field:** in AEB, change the "extra injection time" (now 4 ms) to e.g. 3.5 ms, save as a test file
+  (don't write to the ECU), and note whether the "extra injection sensitivity" check/slider is on. Diff the decoded file
+  to confirm the key is `TempoMaxExtraInjBenz`. Then choose one of the four options in BACKLOG "Gas time step at 4 ms"
+  (gas time is ~0.39 ms shorter below 4.00 ms petrol time; trims +0.8 just below, −0.8 just above).
+- **Bank 2:** the test file `baracuda v2.94test.ml8` (v2.94 with "Fuel trim bank 2" = −2) was deleted at the user's
+  request; recreate it in AEB if needed. Decide: petrol reference log first, or a −2 config and one gas log
+  (GAS2/BENZ2 ÷ GAS1/BENZ1 should go ~1.000 → ~0.980 if the unit is %). Optional: a file with different values per rpm
+  to see whether the ECU uses the 12 values separately.
+- Try the restructured Data tab in the running app (tree, Download, check screen, analysis of v2.92 + v2.93, Export .ml8),
+  then commit (everything since ecaaff9 is uncommitted, incl. the migrated database).
+
 1. **User's decision (2026-11-17):** reducer table → **`-8,-3,-1,1,0,0,0,0,0`** (≤20 back by 1), LPG table
    unchanged, and deploy a new fuel map predicted from all 9 Capture2 logs.
 2. **New map to load (2026-11-17)**, `map_prediction.py` with the app defaults (gain 0.8, **Min Count 1**),
@@ -160,6 +172,30 @@ High-Load Cells, Use History, Always Apply Negative Trim, Map Regression.
 - The GAS check of which map the ECU used was inconclusive: too few rows where the maps differ by ≥ 3 %.
 - Next: collect more new-map logs. Then measure the trim response to a map change, i.e. the slope above. It
   matters for "Analyze together", whose map normalization assumes a slope of 1.
+
+## AEB configuration files (2026-11-18)
+
+- Saves in `Documents\MultipointInj\ConfigLPG`: v2.91 (4.10 11:56), v2.92 (4.10 17:33) = Capture2, v2.93 (14.11) = Capture2
+  with reducer −9, v2.94 (17.11 16:19) = fuel table 2 with reducer −8. The OCR'd maps are exact.
+- **October temperature tables confirmed** from v2.91/v2.92: LPG `-7,-5,-4,-2,0,2,3,4,5`, reducer `-7,-4,-1,0,0,0,0,0,0`
+  (as assumed).
+- v2.91 is a different map (49 cells). A GAS fit says **04.10g2 (13:59) was most likely recorded with v2.91**, not Capture2
+  (scatter 3.32 % vs 3.45 %; 04.10g1 undecided; every other log matches its table). The user chose to leave it as it is for now.
+- The AEB software opened an edited .ml8 (map all 100, both temperature tables changed) correctly: writing .ml8 works.
+- Built: import of .ml8 into LPGDbAnalyzer and "Export .ml8..." of a predicted map (see CLAUDE.md). The Ml8Tool folder and the
+  test file were deleted at the user's request.
+- **Data tab restructured (2026-11-18, user's request):** tree = car → .ml8 → logs; the original logs are stored (download);
+  stored predictions, the history list, "Save to database" and "Export Selected Cells" removed (the 7 stored predictions of
+  14.11 were dropped). Database migrated (backup taken before): fuel table 1 = **v2.92** (Capture2 map, reducer −7; logs
+  04.10–13.11), new **v2.93** (same map, reducer −9; logs 16.11g1, 16.11g2, 17.11g1 moved there), fuel table 2 = **v2.94**,
+  new **v2.91** (no logs). Every log's temperature tables equal its configuration's. `map_prediction.py` now takes the logs of
+  every configuration with the same map: 9.33 % on the 9 Capture2-map logs, unchanged. Not yet tried in the running app.
+- AEB manual read; Adaptivity is **off** in all configs (user). `tools/analysis/pressure_bank_check.py`: the ECU's own
+  pressure compensation curve leaves no pressure trend in the trims at 1.3–1.6 bar (no change needed; < 1.3 bar untested).
+  The bank difference (~1.6 %) is almost all SLOW, the gas ECU feeds both banks alike; "Fuel trim bank 2" waits for a
+  petrol reference log (see BACKLOG). Per cell (`tools/analysis/bank_cells.py`) the bank difference is real and follows
+  load (+3 at 2.9–5.8 ms, ~0 at 7–9.6 ms); one bank-2 value gets most of what is fixable. AEB has one map for both banks
+  (as far as the file shows). Gas time steps at 4.00 ms petrol time (`tools/analysis/gas_step_4ms.py`).
 
 ## Done in the code on 2026-11-17
 

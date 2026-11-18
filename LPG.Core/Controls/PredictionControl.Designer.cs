@@ -15,10 +15,7 @@
 
         private void InitializeComponent()
         {
-            checkBoxSaveSnapshot = new CheckBox();
-            panelHistory = new Panel();
             scoreView = new PredictionScoreView();
-            historyControl1 = new HistoryControl();
             textBoxMinCount = new TextBox();
             checkBoxRound = new CheckBox();
             checkBoxOnlyChanges = new CheckBox();
@@ -45,7 +42,6 @@
             groupPrediction = new GroupBox();
             groupDisplay = new GroupBox();
             tableNumbers = new TableLayoutPanel();
-            buttonExport = new Button();
             tableLayoutPanelTopLine = new TableLayoutPanel();
             buttonConvert = new Button();
             textBoxImagePath = new TextBox();
@@ -54,7 +50,6 @@
             dataGridViewOrig = new ReadOnlyDataGridView();
             panelLegend = new Panel();
             skippedReadingsView = new SkippedReadingsView();
-            panelHistory.SuspendLayout();
             tableLayoutPanelMain.SuspendLayout();
             tableLayoutPanelRight.SuspendLayout();
             tableLayoutPanelManagement.SuspendLayout();
@@ -64,31 +59,11 @@
             tableLayoutPanelLeft.SuspendLayout();
             SuspendLayout();
             // 
-            // checkBoxSaveSnapshot
             // 
-            checkBoxSaveSnapshot.AutoSize = true;
-            checkBoxSaveSnapshot.Location = new Point(7, 150);
-            checkBoxSaveSnapshot.Name = "checkBoxSaveSnapshot";
-            checkBoxSaveSnapshot.Size = new Size(105, 20);
-            checkBoxSaveSnapshot.TabIndex = 0;
-            checkBoxSaveSnapshot.Text = "Save Snapshot";
             // 
-            // panelHistory
             // 
-            panelHistory.Controls.Add(historyControl1);
-            panelHistory.Dock = DockStyle.Fill;
-            panelHistory.Location = new Point(3, 399);
-            panelHistory.Name = "panelHistory";
-            panelHistory.Size = new Size(805, 355);
-            panelHistory.TabIndex = 1;
             // 
-            // historyControl1
             // 
-            historyControl1.Dock = DockStyle.Fill;
-            historyControl1.Location = new Point(0, 0);
-            historyControl1.Name = "historyControl1";
-            historyControl1.Size = new Size(805, 355);
-            historyControl1.TabIndex = 1;
             // 
             // textBoxMinCount
             // 
@@ -224,7 +199,6 @@
             scoreView.Dock = DockStyle.Fill;
             scoreView.Name = "scoreView";
             tableLayoutPanelRight.Controls.Add(scoreView, 0, 2);
-            tableLayoutPanelRight.Controls.Add(panelHistory, 0, 3);
             tableLayoutPanelRight.Controls.Add(tableLayoutPanelManagement, 0, 1);
             tableLayoutPanelRight.Controls.Add(tableLayoutPanelTopLine, 0, 0);
             tableLayoutPanelRight.Dock = DockStyle.Fill;
@@ -232,11 +206,10 @@
             tableLayoutPanelRight.Location = new Point(599, 3);
             tableLayoutPanelRight.Name = "tableLayoutPanelRight";
             // Image line, options, accuracy result, stored predictions (the list is the smaller part).
-            tableLayoutPanelRight.RowCount = 4;
+            tableLayoutPanelRight.RowCount = 3;
             tableLayoutPanelRight.RowStyles.Add(new RowStyle(SizeType.Absolute, 35F));
             tableLayoutPanelRight.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-            tableLayoutPanelRight.RowStyles.Add(new RowStyle(SizeType.Percent, 60F));
-            tableLayoutPanelRight.RowStyles.Add(new RowStyle(SizeType.Percent, 40F));
+            tableLayoutPanelRight.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
             tableLayoutPanelRight.Size = new Size(811, 757);
             tableLayoutPanelRight.TabIndex = 25;
             // 
@@ -299,15 +272,7 @@
             labelValueOfChange.TabIndex = 23;
             labelValueOfChange.Text = "Min Valid % of change";
             // 
-            // buttonExport
             // 
-            buttonExport.Location = new Point(3, 32);
-            buttonExport.Name = "buttonExport";
-            buttonExport.Size = new Size(152, 23);
-            buttonExport.TabIndex = 22;
-            buttonExport.Text = "Export Selected Cells";
-            buttonExport.UseVisualStyleBackColor = true;
-            buttonExport.Click += buttonExport_Click;
             // 
             // tableLayoutPanelTopLine
             // 
@@ -413,13 +378,8 @@
             flowActions.Dock = DockStyle.Fill;
             flowActions.Margin = new Padding(0, 0, 0, 3);
             flowActions.Controls.Add(buttonContinue);
-            flowActions.Controls.Add(checkBoxSaveSnapshot);
-            flowActions.Controls.Add(buttonExport);
             buttonContinue.Font = new Font(buttonContinue.Font, FontStyle.Bold);
             buttonContinue.Size = new Size(90, 27);
-            checkBoxSaveSnapshot.Anchor = AnchorStyles.Left;
-            checkBoxSaveSnapshot.Margin = new Padding(12, 3, 12, 3);
-            buttonExport.Anchor = AnchorStyles.Left;
 
             tableNumbers.AutoSize = true;
             tableNumbers.AutoSizeMode = AutoSizeMode.GrowAndShrink;
@@ -512,7 +472,6 @@
             Controls.Add(tableLayoutPanelMain);
             Name = "PredictionControl";
             Size = new Size(1413, 763);
-            panelHistory.ResumeLayout(false);
             tableLayoutPanelMain.ResumeLayout(false);
             tableLayoutPanelRight.ResumeLayout(false);
             tableLayoutPanelManagement.ResumeLayout(false);
@@ -528,8 +487,6 @@
             ResumeLayout(false);
         }
 
-        private CheckBox checkBoxSaveSnapshot;
-        private Panel panelHistory;
         private PredictionScoreView scoreView;
         private TextBox textBoxMinCount;
         private CheckBox checkBoxRound;
@@ -547,7 +504,6 @@
         private ReadOnlyDataGridView dataGridViewOrig;
         private ReadOnlyDataGridView dataGridViewPrediction;
         private TableLayoutPanel tableLayoutPanelLeft;
-        private HistoryControl historyControl1;
         private TableLayoutPanel tableLayoutPanelRight;
         private TableLayoutPanel tableLayoutPanelManagement;
         private FlowLayoutPanel flowActions;
@@ -566,6 +522,5 @@
         private Label labelMaxBenzDiff;
         private CheckBox checkBoxShowOnlyCount;
         private Button buttonConvert;
-        private Button buttonExport;
     }
 }

@@ -36,6 +36,12 @@ namespace LPGDbAnalyzer.Forms
         private readonly byte[]? _image;
         private readonly string? _imageFileName;
 
+        /// <summary>The .ml8 configuration the new table is read from (no OCR, no image), or null.</summary>
+        private readonly ConfigSource? _config;
+
+        /// <summary>A .ml8 file: its bytes, name, save time and parsed content.</summary>
+        public sealed record ConfigSource(byte[] File, string FileName, DateTime SavedAt, Ml8Config Parsed);
+
         private readonly PictureBox _picture = new() { Dock = DockStyle.Fill, SizeMode = PictureBoxSizeMode.Zoom, BackColor = Color.White };
         private readonly DataGridView _grid = new();
         private readonly TextBox _name = new() { Dock = DockStyle.Fill };
@@ -48,6 +54,22 @@ namespace LPGDbAnalyzer.Forms
 
         private readonly Font _axisFont = new("Consolas", 11f, FontStyle.Bold);
 
+        /// <summary>The .ml8's temperature tables (read only), shown only for a configuration.</summary>
+        private readonly DataGridView _temperatures = new()
+        {
+            Dock = DockStyle.Bottom,
+            ReadOnly = true,
+            AllowUserToAddRows = false,
+            AllowUserToDeleteRows = false,
+            AllowUserToResizeRows = false,
+            ColumnHeadersVisible = false,
+            RowHeadersVisible = false,
+            SelectionMode = DataGridViewSelectionMode.CellSelect,
+            AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
+            ScrollBars = ScrollBars.None,
+            Visible = false,
+        };
+
         private int _errorCount;
         private bool _filling;
 
@@ -56,6 +78,10 @@ namespace LPGDbAnalyzer.Forms
         /// <summary>New fuel table read from a screenshot.</summary>
         public static FuelTableForm FromImage(Database database, Car car, string imagePath, FuelTable? template) =>
             new(database, car, null, template, File.ReadAllBytes(imagePath), Path.GetFileName(imagePath));
+
+        /// <summary>New fuel table read from an AEB configuration file (.ml8). The values are exact, so there is no image to compare.</summary>
+        public static FuelTableForm FromConfig(Database database, Car car, ConfigSource config) =>
+            new(database, car, null, null, null, null, config);
 
         /// <summary>Check or correct a saved fuel table.</summary>
         public static FuelTableForm Edit(Database database, Car car, FuelTable table) =>
@@ -66,12 +92,17 @@ namespace LPGDbAnalyzer.Forms
             // Buttons grow to fit their text (Windows scaling above 100%).
             LPGDataAnalyzer.Controls.ControlSizing.FitButtons(this);
             base.OnLoad(e);
-            if (_split is not null)
+            // Without a screenshot (e.g. read from a .ml8) the grid gets the whole window.
+            if (_split is not null && _picture.Image is null)
+                _split.Panel1Collapsed = true;
+            else if (_split is not null)
                 _split.SplitterDistance = Math.Max(_split.Panel1MinSize, _split.Height * 2 / 5);
         }
 
-        private FuelTableForm(Database database, Car car, FuelTable? existing, FuelTable? template, byte[]? image, string? imageFileName)
+        private FuelTableForm(Database database, Car car, FuelTable? existing, FuelTable? template, byte[]? image, string? imageFileName,
+                              ConfigSource? config = null)
         {
+            _config = config;
             _database = database;
             _car = car;
             _existing = existing;
@@ -98,9 +129,22 @@ namespace LPGDbAnalyzer.Forms
                 _name.Text = existing.Name;
                 _date.Value = existing.CreatedAt;
                 _notes.Text = existing.Notes;
+                if (existing is { HasConfig: true, ConfigGasTempCoef: int[] gas, ConfigReducerTempCoef: int[] reducer })
+                    ShowTemperatures($"{existing.ConfigFileName}, saved {existing.ConfigSavedAt:yyyy-MM-dd HH:mm}", gas, reducer);
                 Fill(existing.RpmAxis.Select(v => (double?)v).ToArray(),
                      existing.InjectionAxis.Select(v => (double?)v).ToArray(),
                      existing.Values.Select(r => r.Select(v => (double?)v).ToArray()).ToArray());
+            }
+            else if (config is not null)
+            {
+                var c = config.Parsed;
+                ShowTemperatures($"{config.FileName}, saved {config.SavedAt:yyyy-MM-dd HH:mm}", c.GasTempCoef, c.ReducerTempCoef);
+                _name.Text = c.Name.Length > 0 ? c.Name : Path.GetFileNameWithoutExtension(config.FileName);
+                _date.Value = config.SavedAt;
+                _confirm.Text = "I checked the map, both axes and both temperature tables of the .ml8 file";
+                Fill(c.RpmAxis.Select(v => (double?)v).ToArray(),
+                     c.InjectionAxis.Select(v => (double?)v).ToArray(),
+                     c.Values.Select(r => r.Select(v => (double?)v).ToArray()).ToArray());
             }
             else
             {
@@ -172,9 +216,37 @@ namespace LPGDbAnalyzer.Forms
             split.Panel2.Controls.Add(legend);
             split.Panel2.Controls.Add(edit);
             split.Panel2.Controls.Add(top);
+            split.Panel2.Controls.Add(_temperatures);
             split.Panel2.Controls.Add(bottom);
 
             Controls.Add(split);
+        }
+
+        /// <summary>The configuration's ECU temperature tables, one band row above each value row.</summary>
+        private void ShowTemperatures(string source, int[] gas, int[] reducer)
+        {
+            var gasBands = LPGDataAnalyzer.Models.Settings.GasTemperatureRanges;
+            var reducerBands = LPGDataAnalyzer.Models.Settings.ReductorTemperatureRanges;
+            int columns = 1 + Math.Max(gasBands.Length, reducerBands.Length);
+
+            _temperatures.Columns.Clear();
+            for (int i = 0; i < columns; i++)
+                _temperatures.Columns.Add(new DataGridViewTextBoxColumn { SortMode = DataGridViewColumnSortMode.NotSortable });
+            _temperatures.Columns[0].AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
+
+            AddRows($"LPG temp °C ({source})", gasBands.Select(b => b.Label), gas);
+            AddRows("Reducer temp °C", reducerBands.Select(b => b.Label), reducer);
+
+            _temperatures.Height = _temperatures.Rows.GetRowsHeight(DataGridViewElementStates.Visible) + 3;
+            _temperatures.Visible = true;
+
+            void AddRows(string title, IEnumerable<string> bands, int[] values)
+            {
+                int header = _temperatures.Rows.Add([title, .. bands]);
+                _temperatures.Rows[header].DefaultCellStyle.BackColor = AxisBack;
+                _temperatures.Rows[header].DefaultCellStyle.Font = _axisFont;
+                _temperatures.Rows.Add(["%", .. values.Select(v => (object)v.ToString(CultureInfo.InvariantCulture))]);
+            }
         }
 
         private static Button MakeButton(string text, EventHandler click)
@@ -516,6 +588,11 @@ namespace LPGDbAnalyzer.Forms
                     // On update the stored image is kept (null = unchanged).
                     Image = _existing is null ? _image : null,
                     ImageFileName = _existing is null ? _imageFileName : null,
+                    ConfigFile = _config?.File,
+                    ConfigFileName = _config?.FileName,
+                    ConfigSavedAt = _config?.SavedAt,
+                    ConfigGasTempCoef = _config?.Parsed.GasTempCoef,
+                    ConfigReducerTempCoef = _config?.Parsed.ReducerTempCoef,
                 };
 
                 if (_existing is { LogCount: > 0 } &&

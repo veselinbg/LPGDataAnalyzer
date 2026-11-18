@@ -17,35 +17,53 @@ namespace LPGDataAnalyzer.Controls
         private DataItem[] Data { get; set; } = [];
         private string[,] Markers { get; set; } = MapRpmAnalyzer.BuildMarkers([]);
 
-        // Database mode (LPGDbAnalyzer): the table comes from the database and predictions are stored there.
-        private bool _databaseMode;
+        // Database mode (LPGDbAnalyzer): the table comes from the database.
         private int? _trimDelayMs;
         // Database mode: the fuel table the logs were recorded with, [rpm, injection].
         private double?[,]? _databaseTable;
         // LPGDataAnalyzer: the fuel table as text (3-digit values per injection row), from OCR or the settings file.
         private string _fuelTableText = "";
 
+
         /// <summary>
-        /// Database mode: stores a prediction and returns it as a snapshot for the history list
-        /// (null when it was not stored). Called after each prediction while "Save to database" is checked.
+        /// Database mode: writes the last predicted map (complete, display options ignored, [rpm, injection])
+        /// as an ECU configuration file. The "Export .ml8..." button is shown only when this is set.
         /// </summary>
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public Func<PredictionRecord, HistorySnapshot?>? SavePrediction { get; set; }
-
-        /// <summary>Database mode: deletes a stored prediction; returns false when it was not deleted.</summary>
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public Func<HistorySnapshot, bool>? DeletePrediction
+        public Func<double?[,], bool>? ExportPrediction
         {
-            get => historyControl1.DeleteSnapshot;
-            set => historyControl1.DeleteSnapshot = value;
+            get => _exportPrediction;
+            set
+            {
+                _exportPrediction = value;
+                UpdateExportButton();
+            }
         }
+
+        private Func<double?[,], bool>? _exportPrediction;
+        // The last prediction as a complete map, for ExportPrediction; null before the first Predict.
+        private double?[,]? _exportMap;
+        private readonly Button _buttonExportMl8 = new() { Text = "Export .ml8...", AutoSize = true, Anchor = AnchorStyles.Left, Visible = false };
+
+        private void UpdateExportButton()
+        {
+            _buttonExportMl8.Visible = _exportPrediction is not null;
+            _buttonExportMl8.Enabled = _exportPrediction is not null && _exportMap is not null;
+        }
+
 
         public PredictionControl()
         {
             InitializeComponent();
             panelLegend.Paint += PanelLegendBuilder.PanelLegend_Paint;
-            historyControl1.HistorySelected += HistoryControl1_HistorySelected;
             SetOptionToolTips();
+
+            flowActions.Controls.Add(_buttonExportMl8);
+            _buttonExportMl8.Click += (_, _) =>
+            {
+                if (_exportMap is not null)
+                    _exportPrediction?.Invoke(_exportMap);
+            };
 
             // The reference pressure is only used while the pressure correction is on.
             checkBoxPressureCorrection.CheckedChanged += (_, _) =>
@@ -118,26 +136,20 @@ namespace LPGDataAnalyzer.Controls
             scoreView.Clear();
             ShowFuelTable();
 
-            historyControl1.AppSettings = AppSettings;
         }
 
         /// <summary>
         /// Loads logs and the fuel table they were recorded with from a database (LPGDbAnalyzer).
-        /// There is no settings file and no image: the image line is hidden, and predictions are stored
-        /// through <see cref="SavePrediction"/> instead of JSON snapshots.
+        /// There is no settings file and no image: the image line is hidden. Predictions are not stored;
+        /// the predicted map can be written as an ECU configuration through <see cref="ExportPrediction"/>.
         /// </summary>
         /// <param name="values">Fuel table values as [injection row][rpm column].</param>
         /// <param name="stored">Stored predictions to list, newest first. The controls keep their defaults; selecting one shows its options.</param>
-        public void LoadFuelTable(DataItem[] data, double[][] values, double referencePressure, int trimDelayMs,
-            IReadOnlyList<HistorySnapshot> stored)
+        public void LoadFuelTable(DataItem[] data, double[][] values, double referencePressure, int trimDelayMs)
         {
-            _databaseMode = true;
             _trimDelayMs = trimDelayMs;
             AppSettingManager = null;
             AppSettings = null;
-            historyControl1.AppSettings = null;
-            historyControl1.UseDatabase($"Stored predictions of this car ({stored.Count})");
-            historyControl1.ClearAddSnapshots(stored);
 
 
             // [injection row][rpm column] -> [rpm, injection]
@@ -151,12 +163,11 @@ namespace LPGDataAnalyzer.Controls
             tableLayoutPanelTopLine.Visible = false;
             tableLayoutPanelRight.RowStyles[0].Height = 0;
 
-            checkBoxSaveSnapshot.Text = "Save to database";
-            checkBoxSaveSnapshot.Checked = false; // off by default: a prediction is stored only when wanted
-            checkBoxSaveSnapshot.Enabled = true;
 
             Data = data;
             Markers = MapRpmAnalyzer.BuildMarkers(data);
+            _exportMap = null;
+            UpdateExportButton();
             skippedReadingsView.Clear();
             scoreView.Clear();
             ShowFuelTable();
@@ -179,19 +190,6 @@ namespace LPGDataAnalyzer.Controls
             }
         }
 
-        private void HistoryControl1_HistorySelected(HistorySnapshot snapshot)
-        {
-            if (snapshot == null)
-                return;
-
-            var cellMap = ArrayConverter.To2D(snapshot.CellMap);
-            var newCellMap = ArrayConverter.To2D(snapshot.NewCellMap);
-            // Stored predictions show the options they were made with.
-            if (snapshot.Options is PredictionOptions options)
-                ApplyOptions(options);
-
-            PreviewPrediction(cellMap, newCellMap);
-        }
         /// <summary>
         /// Reads the fuel table and the options from the controls; shows a message and returns false when they are invalid.
         /// </summary>
@@ -305,31 +303,17 @@ namespace LPGDataAnalyzer.Controls
 
             var tableNew = Predict(Data, table, options);
 
-            if (checkBoxSaveSnapshot.Checked && checkBoxSaveSnapshot.Enabled)
-            {
-                if (!_databaseMode)
-                {
-                    historyControl1.AddSnapshot(Data, table, tableNew.result);
-                }
-                else if (SavePrediction is not null)
-                {
-                    try
-                    {
-                        var record = new PredictionRecord(table, tableNew.result, FuelMapPrediction.CountReadings(Data), Data.Length, options);
-                        if (SavePrediction(record) is HistorySnapshot saved)
-                            historyControl1.InsertFirst(saved);
-                    }
-                    catch (Exception ex)
-                    {
-                        MessageBox.Show(ex.Message, "The prediction was not saved");
-                    }
-                }
-            }
-
             if (AppSettings is not null && AppSettingManager is not null)
             {
                 AppSettings.LastPredictedFuelTable = tableNew.result.ToText();
                 AppSettingManager.Save(AppSettings);
+            }
+
+            // The export always gets the complete map, whatever the "Show" options display.
+            if (_exportPrediction is not null)
+            {
+                _exportMap = Predict(Data, table, options, fullMap: true).result;
+                UpdateExportButton();
             }
 
             PreviewPrediction(table, tableNew.result);
@@ -470,37 +454,7 @@ namespace LPGDataAnalyzer.Controls
             ShowFuelTable();
         }
 
-        private void buttonExport_Click(object sender, EventArgs e)
-        {
-            var selectedLogs = dataGridViewPrediction.GetSelectedCellLogs(Data);
-
-            if (selectedLogs.Count == 0)
-            {
-                MessageBox.Show("No logs found for selected cells. You must mark some cells from Prediction grid and export them in file.");
-                return;
-            }
-
-            using SaveFileDialog dlg = new();
-
-            dlg.Filter = "Log files|*.txt";
-            dlg.FileName = $"export_{DateTime.Now:yyyyMMdd_HHmmss}.txt";
-
-            if (dlg.ShowDialog() != DialogResult.OK)
-                return;
-
-            ExportLogBuilder.Build(dlg.FileName, selectedLogs);
-
-            MessageBox.Show($"Export completed.\nRows exported: {selectedLogs.Count}");
-        }
     }
 
     /// <summary>
-    /// One prediction, as handed to <see cref="PredictionControl.SavePrediction"/>.
-    /// Maps and counts are [rpm, injection], like <see cref="FuelMapPrediction.BuildTable"/>.
-    /// </summary>
-    /// <param name="BaseMap">The fuel table the prediction started from (as typed in the box).</param>
-    /// <param name="NewMap">The predicted fuel table.</param>
-    /// <param name="Counts">Readings per cell.</param>
-    /// <param name="ReadingCount">Readings (grouped samples) the prediction used.</param>
-    public sealed record PredictionRecord(double?[,] BaseMap, double?[,] NewMap, int[,] Counts, int ReadingCount, PredictionOptions Options);
 }

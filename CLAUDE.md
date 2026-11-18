@@ -35,7 +35,9 @@ Main workflow: save many log files over time, load them together, and use all th
 - The map prediction applies no temperature scaling. The ECU applies its own temperature tables, and those tables are tuned separately (`TemperatureCorrectionPrediction`, Temperature prediction tab).
 - Removed at the user's request on 2026-11-14, don't bring them back: "Smooth Corrections" (tested worse in every mode: it blurs real local dips of the map), "Fill Empty High-Load Cells", "Use History", "Always Apply Negative Trim" (positive and negative trims now use the same threshold), "Map Regression" (no difference in Check accuracy), and the Validate button and the two fuel-table text boxes of the Prediction screen.
 - "ECU Interpolation Weights" and "Trim Delay" are checkboxes, ON by default since 2026-11-14 (Check accuracy on the 6 Capture2 logs: both on +4.7 %, interpolation off −0.6 %, delay off +2.0 %). Both were verified from the logs: the MP6C interpolates bilinearly between breakpoints, and the OBD trim describes the engine position ~0.6–1.1 s earlier.
-- History snapshots / stored predictions are kept to look at and compare; they no longer feed into a new prediction.
+- LPGDataAnalyzer's history snapshots are kept to look at; they no longer feed into a new prediction. LPGDbAnalyzer stores no
+  predictions (removed at the user's request on 2026-11-18 together with the history list, "Save to database" and "Export
+  Selected Cells"; schema 5 drops the `Prediction` table): a prediction that is used goes to the ECU as an exported .ml8.
 - Judge prediction changes with the prediction accuracy shown after Predict (`Services/PredictionScore`, leave one file out), not by feel. Every algorithm change is kept only if it raises it.
 
 **Tuning workflow**
@@ -46,10 +48,11 @@ Main workflow: save many log files over time, load them together, and use all th
 - Data structure: car → fuel table → logs. Car and fuel table are selected from the database or defined new before import.
 - An OCR'd fuel table is never saved without the user checking it against the image on the check screen and confirming.
 - Fuel map axes come from each fuel table in the database. The ECU temperature tables (`GasTemperatureCorrectionCoef`, `ReductorTemperatureCorrectionCoef`) are set **per imported .txt file**, or marked "same as previous". Don't fall back to `Settings.cs` values silently; they are LPGDataAnalyzer defaults only.
-- Checking logs of one fuel table works like LPGDataAnalyzer; checking two fuel tables shows the comparison, to see progress over time.
+- Data structure since 2026-11-18: car → .ml8 configuration → logs (a fuel table read from a screenshot is the alternative).
+- Checking logs of one map works like LPGDataAnalyzer (configurations with the same map count as one map); checking two maps shows the comparison, to see progress over time.
 - Delete is possible for a car, fuel table, log, or only the image. Fuel tables use LPGDataAnalyzer's heatmap colours.
 - Tabs like LPGDataAnalyzer: Data (import/loading) first, the analysis tabs disabled until data is loaded, using the full window and as responsive as possible.
-- Predictions are stored in the database with all selected options; the history list works from the database, not JSON files.
+- Configurations (.ml8), screenshots and original log files are stored in the database and can be downloaded.
 
 ## Build / run
 
@@ -99,7 +102,7 @@ dotnet run --project LPGDbAnalyzer
   - It applies `CorrectionGain` (0.8, damping chosen with Check accuracy). The `minChangeValue` threshold is checked on the undamped average.
   - Trims get no temperature scaling: the ECU applies its own temperature tables, and logs are recorded after the tables are set.
   - Trims **are** scaled by reducer pressure (`ApplyPressureCorrection`, "Reference Press" box in the UI, default 1.49, "Pressure Correction" checkbox on by default; a reference of 0 turns it off). Under high load the reducer pressure drops (down to ~1.1 bar on long high load) and the mixture risks going lean, so this correction is intentional and must stay.
-  - **Prediction accuracy** (no button: calculated in the background after each Predict with the options just used; `Services/PredictionScore` + `Controls/PredictionScoreView`, shown in the Prediction screen between the options and the stored predictions, 60/40 of the height; cleared when new data is loaded): leave one file out. Each file is hidden in turn, the map is predicted from the others (`fullMap`: display options ignored), and for each hidden reading the change the ECU would apply is the bilinear blend of the 4 surrounding cells' % changes at its `DelayedPositions`, averaged over the rows. Score = 1 − Σ(FAST − change)² / Σ FAST², both banks (0 = no better than the current map, max 1 − (1 − gain)², 96 % with gain 0.8). It shows the current options, each of Pressure Correction, ECU Interpolation Weights and Trim Delay switched the other way (with a better/worse verdict), and the score per hidden file. The yardstick is the same for every option set.
+  - **Prediction accuracy** (no button: calculated in the background after each Predict with the options just used; `Services/PredictionScore` + `Controls/PredictionScoreView`, shown in the Prediction screen below the options, filling the rest of the height; cleared when new data is loaded): leave one file out. Each file is hidden in turn, the map is predicted from the others (`fullMap`: display options ignored), and for each hidden reading the change the ECU would apply is the bilinear blend of the 4 surrounding cells' % changes at its `DelayedPositions`, averaged over the rows. Score = 1 − Σ(FAST − change)² / Σ FAST², both banks (0 = no better than the current map, max 1 − (1 − gain)², 96 % with gain 0.8). It shows the current options, each of Pressure Correction, ECU Interpolation Weights and Trim Delay switched the other way (with a better/worse verdict), and the score per hidden file. The yardstick is the same for every option set.
   - **ECU Interpolation Weights** (checkbox, on by default): the MP6C interpolates bilinearly between map breakpoints (the axis `Label`s), which was verified from GAS/BENZ in the logs. When this is on, each raw row of a reading is credited to its 4 surrounding cells with those weights, averaged over the rows. Cells then use the weighted median, the count is the sum of weights, and the `Stability` filter is skipped.
   - **Trim Delay** (checkbox, on by default): the OBD trim describes the engine position about `AppSettings.TrimDelayMs` (default 850 ms, measured 600–1100 ms) earlier. When this is on, readings are placed at `DataItem.DelayedPositions` instead of their own rows.
   - With both checkboxes off, results are the same as before these options existed.
@@ -131,12 +134,69 @@ dotnet run --project LPGDbAnalyzer
 - **Car fields** follow the car profile in `BACKLOG.md` and are edited in a `PropertyGrid` (`Forms/CarForm.cs`).
 - **Import** (`Forms/ImportForm.cs`): select or add a car, select or add the fuel table that was in the ECU, add `*.txt` logs, then import.
 - **Fuel table check** (`Forms/FuelTableForm.cs`): shows the image above an editable grid (horizontal splitter, image 40 %), with a two-line Notes box (what changed in this map). Row 0 is the RPM axis and column 0 is the injection axis. Values use the same blue-white-red heatmap as LPGDataAnalyzer (`Forms/Heatmap.cs`). Black cells are invalid, and cells with a violet frame are >20% from their neighbours' median. Saving needs no black cells and the "I compared every value" checkbox.
+- **AEB configuration files (.ml8)** (`Services/Ml8Config.cs`, `Forms/Ml8Import.cs`, `Forms/Ml8Export.cs`): the config the AEB
+  software saves and loads (`Documents\MultipointInj\ConfigLPG`). Format: clear header `ENCRYPTED_MLTP_FILE\r\n`, then the body
+  XOR'd with the repeating key `41 8A 08 C0 10 45 84 C0 80 50` (symmetric; decode → encode is byte-identical). The body is INI-like
+  text with binary blocks, so it is always handled as **Latin-1** and edited only by replacing whole `key=value` lines. Verified
+  with the user's files and the AEB software (2026-11-18; an edited file with a changed map and both temperature tables opened
+  correctly): map `[MappaCoefficientiK]` `MappaK{row}_{col}` (rows = injection) plus a **hidden extra row**
+  `MappaK{NumeroRighe}_*`, always a copy of the last row (used above the last breakpoint: keep it a copy when writing); axes
+  `RifGiriK{n}` (rpm) and `RifTempiK{n}` in ticks of 2.56 µs (390.625 per ms, shown rounded to 0.01 ms); in `[Temperatura]` the
+  LPG table is `CoeffMot0..8` and the reducer table `Coeff0..8`, stored as **100 + value, hottest band first**. Also there:
+  `[PressioneDifferenziale]` (ECU pressure compensation, 0 at 1489 mbar = Reference Press), `Iniezione.TempoMortoIniettoreGas`
+  (391 ticks ≈ 1.0 ms).
+  - **Each .ml8 is its own node** (Car → .ml8 → logs; a `FuelTable` row with the file in `ConfigFile`, `ConfigFileName`,
+    `ConfigSavedAt` = file time, `ConfigGasTempCoef`, `ConfigReducerTempCoef`, schema version 4; tree label = file name and save
+    time). Two configurations may share a map (v2.92 and v2.93 differ only in the reducer table).
+  - **Import** ("Import .ml8..." on the Data toolbar and tree menu, "New from .ml8..." in the import window, the default; "New from
+    image..." is the alternative): the check screen shows the map, the axes and both temperature tables, and saves after the user
+    confirms. A file already stored is not imported again. A table read from a screenshot with the same map and no configuration
+    can get the file attached instead.
+  - On log import "same as previous" takes the newest log **or configuration** recorded/saved before the log.
+  - **Export .ml8...** (Prediction tab, `PredictionControl.ExportPrediction`): after Predict, writes the complete predicted map
+    (display options ignored, rounded to whole numbers, values 1–255) into a copy of the fuel table's stored .ml8
+    (`Ml8Config.WithMap`): only the `MappaK` lines (hidden row = copy of the last row) and the name lines (`DescrizAuto`,
+    `NomeConfigurazione`) change, and the file is read back and checked. Suggested name = the config's name with its last number
+    + 1 (v2.94 → v2.95). The user opens it in the AEB software, compares, then writes it to the ECU.
+  - Windows Defender flagged a separate Ml8Tool DLL (since deleted), not this code; never work around Defender.
+  - **AEB manual** (`Documents\MultipointInj\Documents\ISW2001NBF_AEB (VERSIONE 6.1.3) _Installatore_ENG.pdf` and the
+    `_CAD_ENG` "complete advanced" edition, which adds EMISSIONS and ADJUSTMENTS; text extracted with a stdlib Python script,
+    no PDF tools on this machine). Screens: Vehicle configuration (Change-over, Lambda, Sensors), Map, Carburation testing,
+    Gas/Petrol, Modify carburation, Emissions, Adjustments, Display (acquisitions = our logs), Display chart, Diagnosis,
+    Autocalibration, Save/Load configuration, ECU reprogramming. Facts used here:
+    - Map = "multiplication coefficients K" for the gas time; axes (rpm, petrol time) are editable on the Map screen.
+    - Adjustments = "percentage corrections on the GAS injection time according to the temperatures of the reduction gear
+      and of the GAS" (the two temperature tables; confirms the % model).
+    - Carburation testing: AEB's manual method corrects K until the trims on gas **return to the values seen on petrol**
+      (not to zero). The prediction uses FAST only, which is ~0 on petrol in closed loop.
+    - Lambda screen "Fuel trim bank 2": enriches/leans the second bank (on a 4-cylinder: gas injectors B and C against A
+      and D); in the file `Iniezione.CorrSecondaBancata0..11`. Tested 2026-11-18 (`baracuda v2.94test.ml8`): the screen has
+      **one** value; setting it to −2 wrote `-2` into all 12 keys (the number as shown, probably %; to be confirmed from
+      GAS2/GAS1 in a log recorded with it). All 0 in the user's real configs. Saving also changed the last three `Prt0`
+      lines (metadata, not a content checksum: files edited by `Ml8Config.WithMap` without touching them open fine). There is no bank-1 table: bank 1 runs on the map as it is (the logs
+      confirm GAS/BENZ is equal on both banks).
+    - Modify carburation "Adaptivity" (Bosch OBD only) adapts the gas calibration to the petrol behaviour; it has no readable
+      key in the file (probably in `Generale.Flag1..6` or a binary block). The user confirmed it is **off** in all
+      configurations (2026-11-18). To find its key: save the same config with it on and diff the decoded files.
+  - Other sections (all four configs identical apart from the names; values are as stored): `[PressioneDifferenziale]`
+    `RifPressDiff0..14` (800–1734 mbar) / `CoeffPressDiff0..14` (+2828 at 800, 0 at 1489, −989 at 1734; roughly
+    0.6·(1 − P/1489), probably 0.01 % of gas time) is the ECU's own reducer-pressure compensation, not described in the manual;
+    `[AutoCal_2] AutoCalEnable=0` and `[AutoCalibrazioneAvanzata] MappaDifferenzeK0..11_0..11` (all 0) belong to the
+    (advanced) autocalibration; `[ADJUST_INJ] OffsetBenz0..9/OffsetGas0..9` all 0; `[TempiKOpenLoop] TOpenLoop0..11` = 11719
+    (30 ms); `[LIQUID_INJECTION]` is for another system. `Iniezione.TempoMaxExtraInjBenz` = 1562 (4.00 ms) is most likely
+    AEB's "extra-injection time" field (4 ms): the logs show the gas time stepping up by ~0.39 ms at exactly BENZ = 4.00 ms
+    (`tools/analysis/gas_step_4ms.py`, BACKLOG "Gas time step at 4 ms"). Only the map and both temperature tables have been tried in the
+    AEB software; don't write other keys without the user's OK and a check in the AEB software.
+- **Stored files and download**: `.ml8` files (`FuelTable.ConfigFile`), screenshots (`Image`) and, since schema version 5, the
+  original log files (`LogFile.Content`, gzip; filled on import, backfilled for the existing logs) are kept in the database.
+  "Download..." (toolbar, tree menu) saves the selected configuration's .ml8 (or the screenshot of a table without one) or log's .txt.
 - **OCR** (`Services/FuelTableOcr.cs`), tested on `Capture2.PNG` (144/144 values and both axes correct). Cell values are read from the image upscaled 3× with each pixel set to its **brightest channel** (max of R, G, B). This makes the coloured cells, the blue selected cell and the red borders white, while black digits stay black; on the plain colour image the OCR missed the blue cell and read 131 as 1893. Each number is placed by its position, so a missed value leaves an empty cell. The white-on-red axis labels are read **one by one from their own crop**, inverted (255 − min of R, G, B). RPM crops must stay at 75% of the column width, or the border is read as an extra "1". Labels without a dot are divided by 100 (`190` → 1.90).
 - **Main window** (`Forms/MainForm.cs`): tabs over the whole window (maximized), like LPGDataAnalyzer. The first tab, **Data**, has the toolbar, the tree with Windows stock icons on the left, and on the right, top to bottom: the selected item's fields, its fuel table with the heatmap, and the screenshot. Delete removes a car, fuel table or log (cascade, then `VACUUM`). "Delete image" removes only the screenshot. The other tabs (Main Data … Extra injection, Compare) are **disabled** (owner-drawn grey, `Selecting` cancelled); each tab is as wide as its own title (`SizeMode.Normal`, padding for the icon and the bold selected title) until "Analyze checked" loads data for them.
-- **Stored predictions** (schema version 3, table `Prediction`, cascades with its fuel table): each prediction made in the Prediction tab is saved while "Save to database" is checked (off by default), with the fuel table, the checked log ids, every option (`LPG.Core/Models/PredictionOptions`), the axes, the base map, the result and the readings per cell (maps and counts `[rpm][injection]`). The history list in the Prediction tab shows the car's stored predictions with the same axes; selecting one shows its maps and restores its options, and it can be deleted there. Loading keeps the default options (stored ones are not restored automatically). The JSON snapshot files are LPGDataAnalyzer only.
 - **Analysis** (`Forms/MainForm.cs`): tree nodes have checkboxes. Checking a car or fuel table checks all logs under it, and single logs can be unchecked. "Analyze checked" loads the rows through `Services/AnalysisLoader` (each log grouped by `Parser.Load(rows, fileName)` with the car's `TrimDelayMs`, joined in recording order) and then:
-  - **one fuel table**: the LPG.Core screens as in LPGDataAnalyzer (Main Data, Analyses, Temperature, Map Analysis, Prediction, Temperature prediction, Chart) plus an "Extra injection" tab with the calculator's results. The prediction gets the table's values, the car's reference pressure and trim delay, and the stored predictions through `PredictionControl.LoadFuelTable` (no settings file, no image line, `SavePrediction`/`DeletePrediction` callbacks instead of JSON snapshots). "Temperature prediction" starts from the temperature tables of the newest checked log. Each log's trims are first brought to the newest checked log's temperature tables (`LPG.Core/Services/TrimNormalizer`, via `AnalysisLoader.Load(..., recordedWith, target, out normalized)`): the ECU gas time scales with (1 + table value/100) interpolated by temperature, so FAST −= (R − 1)·100 with R = target/recorded factor; readings with FAST 0 on both banks are left alone. Nothing changes when the tables are equal. The status bar says how many logs were adjusted.
-  - **two fuel tables**: `Forms/CompareControl.cs`, where A = older table and B = newer. Each side is placed in its own table's cells and uses its newest log's temperature tables. The temperature tab shows both ECU tables, and values that changed are highlighted. It shows a summary (trims, SLOW, pressure, temperatures, cell trim stats with better/worse), cell median FAST for A, B and |B|−|A|, the fuel map change B−A (absolute and %), and temperature band errors from `TemperatureCorrectionPrediction`.
+  - Checked logs are grouped by **map** (axes and values), not by tree node: configurations with the same map form one group,
+    framed by the newest of them, each log with its own temperature tables.
+  - **one map**: the LPG.Core screens as in LPGDataAnalyzer (Main Data, Analyses, Temperature, Map Analysis, Prediction, Temperature prediction, Chart) plus an "Extra injection" tab with the calculator's results. The prediction gets the table's values, the car's reference pressure and trim delay through `PredictionControl.LoadFuelTable` (no settings file, no image line) and `ExportPrediction` for "Export .ml8...". "Temperature prediction" starts from the temperature tables of the newest checked log. Each log's trims are first brought to the newest checked log's temperature tables (`LPG.Core/Services/TrimNormalizer`, via `AnalysisLoader.Load(..., recordedWith, target, out normalized)`): the ECU gas time scales with (1 + table value/100) interpolated by temperature, so FAST −= (R − 1)·100 with R = target/recorded factor; readings with FAST 0 on both banks are left alone. Nothing changes when the tables are equal. The status bar says how many logs were adjusted.
+  - **two maps**: `Forms/CompareControl.cs`, where A = older table and B = newer. Each side is placed in its own table's cells and uses its newest log's temperature tables. The temperature tab shows both ECU tables, and values that changed are highlighted. It shows a summary (trims, SLOW, pressure, temperatures, cell trim stats with better/worse), cell median FAST for A, B and |B|−|A|, the fuel map change B−A (absolute and %), and temperature band errors from `TemperatureCorrectionPrediction`.
   - more than two: a message, pointing to "Analyze together".
   - **Analyze together** (toolbar and tree menu): all checked logs of one car as one analysis, even from several fuel tables. The frame is the fuel table of the newest checked log; every log's trims are brought to that map (ratio of the two maps' bilinear values at the reading's delayed rows, per bank, each map with its own axes) and to the newest log's temperature tables. Predictions made there are stored with that fuel table.
 - Forms are built in code (no `.Designer.cs`).

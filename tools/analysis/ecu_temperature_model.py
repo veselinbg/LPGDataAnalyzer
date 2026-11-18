@@ -9,7 +9,7 @@ from collections import defaultdict
 
 OFF = 0.47
 rows = []
-for log_id, name in loo.con.execute('select Id, FileName from LogFile where FuelTableId=1'):
+for log_id, name, _, _ in loo.logs():   # logs of every configuration with the map of LPG_TABLE
     for r in loo.con.execute(f'select Rpm,Gas1,Benz1,Gas2,Benz2,Press,TempGas,TempReducer,Map from LogRow where LogFileId=? order by RowIndex', (log_id,)):
         rpm, g1, b1, g2, b2, p, tg, tr, mp = r
         if rpm <= 0 or g1 <= 0 or b1 < 2.0 or p <= 0.5:

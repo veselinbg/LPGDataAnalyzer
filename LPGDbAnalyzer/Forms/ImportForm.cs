@@ -44,7 +44,7 @@ namespace LPGDbAnalyzer.Forms
         };
 
         // Temperature tables of the selected file(s).
-        private readonly CheckBox _sameAsPrevious = new() { Text = "Same as previous log (the log of this car recorded just before)", AutoSize = true };
+        private readonly CheckBox _sameAsPrevious = new() { Text = "Same as previous (the log or .ml8 configuration of this car recorded or saved just before)", AutoSize = true };
         private readonly TextBox _gas = new() { Width = 260 };
         private readonly TextBox _reducer = new() { Width = 260 };
         private readonly Button _applyCoefficients = new() { Text = "Apply to selected", AutoSize = true };
@@ -106,6 +106,9 @@ namespace LPGDbAnalyzer.Forms
             var tableBox = new GroupBox { Text = "2. Fuel table that was in the ECU while the logs were recorded", Dock = DockStyle.Top, Height = 84 };
             var tableRow = new FlowLayoutPanel { Dock = DockStyle.Fill };
             tableRow.Controls.Add(_tables);
+            var fromConfig = MakeButton("New from .ml8...", NewTableFromConfig_Click);
+            fromConfig.Font = new Font(fromConfig.Font, FontStyle.Bold);   // the default way
+            tableRow.Controls.Add(fromConfig);
             tableRow.Controls.Add(MakeButton("New from image...", NewTable_Click));
             tableRow.Controls.Add(MakeButton("Check / edit...", EditTable_Click));
             tableRow.SetFlowBreak(tableRow.Controls[^1], true);
@@ -250,7 +253,7 @@ namespace LPGDbAnalyzer.Forms
         private void ShowTableInfo()
         {
             _tableInfo.Text = SelectedCar is null ? "Add a car first."
-                : SelectedTable is not FuelTable t ? "No fuel table for this car yet: add one from the ECU screenshot."
+                : SelectedTable is not FuelTable t ? "No configuration for this car yet: add the .ml8 saved by the AEB software (or a screenshot of the map)."
                 : $"RPM {t.RpmAxis.FirstOrDefault()}–{t.RpmAxis.LastOrDefault()}, injection {t.InjectionAxis.FirstOrDefault()}–{t.InjectionAxis.LastOrDefault()} ms, " +
                   $"values {t.Values.SelectMany(r => r).DefaultIfEmpty().Min()}–{t.Values.SelectMany(r => r).DefaultIfEmpty().Max()}, {t.LogCount} log(s)";
         }
@@ -277,6 +280,21 @@ namespace LPGDbAnalyzer.Forms
             using var form = FuelTableForm.FromImage(_database, car, dialog.FileName, template);
             if (form.ShowDialog(this) == DialogResult.OK && form.Saved is FuelTable saved)
                 LoadTables(saved.Id);
+        }
+
+        private void NewTableFromConfig_Click(object? sender, EventArgs e)
+        {
+            if (SelectedCar is not Car car)
+            {
+                MessageBox.Show(this, "Select or add a car first.", "Fuel table");
+                return;
+            }
+
+            if (Ml8Import.Run(this, _database, car) is FuelTable table)
+            {
+                LoadTables(table.Id);
+                ResolveCoefficients();
+            }
         }
 
         private void EditTable_Click(object? sender, EventArgs e)
@@ -351,12 +369,15 @@ namespace LPGDbAnalyzer.Forms
 
         /// <summary>
         /// Works out the tables of every file. "Same as previous" takes the tables of the log of the
-        /// selected car recorded just before it: from the database or from a file above it in this list.
+        /// selected car recorded just before it (from the database or from a file above it in this list),
+        /// or of a .ml8 configuration of the car saved after that log: its tables were in the ECU from then on.
         /// </summary>
         private void ResolveCoefficients()
         {
             var history = SelectedCar is Car car
-                ? _database.GetCarLogCoefficients(car.Id).Select(x => (x.RecordedAt, Gas: (int[]?)x.Gas, Reducer: (int[]?)x.Reducer)).ToList()
+                ? _database.GetCarLogCoefficients(car.Id).Select(x => (x.RecordedAt, Gas: (int[]?)x.Gas, Reducer: (int[]?)x.Reducer))
+                    .Concat(_database.GetCarConfigCoefficients(car.Id).Select(x => (RecordedAt: x.SavedAt, Gas: (int[]?)x.Gas, Reducer: (int[]?)x.Reducer)))
+                    .ToList()
                 : [];
 
             foreach (var import in Items.Where(i => i.Result is not null).OrderBy(i => i.Result!.Log.RecordedAt))
@@ -404,9 +425,13 @@ namespace LPGDbAnalyzer.Forms
             try
             {
                 var first = selected.FirstOrDefault();
-                // A file without its own tables starts from the car's newest imported log's tables
+                // A file without its own tables starts from the car's newest log's or .ml8's tables
                 // (Settings defaults only when the car has no logs yet).
-                var latest = SelectedCar is Car car ? _database.GetCarLogCoefficients(car.Id).LastOrDefault() : default;
+                var latest = SelectedCar is Car car
+                    ? _database.GetCarLogCoefficients(car.Id)
+                        .Concat(_database.GetCarConfigCoefficients(car.Id).Select(x => (RecordedAt: x.SavedAt, x.Gas, x.Reducer)))
+                        .OrderBy(x => x.RecordedAt).LastOrDefault()
+                    : default;
                 _sameAsPrevious.Checked = first?.SameAsPrevious ?? true;
                 _gas.Text = Join(first?.Gas ?? latest.Gas ?? Database.DefaultGasCoefficients);
                 _reducer.Text = Join(first?.Reducer ?? latest.Reducer ?? Database.DefaultReducerCoefficients);

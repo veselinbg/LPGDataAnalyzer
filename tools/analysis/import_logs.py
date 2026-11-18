@@ -4,7 +4,7 @@ Imports log files into LPGDbAnalyzer's database the same way Services/LogFileRea
 header, SHA-256 (upper-case hex) against duplicates, ECU temperature tables as compact JSON.
 Usage: import_logs.py <db> <fuelTableId> <gasCoefJson> <reducerCoefJson> <file>...
 """
-import datetime, hashlib, json, os, re, sqlite3, sys
+import datetime, gzip, hashlib, json, os, re, sqlite3, sys
 
 COLUMNS = 22
 INT_COLS = {0, 1, 19, 20, 21}  # TEMPO, GIRI, MARKER, AUTOMARKER, ECUMARKER -> (int) cast
@@ -74,10 +74,10 @@ def main():
         now = datetime.datetime.now()
         with con:
             cur = con.execute(
-                'INSERT INTO LogFile (FuelTableId, FileName, RecordedAt, ImportedAt, RowCount, FileHash, GasTempCoef, ReducerTempCoef) '
-                'VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+                'INSERT INTO LogFile (FuelTableId, FileName, RecordedAt, ImportedAt, RowCount, FileHash, GasTempCoef, ReducerTempCoef, Content) '
+                'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
                 (table_id, name, when.strftime('%Y-%m-%d %H:%M:%S'), now.strftime('%Y-%m-%d %H:%M:%S'),
-                 len(rows), digest, gas_json, reducer_json))
+                 len(rows), digest, gas_json, reducer_json, gzip.compress(open(path, 'rb').read(), 9)))  # the original file (schema 5)
             log_id = cur.lastrowid
             con.executemany(
                 f'INSERT INTO LogRow (LogFileId, RowIndex, {", ".join(NAMES)}) VALUES ({", ".join("?" * (COLUMNS + 2))})',
