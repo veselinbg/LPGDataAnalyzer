@@ -136,7 +136,7 @@ def app_filter(it):
     return max(b) / max(min(b), 0.1) <= 2.0
 
 
-def build(train, ref=1.49, benzmax=6.0, min_change=0.0, round_map=True, keep=app_filter, agg=None, gain=None, min_count=0, sign_gain=None, train_fast=None, read_w=None, pooled=False):
+def build(train, ref=1.49, benzmax=6.0, min_change=0.0, round_map=True, keep=app_filter, agg=None, gain=None, min_count=1, sign_gain=None, train_fast=None, read_w=None, pooled=False):
     """Returns the new map [rpm][inj]. keep(reading) -> bool filters readings."""
     cells1 = defaultdict(list); cells2 = defaultdict(list)
     for it in train:
@@ -253,10 +253,12 @@ def logs():
         'select Id, FileName, GasTempCoef, ReducerTempCoef from LogFile where FuelTableId=? order by RecordedAt, Id', (TABLE,))]
 
 
-def load_all(delay_ms=850, normalize_tables=True, only=None):
-    """All readings of the fuel table; only = optional set of file names."""
+def load_all(delay_ms=850, normalize_tables=True, only=None, target=None):
+    """All readings of the fuel table; only = optional set of file names.
+    target = (gas table, reducer table) to bring the trims to; default the newest log's tables. Use it when the
+    ECU tables were changed after the last log, so the map is predicted for the tables it will run with."""
     lst = logs()
-    tgt_g, tgt_r = lst[-1][2], lst[-1][3]
+    tgt_g, tgt_r = target if target else (lst[-1][2], lst[-1][3])
     data = []
     for log_id, name, g, r in lst:
         if only is not None and name not in only:

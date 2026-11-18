@@ -148,6 +148,9 @@ namespace LPGDbAnalyzer.Forms
             _fields.Columns[0].DefaultCellStyle.BackColor = Color.WhiteSmoke;
             _fields.Columns[1].HeaderText = "Value";
             _fields.Columns[1].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+            // Long values (notes) wrap onto more lines; the grid's height follows the rows.
+            _fields.Columns[1].DefaultCellStyle.WrapMode = DataGridViewTriState.True;
+            _fields.AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.AllCells;
             _fields.ColumnHeadersVisible = false;
 
             _table.RowHeadersVisible = true;

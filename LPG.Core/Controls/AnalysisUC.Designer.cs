@@ -251,28 +251,36 @@
             // 
             labelGasTemp1.Location = new Point(3, 0);
             labelGasTemp1.Name = "labelGasTemp1";
-            labelGasTemp1.Size = new Size(100, 23);
+            labelGasTemp1.AutoSize = true;
+            labelGasTemp1.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
+            labelGasTemp1.Text = "Bank 1: LPG temperature";
             labelGasTemp1.TabIndex = 0;
             // 
             // labelReductor1
             // 
             labelReductor1.Location = new Point(213, 0);
             labelReductor1.Name = "labelReductor1";
-            labelReductor1.Size = new Size(100, 23);
+            labelReductor1.AutoSize = true;
+            labelReductor1.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
+            labelReductor1.Text = "Bank 1: reducer temperature";
             labelReductor1.TabIndex = 1;
             // 
             // labelGasTemp2
             // 
             labelGasTemp2.Location = new Point(693, 0);
             labelGasTemp2.Name = "labelGasTemp2";
-            labelGasTemp2.Size = new Size(100, 23);
+            labelGasTemp2.AutoSize = true;
+            labelGasTemp2.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
+            labelGasTemp2.Text = "Bank 2: LPG temperature";
             labelGasTemp2.TabIndex = 2;
             // 
             // labelReductor2
             // 
             labelReductor2.Location = new Point(903, 0);
             labelReductor2.Name = "labelReductor2";
-            labelReductor2.Size = new Size(100, 23);
+            labelReductor2.AutoSize = true;
+            labelReductor2.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
+            labelReductor2.Text = "Bank 2: reducer temperature";
             labelReductor2.TabIndex = 3;
             // 
             // panelBank1
@@ -345,14 +353,18 @@
             // 
             labelBank1.Location = new Point(423, 0);
             labelBank1.Name = "labelBank1";
-            labelBank1.Size = new Size(100, 23);
+            labelBank1.AutoSize = true;
+            labelBank1.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
+            labelBank1.Text = "Bank 1: aggregation / field";
             labelBank1.TabIndex = 11;
             // 
             // labelBank2
             // 
             labelBank2.Location = new Point(1113, 0);
             labelBank2.Name = "labelBank2";
-            labelBank2.Size = new Size(100, 23);
+            labelBank2.AutoSize = true;
+            labelBank2.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
+            labelBank2.Text = "Bank 2: aggregation / field";
             labelBank2.TabIndex = 12;
             // 
             // labelAggregation

@@ -20,7 +20,12 @@ namespace LPGDataAnalyzer.Models
         /// <summary>Reducer pressure the trims are scaled to ("Reference Press").</summary>
         public double ReferencePressure { get; init; } = 1.49;
 
-        public int MinCount { get; init; }
+        /// <summary>
+        /// "Min Count for Cell": a cell is corrected only when its readings' weight (both banks, ~2 per reading) is above
+        /// this. 1 since 2026-11-17: Check accuracy 9.31 % → 9.35 % on 9 logs, and the 12 cells with less than about half
+        /// a reading (e.g. 4700 rpm / 9.6 ms, −17 % from spill-over weight only) keep their value.
+        /// </summary>
+        public int MinCount { get; init; } = 1;
 
         /// <summary>"Max Benz Diff in %".</summary>
         public double MaxBenzDiff { get; init; } = 6;

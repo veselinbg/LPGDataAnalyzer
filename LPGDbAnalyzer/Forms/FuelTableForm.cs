@@ -40,7 +40,8 @@ namespace LPGDbAnalyzer.Forms
         private readonly DataGridView _grid = new();
         private readonly TextBox _name = new() { Dock = DockStyle.Fill };
         private readonly DateTimePicker _date = new() { Format = DateTimePickerFormat.Custom, CustomFormat = "yyyy-MM-dd HH:mm", Width = 150 };
-        private readonly TextBox _notes = new() { Dock = DockStyle.Fill };
+        private readonly TextBox _notes = new() { Dock = DockStyle.Fill, Multiline = true, AcceptsReturn = true, ScrollBars = ScrollBars.Vertical };
+        private SplitContainer? _split;
         private readonly Label _status = new() { Dock = DockStyle.Fill, AutoSize = false, TextAlign = ContentAlignment.MiddleLeft };
         private readonly CheckBox _confirm = new() { Text = "I compared every value and both axes with the image", AutoSize = true };
         private readonly Button _save = new() { Text = "Save", Width = 90, Enabled = false };
@@ -65,6 +66,8 @@ namespace LPGDbAnalyzer.Forms
             // Buttons grow to fit their text (Windows scaling above 100%).
             LPGDataAnalyzer.Controls.ControlSizing.FitButtons(this);
             base.OnLoad(e);
+            if (_split is not null)
+                _split.SplitterDistance = Math.Max(_split.Panel1MinSize, _split.Height * 2 / 5);
         }
 
         private FuelTableForm(Database database, Car car, FuelTable? existing, FuelTable? template, byte[]? image, string? imageFileName)
@@ -78,8 +81,8 @@ namespace LPGDbAnalyzer.Forms
 
             Text = existing is null ? $"New fuel table - {car.Name}" : $"Fuel table - {car.Name} - {existing.Name}";
             StartPosition = FormStartPosition.CenterParent;
-            Size = new Size(1500, 760);
-            MinimumSize = new Size(900, 500);
+            Size = new Size(1300, 980);
+            MinimumSize = new Size(800, 700);
 
             BuildLayout();
             SetUpGrid();
@@ -111,10 +114,16 @@ namespace LPGDbAnalyzer.Forms
 
         private void BuildLayout()
         {
-            var split = new SplitContainer { Dock = DockStyle.Fill, SplitterDistance = 640 };
+            // Image on top, grid below (the screenshot is wide). The splitter is placed in OnLoad, when the size is known.
+            var split = new SplitContainer { Dock = DockStyle.Fill, Orientation = Orientation.Horizontal };
+            _split = split;
             split.Panel1.Controls.Add(_picture);
 
-            var top = new TableLayoutPanel { Dock = DockStyle.Top, Height = 64, ColumnCount = 4, Padding = new Padding(4) };
+            var top = new TableLayoutPanel { Dock = DockStyle.Top, ColumnCount = 4, RowCount = 2, Padding = new Padding(4) };
+            top.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            // Notes: two text lines.
+            top.RowStyles.Add(new RowStyle(SizeType.Absolute, _notes.Font.Height * 2 + 14));
+            top.Height = top.Padding.Vertical + _name.PreferredHeight + 6 + _notes.Font.Height * 2 + 14;
             top.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
             top.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
             top.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
@@ -123,7 +132,7 @@ namespace LPGDbAnalyzer.Forms
             top.Controls.Add(_name, 1, 0);
             top.Controls.Add(new Label { Text = "Set in ECU", AutoSize = true, Anchor = AnchorStyles.Left }, 2, 0);
             top.Controls.Add(_date, 3, 0);
-            top.Controls.Add(new Label { Text = "Notes", AutoSize = true, Anchor = AnchorStyles.Left }, 0, 1);
+            top.Controls.Add(new Label { Text = "Notes", AutoSize = true, Anchor = AnchorStyles.Left | AnchorStyles.Top, Margin = new Padding(3, 6, 3, 3) }, 0, 1);
             top.Controls.Add(_notes, 1, 1);
             top.SetColumnSpan(_notes, 3);
 

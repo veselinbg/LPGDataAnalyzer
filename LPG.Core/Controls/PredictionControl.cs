@@ -157,7 +157,7 @@ namespace LPGDataAnalyzer.Controls
 
             Data = data;
             Markers = MapRpmAnalyzer.BuildMarkers(data);
-            DataGridViewInvalidData.DataSource = null;
+            skippedReadingsView.Clear();
             scoreView.Clear();
             ShowFuelTable();
         }
@@ -237,7 +237,7 @@ namespace LPGDataAnalyzer.Controls
         /// Runs the prediction with <paramref name="options"/>. <paramref name="fullMap"/> ignores the display
         /// options (only changes / multipliers / counts) so the result is always a complete fuel map.
         /// </summary>
-        private static (double?[,] result, List<DataItem> invalidItems) Predict(
+        private static (double?[,] result, List<FuelMapPrediction.RejectedReading> invalidItems, double[,] cellWeights) Predict(
             DataItem[] data, double?[,] table, PredictionOptions options, bool fullMap = false)
         {
             // 0 turns the pressure correction off.
@@ -333,9 +333,9 @@ namespace LPGDataAnalyzer.Controls
             }
 
             PreviewPrediction(table, tableNew.result);
+            MarkCellsWithoutEnoughData(tableNew.cellWeights, options.MinCount);
 
-            DataGridViewInvalidData.DataSource = null;
-            DataGridViewInvalidData.DataSource = tableNew.invalidItems;
+            skippedReadingsView.ShowReadings(tableNew.invalidItems, options.MaxBenzDiff);
 
             _ = UpdateAccuracyAsync(table, options);
         }
@@ -391,6 +391,55 @@ namespace LPGDataAnalyzer.Controls
                 // Create horizontal legend aligned with DataGridView
                 PanelLegendBuilder.CreateDynamicHorizontalHeatmapLegend(panelLegend, dataGridViewPrediction.Grid, vals.WLow, vals.WHigh);
             }
+        }
+
+        /// <summary>Cells without readings: the current value is kept.</summary>
+        private static readonly Color NoDataColor = Color.Gainsboro;
+
+        /// <summary>Cells with readings, but not more than Min Count: the current value is kept until more data is collected.</summary>
+        private static readonly Color NotEnoughDataColor = Color.DarkGray;
+
+        /// <summary>
+        /// Greys out the Prediction grid cells that kept their current value for lack of data
+        /// (<paramref name="cellWeights"/> as [rpm, injection], see <see cref="FuelMapPrediction.BuildTable"/>),
+        /// with the readings' weight in the tooltip. Grid rows are injection breakpoints, column 0 is the axis.
+        /// </summary>
+        private void MarkCellsWithoutEnoughData(double[,] cellWeights, int minCount)
+        {
+            var grid = dataGridViewPrediction.Grid;
+            grid.ShowCellToolTips = true;
+
+            int rpmLength = cellWeights.GetLength(0);
+            int injLength = cellWeights.GetLength(1);
+
+            for (int injIndex = 0; injIndex < injLength && injIndex < grid.RowCount; injIndex++)
+            {
+                for (int rpmIndex = 0; rpmIndex < rpmLength && rpmIndex + 1 < grid.ColumnCount; rpmIndex++)
+                {
+                    var cell = grid.Rows[injIndex].Cells[rpmIndex + 1];
+                    double weight = cellWeights[rpmIndex, injIndex];
+                    string weightText = weight.ToString("0.##", CultureInfo.InvariantCulture);
+
+                    if (weight <= 0)
+                    {
+                        cell.Style.BackColor = NoDataColor;
+                        cell.Style.ForeColor = Color.Black;
+                        cell.ToolTipText = "No readings: current value kept.";
+                    }
+                    else if (weight <= minCount)
+                    {
+                        cell.Style.BackColor = NotEnoughDataColor;
+                        cell.Style.ForeColor = Color.Black;
+                        cell.ToolTipText = $"Not enough data: weight {weightText} ≤ Min Count {minCount} (both banks, ~2 per reading). Current value kept until more is collected.";
+                    }
+                    else
+                    {
+                        cell.ToolTipText = $"Readings weight {weightText} (both banks, ~2 per reading).";
+                    }
+                }
+            }
+
+            dataGridViewPrediction.Title = "Prediction Data (light grey = no readings, dark grey = not enough data, kept)";
         }
 
         private void buttonConvert_Click(object sender, EventArgs e)

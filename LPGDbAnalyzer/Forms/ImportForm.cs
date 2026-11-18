@@ -404,9 +404,12 @@ namespace LPGDbAnalyzer.Forms
             try
             {
                 var first = selected.FirstOrDefault();
+                // A file without its own tables starts from the car's newest imported log's tables
+                // (Settings defaults only when the car has no logs yet).
+                var latest = SelectedCar is Car car ? _database.GetCarLogCoefficients(car.Id).LastOrDefault() : default;
                 _sameAsPrevious.Checked = first?.SameAsPrevious ?? true;
-                _gas.Text = Join(first?.Gas ?? Database.DefaultGasCoefficients);
-                _reducer.Text = Join(first?.Reducer ?? Database.DefaultReducerCoefficients);
+                _gas.Text = Join(first?.Gas ?? latest.Gas ?? Database.DefaultGasCoefficients);
+                _reducer.Text = Join(first?.Reducer ?? latest.Reducer ?? Database.DefaultReducerCoefficients);
                 _gas.Enabled = _reducer.Enabled = !_sameAsPrevious.Checked;
             }
             finally

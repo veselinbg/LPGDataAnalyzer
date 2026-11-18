@@ -35,6 +35,26 @@ namespace LPGDataAnalyzer.Services
         /// </summary>
         private readonly record struct CellSample(DataItem Item, double Weight);
 
+        /// <summary>Why a reading was not used by the prediction (the first check that failed, in this order).</summary>
+        public enum RejectReason
+        {
+            /// <summary>|BENZ_Diff| at or above Max Benz Diff.</summary>
+            BankDifference,
+            /// <summary>FAST exactly 0 on both banks (<see cref="IsNotRegulating"/>).</summary>
+            NotRegulating,
+            /// <summary>Petrol injection time changes more than <see cref="MaxLoadChangeRatio"/> times (<see cref="IsLoadTransient"/>).</summary>
+            LoadTransient,
+            /// <summary>Trim Delay on, but no rows logged that much earlier (start of a file or a gap).</summary>
+            NoDelayedRows,
+            /// <summary>The engine position is outside the map axes.</summary>
+            OutsideMap,
+            /// <summary>Interpolation weights off: the reading's rows are spread over cells (<see cref="MinGroupStability"/>).</summary>
+            SpreadOverCells,
+        }
+
+        /// <summary>A reading the prediction did not use, and why.</summary>
+        public readonly record struct RejectedReading(DataItem Item, RejectReason Reason);
+
         /// <summary>
         /// Suggests a corrected fuel map from logs recorded with <paramref name="cellMap"/> in the ECU.
         /// Positive fast trim = lean = increase the cell.
@@ -49,7 +69,12 @@ namespace LPGDataAnalyzer.Services
         /// When true, readings are placed at the engine position logged <see cref="AppSettings.TrimDelayMs"/>
         /// earlier (<see cref="DataItem.DelayedPositions"/>), because the OBD trim describes that moment.
         /// </param>
-        public static (double?[,] result, List<DataItem> invalidItems) BuildTable(
+        /// <returns>
+        /// The new map, the readings that were not used, and the readings' weight per cell as [rpm, injection]
+        /// (sum over both banks; with interpolation weights the sum of the weights). A cell whose weight is
+        /// <paramref name="minCount"/> or less keeps its current value.
+        /// </returns>
+        public static (double?[,] result, List<RejectedReading> invalidItems, double[,] cellWeights) BuildTable(
             DataItem[] logs,
             double?[,] cellMap,
             double referencePressure,
@@ -71,12 +96,13 @@ namespace LPGDataAnalyzer.Services
                     $"Fuel map is {cellMap.GetLength(0)}x{cellMap.GetLength(1)}, expected {rpmLength}x{injLength}.",
                     nameof(cellMap));
 
-            var invalidItems = new List<DataItem>();
+            var invalidItems = new List<RejectedReading>();
 
             BuildLogGrid(logs, rpmLength, injLength, benzDiffMax, useInterpolationWeights, useTrimDelay,
                 invalidItems, out var gridB1, out var gridB2);
 
             var counts = new int[rpmLength, injLength];
+            var cellWeights = new double[rpmLength, injLength];
             var multipliers = new double[rpmLength, injLength];
             // Correction factor per cell that has enough logs (null = not enough data).
             var factors = new double?[rpmLength, injLength];
@@ -94,6 +120,7 @@ namespace LPGDataAnalyzer.Services
                     double effectiveCount = TotalWeight(cellB1) + TotalWeight(cellB2);
                     int count = (int)Math.Round(effectiveCount);
                     counts[rpmIndex, injIndex] = count;
+                    cellWeights[rpmIndex, injIndex] = effectiveCount;
 
                     if (effectiveCount <= 0 || effectiveCount <= minCount)
                         continue;
@@ -158,7 +185,7 @@ namespace LPGDataAnalyzer.Services
                 }
             }
 
-            return (result, invalidItems);
+            return (result, invalidItems, cellWeights);
         }
 
         /// <summary>
@@ -189,7 +216,7 @@ namespace LPGDataAnalyzer.Services
             double benzDiffMax,
             bool useInterpolationWeights,
             bool useTrimDelay,
-            List<DataItem> invalidItems,
+            List<RejectedReading> invalidItems,
             out CellSample[][] gridB1,
             out CellSample[][] gridB2)
         {
@@ -213,9 +240,15 @@ namespace LPGDataAnalyzer.Services
 
             foreach (var log in logs)
             {
-                if (Math.Abs(log.BENZ_Diff) >= benzDiffMax || IsNotRegulating(log) || IsLoadTransient(log))
+                RejectReason? reason =
+                    Math.Abs(log.BENZ_Diff) >= benzDiffMax ? RejectReason.BankDifference
+                    : IsNotRegulating(log) ? RejectReason.NotRegulating
+                    : IsLoadTransient(log) ? RejectReason.LoadTransient
+                    : null;
+
+                if (reason is RejectReason r)
                 {
-                    invalidItems.Add(log);
+                    invalidItems.Add(new RejectedReading(log, r));
                     continue;
                 }
 
@@ -235,7 +268,7 @@ namespace LPGDataAnalyzer.Services
 
                 if (positions.Length == 0)
                 {
-                    invalidItems.Add(log);
+                    invalidItems.Add(new RejectedReading(log, RejectReason.NoDelayedRows));
                     continue;
                 }
 
@@ -245,7 +278,7 @@ namespace LPGDataAnalyzer.Services
                     added |= AddInterpolated(log, positions, static p => p.Benz2, axes!, rpmLength, cellWeights, listB2);
 
                     if (!added)
-                        invalidItems.Add(log);
+                        invalidItems.Add(new RejectedReading(log, RejectReason.OutsideMap));
 
                     continue;
                 }
@@ -269,9 +302,15 @@ namespace LPGDataAnalyzer.Services
                     stability = log.Stability;
                 }
 
-                if (stability < MinGroupStability || rpmIndex < 0 || (b1 < 0 && b2 < 0))
+                if (rpmIndex < 0 || (b1 < 0 && b2 < 0))
                 {
-                    invalidItems.Add(log);
+                    invalidItems.Add(new RejectedReading(log, RejectReason.OutsideMap));
+                    continue;
+                }
+
+                if (stability < MinGroupStability)
+                {
+                    invalidItems.Add(new RejectedReading(log, RejectReason.SpreadOverCells));
                     continue;
                 }
 
@@ -304,7 +343,13 @@ namespace LPGDataAnalyzer.Services
         /// The petrol injection time over the reading's rows and the rows its trim describes changes more
         /// than <see cref="MaxLoadChangeRatio"/> times (see there). Readings without rows are kept.
         /// </summary>
-        internal static bool IsLoadTransient(DataItem log)
+        internal static bool IsLoadTransient(DataItem log) => LoadChangeRatio(log) > MaxLoadChangeRatio;
+
+        /// <summary>
+        /// Largest / smallest average petrol injection time over the reading's rows and its delayed rows
+        /// (0 when it has no rows); <see cref="IsLoadTransient"/> compares it with <see cref="MaxLoadChangeRatio"/>.
+        /// </summary>
+        public static double LoadChangeRatio(DataItem log)
         {
             double min = double.MaxValue, max = 0;
 
@@ -318,7 +363,7 @@ namespace LPGDataAnalyzer.Services
                 }
             }
 
-            return max > 0 && max / Math.Max(min, 0.1) > MaxLoadChangeRatio;
+            return max > 0 ? max / Math.Max(min, 0.1) : 0;
         }
 
         // ---------------- Interpolation weights ----------------

@@ -53,7 +53,7 @@
             dataGridViewPrediction = new ReadOnlyDataGridView();
             dataGridViewOrig = new ReadOnlyDataGridView();
             panelLegend = new Panel();
-            DataGridViewInvalidData = new DataGridView();
+            skippedReadingsView = new SkippedReadingsView();
             panelHistory.SuspendLayout();
             tableLayoutPanelMain.SuspendLayout();
             tableLayoutPanelRight.SuspendLayout();
@@ -62,7 +62,6 @@
             groupDisplay.SuspendLayout();
             tableLayoutPanelTopLine.SuspendLayout();
             tableLayoutPanelLeft.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)DataGridViewInvalidData).BeginInit();
             SuspendLayout();
             // 
             // checkBoxSaveSnapshot
@@ -98,7 +97,7 @@
             textBoxMinCount.RightToLeft = RightToLeft.Yes;
             textBoxMinCount.Size = new Size(45, 23);
             textBoxMinCount.TabIndex = 2;
-            textBoxMinCount.Text = "0";
+            textBoxMinCount.Text = "1";
             // 
             // checkBoxRound
             // 
@@ -352,7 +351,7 @@
             tableLayoutPanelLeft.Controls.Add(dataGridViewPrediction, 0, 2);
             tableLayoutPanelLeft.Controls.Add(dataGridViewOrig, 0, 0);
             tableLayoutPanelLeft.Controls.Add(panelLegend, 0, 1);
-            tableLayoutPanelLeft.Controls.Add(DataGridViewInvalidData, 0, 3);
+            tableLayoutPanelLeft.Controls.Add(skippedReadingsView, 0, 3);
             tableLayoutPanelLeft.Dock = DockStyle.Fill;
             tableLayoutPanelLeft.Location = new Point(3, 3);
             tableLayoutPanelLeft.Name = "tableLayoutPanelLeft";
@@ -396,13 +395,13 @@
             panelLegend.Size = new Size(584, 44);
             panelLegend.TabIndex = 9;
             // 
-            // DataGridViewInvalidData
+            // skippedReadingsView
             // 
-            DataGridViewInvalidData.Dock = DockStyle.Fill;
-            DataGridViewInvalidData.Location = new Point(3, 617);
-            DataGridViewInvalidData.Name = "DataGridViewInvalidData";
-            DataGridViewInvalidData.Size = new Size(584, 137);
-            DataGridViewInvalidData.TabIndex = 19;
+            skippedReadingsView.Dock = DockStyle.Fill;
+            skippedReadingsView.Location = new Point(3, 617);
+            skippedReadingsView.Name = "skippedReadingsView";
+            skippedReadingsView.Size = new Size(584, 137);
+            skippedReadingsView.TabIndex = 19;
             //
             // Options layout: actions on top, then "Prediction options" (everything that changes the
             // predicted map and its accuracy) beside "Show" (display only). The two boxes wrap below each
@@ -526,7 +525,6 @@
             tableLayoutPanelTopLine.PerformLayout();
             tableLayoutPanelLeft.ResumeLayout(false);
             tableLayoutPanelLeft.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)DataGridViewInvalidData).EndInit();
             ResumeLayout(false);
         }
 
@@ -563,7 +561,7 @@
         private Label labelValueOfChange;
         private TableLayoutPanel tableLayoutPanelTopLine;
         private TextBox textBoxImagePath;
-        private DataGridView DataGridViewInvalidData;
+        private SkippedReadingsView skippedReadingsView;
         private TextBox textBoxMaxBenzDiff;
         private Label labelMaxBenzDiff;
         private CheckBox checkBoxShowOnlyCount;
