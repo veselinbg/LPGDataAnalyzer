@@ -614,6 +614,9 @@ namespace LPGDbAnalyzer.Forms
             var nodes = CheckedLogNodes().ToList();
             var tables = nodes.Select(n => (FuelTable)n.Parent!.Tag!).DistinctBy(t => t.Id).ToDictionary(t => t.Id);
             var cars = nodes.Select(n => (Car)n.Parent!.Parent!.Tag!).DistinctBy(c => c.Id).ToList();
+            // The fixed times each configuration adds to the gas time (gas dead time, extra injection), from its .ml8.
+            var offsets = tables.Values.ToDictionary(t => t.Id, ReadOffsets);
+            EcuSetup Setup(FuelTable table, LogFile log) => MainForm.Setup(table, log, offsets.GetValueOrDefault(table.Id));
 
             List<(FuelTable Table, Car Car, List<LogFile> Logs)> groups;
 
@@ -681,7 +684,9 @@ namespace LPGDbAnalyzer.Forms
                     });
 
                     int tableCount = g.Logs.Select(l => MapKey(tables[l.FuelTableId])).Distinct().Count();
-                    loaded.Add(new Loaded(g.Table, g.Car, data, g.Logs, normalized, tableCount));
+                    var setups = g.Logs.GroupBy(l => l.FileName)
+                        .ToDictionary(x => x.Key, x => Setup(tables[x.First().FuelTableId], x.First()));
+                    loaded.Add(new Loaded(g.Table, g.Car, data, g.Logs, normalized, tableCount, setups, tables[newestLog.FuelTableId]));
                 }
 
                 if (loaded.Any(l => l.Data.Length == 0))
@@ -712,13 +717,29 @@ namespace LPGDbAnalyzer.Forms
             string.Join(";", t.RpmAxis) + "|" + string.Join(";", t.InjectionAxis) + "|" +
             string.Join("/", t.Values.Select(r => string.Join(";", r)));
 
-        private static EcuSetup Setup(FuelTable table, LogFile log) =>
-            new(table.RpmAxis, table.InjectionAxis, table.Values, log.GasTempCoef, log.ReducerTempCoef);
+        private static EcuSetup Setup(FuelTable table, LogFile log, GasTimeOffsets? offsets) =>
+            new(table.RpmAxis, table.InjectionAxis, table.Values, log.GasTempCoef, log.ReducerTempCoef, offsets);
+
+        /// <summary>The configuration's fixed gas times, or null (no .ml8, or one without these keys).</summary>
+        private GasTimeOffsets? ReadOffsets(FuelTable table)
+        {
+            try
+            {
+                return table.HasConfig && _database.GetFuelTableConfig(table.Id) is { } file ? Ml8Config.Load(file).Offsets : null;
+            }
+            catch (InvalidDataException)
+            {
+                return null;
+            }
+        }
 
         /// <summary>Checked logs loaded for analysis, with their trims brought to <see cref="Table"/> and the newest log's temperature tables.</summary>
         /// <param name="NormalizedLogs">Logs whose trims were changed (other temperature tables or another map).</param>
         /// <param name="TableCount">Different maps the logs were recorded with (more than 1 with "Analyze together").</param>
-        private sealed record Loaded(FuelTable Table, Car Car, DataItem[] Data, List<LogFile> Logs, int NormalizedLogs, int TableCount)
+        /// <param name="Setups">The ECU setup each log was recorded with, by file name (<see cref="DataItem.SourceFile"/>).</param>
+        /// <param name="NewestTable">Fuel table (configuration) of the newest checked log.</param>
+        private sealed record Loaded(FuelTable Table, Car Car, DataItem[] Data, List<LogFile> Logs, int NormalizedLogs, int TableCount,
+            IReadOnlyDictionary<string, EcuSetup> Setups, FuelTable NewestTable)
         {
             public int LogCount => Logs.Count;
 
@@ -745,7 +766,7 @@ namespace LPGDbAnalyzer.Forms
             _reducer.SetCurrentCoefficients(l.Newest.GasTempCoef, l.Newest.ReducerTempCoef);
             _mapAnalysis.LoadData(l.Data);
             _chart.SetData(l.Data);
-            _extraInjection.Text = ExtraInjectionReport(l.Data);
+            _extraInjection.Text = ExtraInjectionReport(l, NewestConfig(l));
 
             LoadPrediction(l);
 
@@ -785,24 +806,87 @@ namespace LPGDbAnalyzer.Forms
             _summary.Text = sb.ToString();
         }
 
-        /// <summary>The three results of LPGDataAnalyzer's "Extra Injection Calculator", on one page.</summary>
-        private static string ExtraInjectionReport(DataItem[] data)
+        /// <summary>The newest checked log's .ml8 configuration, or null (a table read from a screenshot, or unreadable).</summary>
+        private Ml8Config? NewestConfig(Loaded l)
         {
             try
             {
-                var sb = new StringBuilder();
+                return l.NewestTable.HasConfig && _database.GetFuelTableConfig(l.NewestTable.Id) is { } file ? Ml8Config.Load(file) : null;
+            }
+            catch (InvalidDataException)
+            {
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// The extra-injection settings estimated from the gas time step (<see cref="ExtraInjectionCalculator.EstimateGasStep"/>)
+        /// next to the configuration's values, then the three results of LPGDataAnalyzer's "Extra Injection Calculator".
+        /// </summary>
+        /// <summary>A gas time step smaller than this is reported as no step (the scatter of GAS is ~0.06–0.1 ms).</summary>
+        private const double NoStepMs = 0.1;
+
+        private static string ExtraInjectionReport(Loaded l, Ml8Config? config)
+        {
+            var data = l.Data;
+            var inv = CultureInfo.InvariantCulture;
+            var sb = new StringBuilder();
+
+            sb.AppendLine("ESTIMATE FROM THE GAS TIME STEP");
+            sb.AppendLine("Below the AEB \"Extra-injection ident. time\" the gas time is shorter: the ECU seems to use the");
+            sb.AppendLine("\"Extrainj. sensitivity\" time there instead of the gas injector dead time (hypothesis, 2026-11-19).");
+            sb.AppendLine();
+            try
+            {
+                var est = ExtraInjectionCalculator.EstimateGasStep(data,
+                    d => d.SourceFile is { } f && l.Setups.TryGetValue(f, out var s) ? s : null);
+                double? dead = config?.Offsets?.DeadTimeMs;
+                double? ident = config?.Offsets?.IdentTimeMs;
+                double? sensitivity = config?.Offsets?.SensitivityMs;
+                string Cfg(double? v) => v is null ? "" : string.Format(inv, "   (configuration: {0:F2} ms)", v);
+
+                if (est is null)
+                {
+                    sb.AppendLine("Not enough readings with steady petrol times between 2.5 and 6 ms to find a step.");
+                }
+                else
+                {
+                    if (Math.Abs(est.JumpMs) < NoStepMs)
+                        sb.AppendLine(string.Format(inv, "No step in the gas time (best fit {0:+0.00;-0.00} ms at {1:F2} ms): the dead time and the sensitivity act alike.",
+                            -est.JumpMs, est.StepAtMs));
+                    sb.AppendLine(string.Format(inv, "Extra-injection ident. time:  {0:F2} ms{1}", est.StepAtMs, Cfg(ident)));
+                    sb.AppendLine(dead is { } dt
+                        ? string.Format(inv, "Extrainj. sensitivity time:   {0:F2} ms = dead time {1:F2} - step {2:F2}{3}", dt - est.JumpMs, dt, est.JumpMs, Cfg(sensitivity))
+                        : string.Format(inv, "Extrainj. sensitivity time:   gas injector dead time - {0:F2} ms (no .ml8 with the dead time)", est.JumpMs));
+                    sb.AppendLine();
+                    sb.AppendLine(string.Format(inv, "Fit: GAS = {0:F3} x BENZ x K x temperature factor + {1:F3} ms, {2:F3} ms less below {3:F2} ms petrol time",
+                        est.Slope, est.OffsetAboveMs, est.JumpMs, est.StepAtMs));
+                    sb.AppendLine(string.Format(inv, "Readings per bank: {0} ({1} below the step). Scatter {2:F3} ms with the step, {3:F3} ms without.",
+                        est.Readings, est.ReadingsBelow, est.RmsMs, est.RmsWithoutStepMs));
+                }
+            }
+            catch (Exception ex)
+            {
+                sb.AppendLine("The estimate failed: " + ex.Message);
+            }
+
+            sb.AppendLine();
+            sb.AppendLine("OLD CALCULATOR (LPGDataAnalyzer)");
+            try
+            {
                 sb.AppendLine("Ident time: " + ExtraInjectionCalculator.CalculateIdentTime(data));
                 sb.AppendLine();
                 sb.AppendLine("Extra injection time: " + ExtraInjectionCalculator.CalculateExtraInjectionTime(data));
                 sb.AppendLine();
                 sb.AppendLine("Histogram:");
                 sb.AppendLine(ExtraInjectionCalculator.PrintHistogram(data));
-                return sb.ToString().Replace("\r\n", "\n").Replace("\n", Environment.NewLine);
             }
             catch (Exception ex)
             {
-                return "The extra injection calculation failed: " + ex.Message;
+                sb.AppendLine("The old calculation failed: " + ex.Message);
             }
+
+            return sb.ToString().Replace("\r\n", "\n").Replace("\n", Environment.NewLine);
         }
 
         // ---------------- Prediction ----------------

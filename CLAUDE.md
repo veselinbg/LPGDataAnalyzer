@@ -183,10 +183,17 @@ dotnet run --project LPGDbAnalyzer
     0.6·(1 − P/1489), probably 0.01 % of gas time) is the ECU's own reducer-pressure compensation, not described in the manual;
     `[AutoCal_2] AutoCalEnable=0` and `[AutoCalibrazioneAvanzata] MappaDifferenzeK0..11_0..11` (all 0) belong to the
     (advanced) autocalibration; `[ADJUST_INJ] OffsetBenz0..9/OffsetGas0..9` all 0; `[TempiKOpenLoop] TOpenLoop0..11` = 11719
-    (30 ms); `[LIQUID_INJECTION]` is for another system. `Iniezione.TempoMaxExtraInjBenz` = 1562 (4.00 ms) is most likely
-    AEB's "extra-injection time" field (4 ms): the logs show the gas time stepping up by ~0.39 ms at exactly BENZ = 4.00 ms
-    (`tools/analysis/gas_step_4ms.py`, BACKLOG "Gas time step at 4 ms"). Only the map and both temperature tables have been tried in the
-    AEB software; don't write other keys without the user's OK and a check in the AEB software.
+    (30 ms); `[LIQUID_INJECTION]` is for another system. `Iniezione.TempoMaxExtraInjBenz` = 1562 (4.00 ms) is AEB's
+    "Extra-injection ident. time" (4 ms) and `TempiExtraIniettate1` = 234 (0.60 ms) its "Extrainj. sensitivity" (0.6 ms): the logs
+    show the gas time ~0.4 ms shorter below exactly BENZ = 4.00 ms, i.e. (hypothesis) the sensitivity time replaces the 1.00 ms
+    gas dead time there (`tools/analysis/gas_step_4ms.py`, BACKLOG "Gas time step at 4 ms"; the "Extra injection" tab estimates
+    both with `ExtraInjectionCalculator.EstimateGasStep`). The `Prt0` lines are a further scrambled layer (XOR with −position
+    over all Prt0 bytes, then still encoded): never edit them. With the ECU connected, "Load configuration" in the AEB software
+    also writes the file to the ECU (user). Only the map and both temperature tables have been tried in the
+    AEB software; don't write other keys without the user's OK and a check in the AEB software. Exception agreed on 2026-11-19:
+    `WithMap(..., gasDeadTimeMs)` writes `TempoMortoIniettoreGas` (dead time 0.6 ms in v2.95). `Ml8Config.Offsets` reads
+    the dead time, sensitivity and ident time into `GasTimeOffsets` (LPG.Core, on `EcuSetup`); `TrimNormalizer` then compares
+    gas times (only GAS − fixed time scales with the map) instead of map values when both setups have them.
 - **Stored files and download**: `.ml8` files (`FuelTable.ConfigFile`), screenshots (`Image`) and, since schema version 5, the
   original log files (`LogFile.Content`, gzip; filled on import, backfilled for the existing logs) are kept in the database.
   "Download..." (toolbar, tree menu) saves the selected configuration's .ml8 (or the screenshot of a table without one) or log's .txt.

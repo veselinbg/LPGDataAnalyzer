@@ -1,4 +1,5 @@
 using LPGDataAnalyzer.Models;
+using LPGDataAnalyzer.Services;
 using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -49,6 +50,17 @@ namespace LPGDbAnalyzer.Services
         /// <summary>Reducer temperature table, one per band of <see cref="Settings.ReductorTemperatureRanges"/>.</summary>
         public int[] ReducerTempCoef { get; }
 
+        /// <summary>
+        /// Fixed times the ECU adds to the gas time: <c>TempoMortoIniettoreGas</c> (gas injector dead time),
+        /// <c>TempiExtraIniettate1</c> ("Extrainj. sensitivity", used below the ident time) and <c>TempoMaxExtraInjBenz</c>
+        /// ("Extra-injection ident. time", petrol time). Null when a key is missing.
+        /// </summary>
+        public GasTimeOffsets? Offsets { get; }
+
+        public const string GasDeadTimeKey = "TempoMortoIniettoreGas";
+        public const string SensitivityKey = "TempiExtraIniettate1";
+        public const string IdentTimeKey = "TempoMaxExtraInjBenz";
+
         private Ml8Config(string text)
         {
             Text = text;
@@ -70,6 +82,10 @@ namespace LPGDbAnalyzer.Services
             string temperature = Section("Temperatura");
             GasTempCoef = ReadTemperatureTable(temperature, "CoeffMot", Settings.GasTemperatureRanges.Length);
             ReducerTempCoef = ReadTemperatureTable(temperature, "Coeff", Settings.ReductorTemperatureRanges.Length);
+
+            Offsets = TimeMs(GasDeadTimeKey) is double dead && TimeMs(SensitivityKey) is double sensitivity && TimeMs(IdentTimeKey) is double ident
+                ? new GasTimeOffsets(dead, sensitivity, ident)
+                : null;
         }
 
         /// <summary>Reads and parses a .ml8 file. Throws <see cref="InvalidDataException"/> when it is not one.</summary>
@@ -112,7 +128,9 @@ namespace LPGDbAnalyzer.Services
         /// </summary>
         /// <param name="values">[injection row][rpm column], the same size as the template's map.</param>
         /// <param name="description">New "DescrizAuto" (e.g. "baracuda v2.95"); "NomeConfigurazione" becomes description + ".ml8".</param>
-        public static byte[] WithMap(byte[] template, int[][] values, string? description)
+        /// <param name="gasDeadTimeMs">New gas injector dead time (<c>TempoMortoIniettoreGas</c>), or null to keep it. Set to
+        /// 0.6 ms with the user's OK on 2026-11-19 (= the extra-injection sensitivity, so the 4 ms step disappears).</param>
+        public static byte[] WithMap(byte[] template, int[][] values, string? description, double? gasDeadTimeMs = null)
         {
             var config = Load(template);
             int rows = config.Values.Length;
@@ -133,6 +151,15 @@ namespace LPGDbAnalyzer.Services
             for (int c = 0; c < columns; c++)
                 text = ReplaceValue(text, $"MappaK{rows}_{c}", values[rows - 1][c].ToString(CultureInfo.InvariantCulture), required: false);
 
+            int? deadTicks = null;
+            if (gasDeadTimeMs is double dead)
+            {
+                if (dead is < 0 or > 3)
+                    throw new InvalidOperationException($"Gas dead time {dead} ms is outside 0–3 ms.");
+                deadTicks = (int)Math.Round(dead * TicksPerMs);
+                text = ReplaceValue(text, GasDeadTimeKey, deadTicks.Value.ToString(CultureInfo.InvariantCulture), required: true);
+            }
+
             if (!string.IsNullOrWhiteSpace(description))
             {
                 text = ReplaceValue(text, "DescrizAuto", description.Trim(), required: false);
@@ -147,6 +174,8 @@ namespace LPGDbAnalyzer.Services
                 for (int c = 0; c < columns; c++)
                     if (check.Values[r][c] != values[r][c])
                         throw new InvalidOperationException($"Check failed: MappaK{r}_{c} reads back as {check.Values[r][c]}, not {values[r][c]}.");
+            if (deadTicks is int ticks && IntValue(check.Text, GasDeadTimeKey) != ticks)
+                throw new InvalidOperationException($"Check failed: {GasDeadTimeKey} does not read back as {ticks}.");
 
             return file;
         }
@@ -171,6 +200,10 @@ namespace LPGDbAnalyzer.Services
             var m = Regex.Match(Text, $@"(?m)^{Regex.Escape(key)}=([^\r\n]*)\r?$");
             return m.Success ? m.Groups[1].Value : null;
         }
+
+        /// <summary>A time stored in ticks of 2.56 µs (e.g. <c>TempoMaxExtraInjBenz</c>), in ms; null when the key is missing.</summary>
+        public double? TimeMs(string key) =>
+            int.TryParse(TextValue(key), NumberStyles.Integer, CultureInfo.InvariantCulture, out int ticks) ? ticks / TicksPerMs : null;
 
         private int IntValue(string key) => IntValue(Text, key);
 

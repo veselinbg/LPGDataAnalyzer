@@ -194,6 +194,68 @@ High-Load Cells, Use History, Always Apply Negative Trim, Map Regression.
   **only the v2.93 logs (16.11–17.11), s 1.0 → 5.94 %**. Three of the four files gain from the old logs; 18.11g1 loses a lot.
   The October logs hurt (SLOW drift? older tables?). Weak evidence with 4 files.
 
+## Extra injection settings from the logs (2026-11-19)
+
+- AEB shows "Extrainj. sensitivity" 0.6 ms and "Extra-injection ident. time" 4 ms (user). In the .ml8:
+  `Iniezione.TempiExtraIniettate1` = 234 ticks = **0.60 ms**, `TempoMaxExtraInjBenz` = 1562 = **4.00 ms**
+  (`TempiExtraIniettate0` = 0, `TempiExtraIniettate2` = 39 = 0.10 ms: unknown, maybe the slider), gas dead time
+  `TempoMortoIniettoreGas` = 391 = 1.00 ms.
+- GAS = a·BENZ·K·(temperature factor) + c with a step: the scan of the step position finds **exactly 4.00 ms** on both maps,
+  and the **jump is 0.37–0.43 ms** (raw rows 0.42–0.43, grouped readings 0.41–0.43). Hypothesis: below the ident time the ECU adds
+  the sensitivity time (0.60 ms) instead of the dead time (1.00 ms): 1.00 − 0.60 = 0.40. To confirm: a log with another
+  sensitivity or ident time (the step should move with it).
+- Built (LPGDbAnalyzer "Extra injection" tab): `ExtraInjectionCalculator.EstimateGasStep` (LPG.Core) finds the step from the
+  loaded logs (each log with its own map and temperature tables) and shows ident time = step position and sensitivity =
+  dead time − jump, next to the values of the newest log's .ml8. The old LPGDataAnalyzer calculator stays below.
+  `EcuSetup.TemperatureFactor` is now shared with `TrimNormalizer`. Built into a separate folder (the app was running):
+  0 warnings; not yet seen in the app.
+- The `Prt0` lines (the unparsed part, 1 078 records, 11 KB, in Sez0004, AutoTaratura, Sez0003, Emulazione, Iniezione, …) have a
+  second scrambling: XOR with (−n) & 255, n = byte position over all Prt0 payloads of the file. After it every record ends with
+  0x07 and starts with 00 00, but the content is still encoded (one more layer). Not needed for the map, temperature tables or
+  extra-injection keys, which are readable lines. Never edit `Prt0` lines.
+- **User's earlier experience (manual gearbox):** sensitivity raised 0.6 → 1.2 ms made the petrol times at idle drop below
+  1.9 ms, the more the higher the value, and on throttle-off during a gear change the rpm fell and then rose sharply. 0.8 was
+  tried too; 0.6 was kept to avoid the rpm flare. This fits the hypothesis (sensitivity = the fixed time added to the gas time
+  below the ident time: above 1.0 ms low load runs richer, the petrol ECU shortens BENZ). So no test log is needed, and
+  removing the step in the ECU (ident time lowered, or sensitivity → 1.0) risks the flare: handle the step in software
+  (BACKLOG option 4) or leave it. The flare happened only **below 1300–1500 rpm**. In the logs (all 13, raw rows) the petrol
+  ECU's overrun fuel cut starts mostly above 1500 rpm (median 1960), and injection resumes most often at **1200–1700 rpm**
+  with short pulses (median first BENZ 2.0 ms, below the ident time). So the fixed sensitivity time hits exactly at fuel
+  re-entry near idle: with 1.2 ms the first pulses get too much gas → rpm bump. One log shows a dip at 0.6 too
+  (1337 → 816 → 1022 rpm, BENZ 1.6 → 5.3: the petrol ECU catching a stall).
+- **Gas injectors: Barracuda 120** (Alex, rail BR124P, installed by the user). Retailer specs "according to the manufacturer"
+  (agsiedlik.pl): opening 1.9 ms, closing 1.2 ms, coil 1.9 Ω, 120 Nl/min at 1.2 bar, max 4.5 bar. No official datasheet found.
+  Effective offset ≈ opening − closing ≈ **0.7 ms**, close to the 0.6 ms sensitivity that works at idle, while the dead time
+  above the ident time is 1.0 ms. AEB injector type in the configs: "I-PLUS" (`TipoIniettoreSoftware` 63); not checked
+  whether AEB's list has a Barracuda/Alex type. Option discussed: dead time 1.0 → 0.6 ms (= sensitivity: the 4 ms step
+  disappears, short pulses unchanged) with the rows ≥ 4.0 raised by the computed amount; not decided.
+- User (2026-11-19): with the ECU connected, "Load configuration" loads the file into the AEB software **and the ECU**. So a test
+  file must be opened only with the ECU disconnected, unless it is meant to go into the car.
+
+## Gas dead time 1.0 → 0.6 ms: configuration v2.95 (2026-11-19, user's decision)
+
+- Decided with the user: **dead time 0.6 ms** (= sensitivity, the 4 ms step disappears; idle and fuel re-entry unchanged),
+  sensitivity 0.6 and ident time 4.0 unchanged. Ident 4.4 together with it brings nothing (no step left to place); use it only
+  if a residual step shows up.
+- **`ConfigLPGaracuda v2.95.ml8`** written from v2.94: `TempoMortoIniettoreGas` 391 → 234, map rows 4.0–12.0 compensated,
+  names; nothing else changed (checked line by line). **Not yet opened in AEB / not in the ECU.** Open it with the ECU
+  disconnected first.
+- Compensation (scratch `deadtime_map.py`): every raw row of the 4 v2.94 logs keeps its gas time; above 4.00 ms the part
+  GAS − dead time must grow by 0.4 ms. Least squares over all cells of rows ≥ 4.0, cells without data pulled to the formula
+  K·(1 + 0.4 / (0.82·B·K/100)). Changes: row 4.0 +3…+7 %, 4.8 +5…+11 %, 5.8 +4…+7 %, 7.0 +4…+7 %, 8.3 +4…+5 %,
+  9.6–12.0 +2…+4 %. Gas vs now: within ±0.3–0.8 % above 4.6 ms; row 4.0 can only split the old step: +3.4 % just below
+  4 ms, −3.1 % just above (old logs' steady trims there: +2.3 below / −2.0 above, so both move towards 0).
+- After loading: drive gently first, then normally with a few lift-offs below 1500 rpm. Check: the Extra injection tab
+  should report no step; trims around 4 ms; high load not lean. Then import the logs under v2.95 and predict as usual.
+- Code (built, 0 warnings, not committed): `GasTimeOffsets` on `EcuSetup` (from the .ml8: dead time, sensitivity, ident);
+  `TrimNormalizer` compares gas times (GAS − fixed time scales with the map) when both setups know them, so "Analyze together"
+  of v2.94 and v2.95 logs sees no change where the map only compensates the dead time (LOO on the v2.94 logs with older logs
+  added: 5.17 % vs 5.08 % one to one). `Ml8Config.Offsets`, `WithMap(..., gasDeadTimeMs)`. Extra injection tab says
+  "no step" below 0.1 ms.
+- Idea, not done (one change at a time): the map prediction also assumes gas follows K one to one, but only GAS − fixed time
+  does. That may explain the measured trim response 0.74; correcting K by trim × GAS / (GAS − fixed time) would be tested
+  with the prediction accuracy.
+
 ## AEB configuration files (2026-11-18)
 
 - Saves in `Documents\MultipointInj\ConfigLPG`: v2.91 (4.10 11:56), v2.92 (4.10 17:33) = Capture2, v2.93 (14.11) = Capture2
