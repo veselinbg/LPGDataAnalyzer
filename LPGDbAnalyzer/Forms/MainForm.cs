@@ -442,9 +442,11 @@ namespace LPGDbAnalyzer.Forms
             ("Added", c.CreatedAt.ToString("yyyy-MM-dd HH:mm")),
         ];
 
-        private static List<(string, string)> TableFields(FuelTable t, TreeNode node)
+        private List<(string, string)> TableFields(FuelTable t, TreeNode node)
         {
             var all = t.Values.SelectMany(r => r).ToArray();
+            var offsets = ReadOffsets(t);
+            string Ms(double? v) => v is double x ? x.ToString("0.00", CultureInfo.InvariantCulture) + " ms" : (t.HasConfig ? "not in the file" : "");
             return
             [
                 ("Fuel table", t.Name),
@@ -459,6 +461,9 @@ namespace LPGDbAnalyzer.Forms
                 ("Configuration", t.HasConfig ? $"{t.ConfigFileName}, saved {t.ConfigSavedAt:yyyy-MM-dd HH:mm}" : "none"),
                 ("Config LPG temp", t.ConfigGasTempCoef is null ? "" : string.Join(", ", t.ConfigGasTempCoef)),
                 ("Config reducer temp", t.ConfigReducerTempCoef is null ? "" : string.Join(", ", t.ConfigReducerTempCoef)),
+                ("Gas dead time", Ms(offsets?.DeadTimeMs)),
+                ("Extrainj. sensitivity", Ms(offsets?.SensitivityMs)),
+                ("Extra-inj. ident. time", Ms(offsets?.IdentTimeMs)),
                 ("Notes", t.Notes ?? ""),
             ];
         }

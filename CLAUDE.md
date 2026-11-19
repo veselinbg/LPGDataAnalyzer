@@ -188,12 +188,15 @@ dotnet run --project LPGDbAnalyzer
     show the gas time ~0.4 ms shorter below exactly BENZ = 4.00 ms, i.e. (hypothesis) the sensitivity time replaces the 1.00 ms
     gas dead time there (`tools/analysis/gas_step_4ms.py`, BACKLOG "Gas time step at 4 ms"; the "Extra injection" tab estimates
     both with `ExtraInjectionCalculator.EstimateGasStep`). The `Prt0` lines are a further scrambled layer (XOR with −position
-    over all Prt0 bytes, then still encoded): never edit them. With the ECU connected, "Load configuration" in the AEB software
+    over all Prt0 bytes, then still encoded): never edit them. They hold settings of the AEB screens, e.g. the "Enrichment in
+    acceleration" slider (record 783, section Sez0003; found by saving with only the slider moved, 2026-11-19). With the ECU connected, "Load configuration" in the AEB software
     also writes the file to the ECU (user). Only the map and both temperature tables have been tried in the
     AEB software; don't write other keys without the user's OK and a check in the AEB software. Exception agreed on 2026-11-19:
     `WithMap(..., gasDeadTimeMs)` writes `TempoMortoIniettoreGas` (dead time 0.6 ms in v2.95). `Ml8Config.Offsets` reads
     the dead time, sensitivity and ident time into `GasTimeOffsets` (LPG.Core, on `EcuSetup`); `TrimNormalizer` then compares
-    gas times (only GAS − fixed time scales with the map) instead of map values when both setups have them.
+    gas times (only GAS − fixed time scales with the map) instead of map values when both setups have them. AEB can't
+    store a configuration whose name has Cyrillic letters ("Cannot complete correctly the data loading/storing"), so
+    `WithMap` accepts printable ASCII names only. The Data tab shows each configuration's dead time, sensitivity and ident time.
 - **Stored files and download**: `.ml8` files (`FuelTable.ConfigFile`), screenshots (`Image`) and, since schema version 5, the
   original log files (`LogFile.Content`, gzip; filled on import, backfilled for the existing logs) are kept in the database.
   "Download..." (toolbar, tree menu) saves the selected configuration's .ml8 (or the screenshot of a table without one) or log's .txt.

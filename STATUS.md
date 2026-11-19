@@ -238,8 +238,11 @@ High-Load Cells, Use History, Always Apply Negative Trim, Map Regression.
   sensitivity 0.6 and ident time 4.0 unchanged. Ident 4.4 together with it brings nothing (no step left to place); use it only
   if a residual step shows up.
 - **`ConfigLPGaracuda v2.95.ml8`** written from v2.94: `TempoMortoIniettoreGas` 391 → 234, map rows 4.0–12.0 compensated,
-  names; nothing else changed (checked line by line). **Not yet opened in AEB / not in the ECU.** Open it with the ECU
-  disconnected first.
+  names; nothing else changed (checked line by line). Checked in AEB with the ECU disconnected (2026-11-19): the first
+  "save as" showed "Cannot complete correctly the data loading/storing", but the file was written correctly; v2.94 + dead
+  time only and v2.94 + map only saved without a message, and v2.95 again also without one. **Cause (user): the file name
+  had Cyrillic letters**; AEB can't store such names. "Export .ml8..." now refuses names outside printable ASCII. AEB keeps the dead time 234 and the map on save (map cells go up to 255, user). Test files deleted.
+  **Not yet in the ECU.**
 - Compensation (scratch `deadtime_map.py`): every raw row of the 4 v2.94 logs keeps its gas time; above 4.00 ms the part
   GAS − dead time must grow by 0.4 ms. Least squares over all cells of rows ≥ 4.0, cells without data pulled to the formula
   K·(1 + 0.4 / (0.82·B·K/100)). Changes: row 4.0 +3…+7 %, 4.8 +5…+11 %, 5.8 +4…+7 %, 7.0 +4…+7 %, 8.3 +4…+5 %,
@@ -255,6 +258,17 @@ High-Load Cells, Use History, Always Apply Negative Trim, Map Regression.
 - Idea, not done (one change at a time): the map prediction also assumes gas follows K one to one, but only GAS − fixed time
   does. That may explain the measured trim response 0.74; correcting K by trim × GAS / (GAS − fixed time) would be tested
   with the prediction accuracy.
+
+## Enrichment in acceleration slider (2026-11-19)
+
+- AEB manual: when the petrol time jumps from medium-low to very high (15–16 ms) on sudden acceleration, the slider sets how
+  fast the gas follows (+ faster, − more filtered); blue background / LED when active. v2.94 logs: in the first logged row
+  after BENZ jumped ≥ 1.8× to ≥ 6 ms, GAS / expected = 1.000 (steady 1.004): no visible filtering at the 250 ms log rate.
+  It does not affect the map prediction (load transients are skipped).
+- Test file `baracuda v2.95enrichmentlow.ml8` (user: v2.95 with only the slider at minimum): no readable key changed. After
+  the first Prt0 descrambling only record 783 (section Sez0003) differs (`00 00 03 0e 08 05 3d 07` → `00 00 03 0e 10 18 05 3d
+  07`) besides the save metadata in Sez0000. The record is the same in v2.91–v2.95, so the slider was never moved. Its value
+  has a further encoding (not a simple XOR); not decoded. `KFiltro`/`KFiltro2` (128) are not this slider.
 
 ## AEB configuration files (2026-11-18)
 

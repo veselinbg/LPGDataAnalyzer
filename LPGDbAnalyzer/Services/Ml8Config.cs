@@ -162,6 +162,11 @@ namespace LPGDbAnalyzer.Services
 
             if (!string.IsNullOrWhiteSpace(description))
             {
+                // The AEB software can't load or store names with other letters (Cyrillic gave "Cannot complete correctly
+                // the data loading/storing", 2026-11-19), and Latin-1 would turn them into '?'.
+                if (description.Any(ch => ch < ' ' || ch > '~'))
+                    throw new InvalidOperationException(
+                        $"The name \"{description.Trim()}\" has letters the AEB software can't store (e.g. Cyrillic). Use Latin letters, digits and spaces only.");
                 text = ReplaceValue(text, "DescrizAuto", description.Trim(), required: false);
                 text = ReplaceValue(text, "NomeConfigurazione", description.Trim() + FileExtension, required: false);
             }
