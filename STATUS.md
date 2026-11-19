@@ -4,7 +4,7 @@ Read this first when a new session starts. `CLAUDE.md` describes the code and th
 **where the tuning stands**, what was measured, what was decided and what comes next. Update it at the
 end of every working session.
 
-Last update: **2026-11-18**.
+Last update: **2026-11-19**.
 
 ## The car and the data
 
@@ -172,6 +172,27 @@ High-Load Cells, Use History, Always Apply Negative Trim, Map Regression.
 - The GAS check of which map the ECU used was inconclusive: too few rows where the maps differ by ≥ 3 %.
 - Next: collect more new-map logs. Then measure the trim response to a map change, i.e. the slope above. It
   matters for "Analyze together", whose map normalization assumes a slope of 1.
+
+## Second check of the new map (2026-11-19, 4 logs)
+
+- Imported by the user under v2.94: log 12 `18.11.2026g2.txt` (18.11 16:19, 6 331 rows), log 13 `19.11.2026g1.txt`
+  (19.11 07:13, 3 928 rows). New-map logs now: 17.11g2, 18.11g1, 18.11g2, 19.11g1.
+- Old logs brought to the tables now in the ECU (reducer −8), cells with weight ≥ 4 on both maps (scratch script, not in tools):
+  - **Changed cells** (32): new median FAST ≈ 0.37 × old − 0.75 (expected 0.2 × old at gain 0.8); weighted RMS 2.43 → 1.95.
+    With weight ≥ 10 (22 cells): 0.44 × old − 0.64, RMS 2.31 → 1.89.
+  - **Trim response to a map change: ΔFAST ≈ −0.74 × map change % − 0.7** (one to one would be −1.00). So the effective gain
+    was about 0.8 × 0.74 ≈ 0.6.
+  - Unchanged cells: −0.43 → −0.56 (the 0.8 % shift seen on 18.11 has mostly gone).
+  - **Overshoot**: 4 sign flips > 1 % (weight ≥ 4), 1 with weight ≥ 10: 2600 × 10.8 (old +4.15, map +3.1 %, now −4.12, w 15).
+    The other three: 2600 × 12, 2600 × 2.4, 1800 × 12. **Three are in the 2600 column.** Gain 0.8 stays (response < 1).
+  - **SLOW is drifting down steadily** (bank 1 / bank 2): 16.11g1 +5.4/+2.3 → 17.11g2 +4.6/+2.7 → 18.11g1 +3.9/+1.6 →
+    18.11g2 +3.1/+0.9 → 19.11g1 +2.9/+0.9. It started before the map change (v2.93 logs). FAST overall stays −0.4…−0.9 on bank 1.
+- Leave one file out, **new-map logs only: 5.55 %** (17.11g2 5.53, 18.11g1 10.37, 18.11g2 3.54, 19.11g1 4.10).
+  Hidden = new-map logs, training = the other new-map logs plus old-map logs brought to the new map
+  ("Analyze together" with slope s: FAST −= s · (new/old map − 1) · 100):
+  s 1.0 → 5.08 %, 0.74 → 5.34 %, 0.5 → 5.52 %, 0 → 5.27 %; old readings only where the map did not change → 4.19 %;
+  **only the v2.93 logs (16.11–17.11), s 1.0 → 5.94 %**. Three of the four files gain from the old logs; 18.11g1 loses a lot.
+  The October logs hurt (SLOW drift? older tables?). Weak evidence with 4 files.
 
 ## AEB configuration files (2026-11-18)
 
